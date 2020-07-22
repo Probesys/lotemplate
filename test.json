@@ -8,12 +8,15 @@
     },
     {
       "cell1": "why",
-      "cell2": "not"
+      "cell2": "camille"
     },
     {
       "cell1": "all",
       "cell2": "end je sais c'est long\n mais bonfdsf dsfdsf\ndsfsfsdf f fds mk ldskfmkdsfd dsfldsk fmdskfmlkdsfmds"
     }
   ],
-   "signature": "this isme"
+   "signature": "this isme",
+  "photo1": {
+      "path":"test.jpg"
+  }
 }
