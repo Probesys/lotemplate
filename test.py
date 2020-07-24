@@ -14,7 +14,8 @@ from com.sun.star.awt import Size
 import uno
 import configargparse
 import json
-
+from PIL import Image
+from PIL import ImageOps
 
 flags = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
 fcntl.fcntl(
@@ -61,9 +62,26 @@ class oo_template(object):
 
     def convert_image(self, name, data):
         print(data['path'])
+        img = Image.open(data['path'])
+        print(img.size)
+        graph_shape = self.edit_doc.getGraphicObjects().getByName('$photo')
+        print(graph_shape.Graphic.SizePixel)
+        img_with_border = self.resize_with_padding(img, (200, 200))
+        img_with_border.save(data['path'] + '-border.png')
         fileurl = unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + '/' + data['path'])
         graphic = self.graphicprovider.queryGraphic((PropertyValue('URL', 0, fileurl, 0), ))
         self.edit_doc.getGraphicObjects().getByName('$photo').Graphic = graphic
+
+
+    def resize_with_padding(self, img, expected_size):
+        img.thumbnail((expected_size[0], expected_size[1]))
+        # print(img.size)
+        delta_width = expected_size[0] - img.size[0]
+        delta_height = expected_size[1] - img.size[1]
+        pad_width = delta_width // 2
+        pad_height = delta_height // 2
+        padding = (pad_width, pad_height, delta_width - pad_width, delta_height - pad_height)
+        return ImageOps.expand(img, padding, 'white')
 
     def convert_table(self, name, data):
         table = self.oWriterTables.getByName("$" + name)
