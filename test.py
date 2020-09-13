@@ -26,6 +26,39 @@ fcntl.fcntl(
 
 
 class oo_template(object):
+
+    def list_vars(self, oo_connect, file):
+        self.desktop = oo_connect[0]
+        self.graphicprovider = oo_connect[1]
+        url = unohelper.systemPathToFileUrl(os.path.dirname(
+            os.path.abspath(__file__)) + "/" + file)
+        self.dpi = 150
+        self.edit_doc = self.desktop.loadComponentFromURL(url, "_blank", 0, ())
+        self.cursor = self.edit_doc.Text.createTextCursor()
+        self.oWriterTables = self.edit_doc.getTextTables()
+        self.cursor.gotoEnd(False)
+        self.cl_ID = 0
+        doc = self.edit_doc
+        search = doc.createSearchDescriptor()
+        search.SearchRegularExpression = True
+        search.SearchString = '\\$[:alnum:]*'
+        found = doc.findFirst(search)
+        vars = {}
+        while found:
+            print(found.String)
+            if found.TextTable is not None:
+                if found.TextTable.Name[1:] in vars:
+                    vars[found.TextTable.Name[1:]][0][found.String[1:]] = ""
+                else:
+                    vars[found.TextTable.Name[1:]] = [{found.String[1:]: ""}]
+            else:
+                vars[found.String[1:]] = ""
+            found = doc.findNext(found.End, search)
+        print(self.edit_doc.getGraphicObjects().getElementNames())
+        # while found:
+        #    print(found)
+        print(json.dumps(vars))
+
     def convert(self, oo_connect, file, datas, out_file):
         self.desktop = oo_connect[0]
         self.graphicprovider = oo_connect[1]
@@ -63,15 +96,18 @@ class oo_template(object):
     def convert_image(self, name, data):
         print(data['path'])
         img = Image.open(data['path'])
+        img1 = Image.open('test150.jpg')
         print(img.size)
+        print(img1.size)
         graph_shape = self.edit_doc.getGraphicObjects().getByName('$photo')
-        print(graph_shape.Graphic.SizePixel)
+        print(graph_shape.getSize().Height)
+        print(graph_shape.getSize().Width)
+
         img_with_border = self.resize_with_padding(img, (200, 200))
         img_with_border.save(data['path'] + '-border.png')
         fileurl = unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + '/' + data['path'])
         graphic = self.graphicprovider.queryGraphic((PropertyValue('URL', 0, fileurl, 0), ))
         self.edit_doc.getGraphicObjects().getByName('$photo').Graphic = graphic
-
 
     def resize_with_padding(self, img, expected_size):
         img.thumbnail((expected_size[0], expected_size[1]))
@@ -169,18 +205,23 @@ if __name__ == '__main__':
     p.add('-c', '--config', is_config_file=True, help='config file path')
     p.add('--host', required=True, help='host connection libreoffice')  # this option can be set in a config file because it starts with '--'
     p.add('--port', help='port')
+    p.add('--action', help='list or create')
     p.add('input', nargs='?', default=sys.stdin)
     p.add('-d', "--data", help='file with data in json put')
     p.add('-f', '--file', default='test.odt', help='oo template')
     p.add('-t', '--to_file', default='test1.odt', help='out file')
     options = p.parse_args()
-
-    print(options)
-    if options.data is not None:
-        Io_f = open(options.data)
+    if options == "create":
+        print(options)
+        if options.data is not None:
+            Io_f = open(options.data)
+        else:
+            Io_f = options.input
+        datas = json.loads(Io_f.read())
+        oo_connect = connect(options.host, options.port)
+        oo_template = oo_template()
+        oo_template.convert(oo_connect, options.file, datas, options.to_file)
     else:
-        Io_f = options.input
-    datas = json.loads(Io_f.read())
-    oo_connect = connect(options.host, options.port)
-    oo_template = oo_template()
-    oo_template.convert(oo_connect, options.file, datas, options.to_file)
+        oo_connect = connect(options.host, options.port)
+        oo_template = oo_template()
+        oo_template.list_vars(oo_connect, options.file)
