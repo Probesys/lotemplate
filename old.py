@@ -1,7 +1,5 @@
 """
-high level support for doing this and that.
-
-ok
+depreciated - use this as a code exemple only
 """
 # encoding=UTF-8
 
@@ -17,6 +15,8 @@ import json
 from PIL import Image
 from PIL import ImageOps
 
+
+# empêche le blocage de l'input, le lit directement sans s'y arrêter
 flags = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
 fcntl.fcntl(
     sys.stdin.fileno(),
@@ -46,7 +46,9 @@ class oo_template(object):
         vars = {}
         while found:
             print(found.String)
-            if found.TextTable is not None:
+            if found.TextTable is not None:  # censé gérer les cas quand une variable est dans un tableau,
+                # mais ne vérifie absolument pas si le tableau est une variable ;
+                # en bref, une tentative échouée de trouver un concept pour remplir dynamiquement les tableaux
                 if found.TextTable.Name[1:] in vars:
                     vars[found.TextTable.Name[1:]][0][found.String[1:]] = ""
                 else:
@@ -81,14 +83,14 @@ class oo_template(object):
                 self.convert_image(key, data)
 
         url2 = unohelper.systemPathToFileUrl(
-            os.path.dirname(os.path.abspath(__file__)) + '/test1.odt')
+            os.path.dirname(os.path.abspath(__file__)) + '/test_files/output/test1.odt')
         self.edit_doc.storeAsURL(url2, ())
 
         property = (
             PropertyValue("FilterName", 0, "writer_pdf_Export", 0),
         )
         url3 = unohelper.systemPathToFileUrl(os.path.dirname(
-            os.path.abspath(__file__)) + '/test1.pdf')
+            os.path.abspath(__file__)) + '/test_files/output/est1.pdf')
         self.edit_doc.storeToURL(url3, property)
         self.edit_doc.dispose()
     # search and replace text
@@ -96,7 +98,7 @@ class oo_template(object):
     def convert_image(self, name, data):
         print(data['path'])
         img = Image.open(data['path'])
-        img1 = Image.open('test150.jpg')
+        img1 = Image.open('test_files/input/test150.jpg')
         print(img.size)
         print(img1.size)
         graph_shape = self.edit_doc.getGraphicObjects().getByName('$photo')
@@ -120,9 +122,10 @@ class oo_template(object):
         return ImageOps.expand(img, padding, 'white')
 
     def convert_table(self, name, data):
-        table = self.oWriterTables.getByName("$" + name)
+        table = self.oWriterTables.getByName("$" + name)  # plante si on met pas de dollar, vu qu'il le vérifie
+        # absolument pas et assume qu'un tableau contenant des variables est lui-même une variable
         rows = table.getRows()
-        rows.insertByIndex(2, len(data) - 1)
+        rows.insertByIndex(2, len(data))
         table_data = table.getDataArray()
         template = table_data[1]
         myarray = (table_data[0],)
@@ -201,18 +204,17 @@ def connect(host="localhost", port="2002"):
 
 
 if __name__ == '__main__':
-    p = configargparse.ArgParser(default_config_files=['config.ini'])
-    p.add('-c', '--config', is_config_file=True, help='config file path')
-    p.add('--host', required=True, help='host connection libreoffice')  # this option can be set in a config file because it starts with '--'
-    p.add('--port', help='port')
-    p.add('--action', help='list or create')
-    p.add('input', nargs='?', default=sys.stdin)
-    p.add('-d', "--data", help='file with data in json put')
-    p.add('-f', '--file', default='test.odt', help='oo template')
-    p.add('-t', '--to_file', default='test1.odt', help='out file')
+    p = configargparse.ArgumentParser(default_config_files=['config.ini'])
+    p.add_argument('-c', '--config', is_config_file=True, help='config file path')
+    p.add_argument('--host', required=True, help='host connection libreoffice')
+    p.add_argument('--port', help='port')
+    p.add_argument('--action', help='list or create')
+    p.add_argument('input', nargs='?', default=sys.stdin)
+    p.add_argument('-d', "--data", help='file with data in json put')
+    p.add_argument('-f', '--file', default='test_files/input/test.odt', help='oo template')
+    p.add_argument('-t', '--to_file', default='test_files/output/test1.odt', help='out file')
     options = p.parse_args()
-    if options == "create":
-        print(options)
+    if options.action == "create":
         if options.data is not None:
             Io_f = open(options.data)
         else:
