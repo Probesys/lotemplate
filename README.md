@@ -66,6 +66,7 @@ override config file values which override defaults.
 
 *Note: possibilitée de noter les variables de tableaux d'une autre manière (ex : '&') pour pouvoir placer des 
 variables statiques et des variables dynamiques en même temps à envisager, demander son avis à cyril dès son retour*
+
 2. en faire une API REST basée sur le même noyau avec flask
    - [se renseigner sur Flask](https://flask.palletsprojects.com/en/2.0.x/)
    - coder
