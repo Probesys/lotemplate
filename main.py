@@ -38,10 +38,7 @@ class Template:
         :return: list containing all the variables founded in the template
         """
 
-        class TemplateDifferentVariablesRows(Template.TemplateException):
-            pass
-
-        class TemplateVariablesNotInLastRow(Template.TemplateException):
+        class TemplateVariableNotInLastRow(Template.TemplateException):
             pass
 
         search = self.doc.createSearchDescriptor()
@@ -64,19 +61,12 @@ class Template:
         for tab_name, tab_infos in tab_vars_pos.items():
             tab_cells = tab_infos[0]
             last_row = tab_infos[1]
-            rows = list(tab_cells.values())
-            rows.sort()
-            row = rows[0]
 
             for var_name, var_row in tab_cells.items():
-                if var_row != row:
-                    raise TemplateDifferentVariablesRows(
-                        f"The variable {repr(var_name)} (table {repr(tab_name)}) isn't in the same row as the other "
-                        f"variables (got: row {repr(var_row)}, expected: row {repr(row)})")
-
-            if row != last_row:
-                raise TemplateVariablesNotInLastRow(f"The variables in the table {repr(tab_name)} are not in the last "
-                                                    f"row (last : {repr(last_row)}, actual : {repr(row)})")
+                if var_row != last_row:
+                    raise TemplateVariableNotInLastRow(
+                        f"The variable {repr(var_name)} (table {repr(tab_name)}) isn't in the last row "
+                        f"(got: row {repr(var_row)}, expected: row {repr(last_row)})")
 
         tab_vars = {var.TextTable.Name[1:]: {text_var.String[1:]: None for text_var in tab_generator
                                              if text_var.TextTable.Name == var.TextTable.Name} for var in tab_generator}
