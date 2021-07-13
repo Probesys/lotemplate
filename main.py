@@ -51,6 +51,9 @@ class Template:
         text_vars = {var.String[1:]: None for var in var_generator if
                      not var.TextTable or var.TextTable.Name[0] != "$"}
 
+        if "" in text_vars.keys():
+            text_vars.pop("")
+
         tab_generator = set(var for var in var_generator if var.TextTable and var.TextTable.Name[0] == "$")
 
         tab_vars_pos = {var.TextTable.Name[1:]: ({text_var.String[1:]: int(text_var.Cell.CellName[1]) for text_var in
