@@ -105,9 +105,6 @@ class Template:
         :return: None
         """
 
-        if not self.variables:
-            return
-
         class JsonGenericVariableError(Template.JsonException):
             def __init__(self, diff, _json: dict[str: str, dict[str: str]], _template: dict[str: str, dict[str: str]],
                          message):
@@ -147,6 +144,10 @@ class Template:
             :param json_var: the dictionary to convert
             :return: the converted dictionary
             """
+
+            if type(json_var) is not dict:
+                raise JsonIncorrectValueType(f"The value type {repr(type(json_var).__name__)} isn't accepted in the "
+                                             f"json files (file {repr(json_name)})")
 
             template = {}
             for key, value in json_var.items():
