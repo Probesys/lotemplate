@@ -1,6 +1,6 @@
-import io
 import json
 import configargparse as cparse
+import urllib.request
 
 import uno
 import unohelper
@@ -134,7 +134,8 @@ class Template:
         import os
 
         self.cnx = cnx
-        self.file_url = unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + "/" + file_path)
+        self.file_url = file_path if is_network_based(file_path) else \
+            unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + "/" + file_path)
         self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
         self.variables = self.scan() if should_scan else None
 
@@ -261,9 +262,6 @@ class Template:
             bad_keys = list(json_incorrect.keys())
             bad_keys.sort()
             bad_key = bad_keys[0]
-            print(bad_key)
-            print(json_incorrect[bad_key])
-            print(template_vars[bad_key])
 
             def get_printable_value_type(var) -> str:
                 """
@@ -323,17 +321,34 @@ class Template:
         return
 
 
-def get_files_json(files: list[io.TextIOWrapper]) -> dict[str: dict[str: list[dict[str: str]], str]]:
+def is_network_based(file: str) -> bool:
+    """
+    Checks if the given file is supposed to be a local file or a network file
+
+    :param file: the file to check
+    :return: true if the file is network based, else false
+    """
+
+    return bool(file[:8] == "https://" or file[:7] == "http://" or file[:6] == "ftp://" or file[:7] == "file://")
+
+
+def get_files_json(file_path_list: list[str]) -> dict[str: dict[str: list[dict[str: str]], str]]:
     """
     converts all the specified json files to file_name: dict
 
-    :param files: the paths of all the json files to convert
+    :param file_path_list: the paths of all the json files to convert
     :return: format {file_name: values_dict,...} the converted list of dictionaries
     """
 
-    jsons = {f.name: json.loads(f.read()) for f in files}
-    for f in files:
-        f.close()
+    jsons = {}
+
+    for file_path in file_path_list:
+        if is_network_based(file_path):
+            jsons[file_path] = json.loads(urllib.request.urlopen(file_path).read())
+        else:
+            with open(file_path) as f:
+                jsons[file_path] = json.loads(f.read())
+
     return jsons
 
 
@@ -348,7 +363,7 @@ def set_arguments() -> cparse.Namespace:
     p = cparse.ArgumentParser(default_config_files=['config.ini'])
     p.add_argument('template_file',
                    help="Template file to scan or fill")
-    p.add_argument('--json', '-j', nargs='+', default=sys.stdin, type=cparse.FileType('r'),
+    p.add_argument('--json', '-j', nargs='+', default=sys.stdin,
                    help="Json file(s) that must fill the template, if any")
     p.add_argument('--output', '-o', default="output.odt",
                    help="Name of the filled file, if the template should be filled")
