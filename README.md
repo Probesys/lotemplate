@@ -8,6 +8,8 @@ use this script to automatically fill .odt templates with given values
 - the package `libreoffice-java-common`
 - some python packages specified in `requirement.txt` that you can install with `pip install -r requirements.txt`
 
+more informations on [the github page of unotools](https://github.com/t2y/unotools)
+
 ## Executing the script
 
 Run the command
@@ -45,15 +47,28 @@ flag=true, stuff=[a,b,c] (for details, see syntax at https://goo.gl/R74nmi).
 If an arg is specified in more than one place, then commandline values
 override config file values which override defaults.
 
-## Functionnal:
+## Unsolvable problems
+
+The error `main.com.sun.star.lang.DisposedException: Binary URP bridge disposed during call` happens frequently and 
+unpredictably, and this error stops the soffice processus. This error, particularly annoying, is unfortunately 
+impossible to fix, since it's a pyUNO - or soffice - bug, unresolved since 2015. It is therefore very unlikely that 
+this bug will ever be fixed.
+Here is a non-exhaustive list of cases that can cause this bug :
+- The `.~lock.[FILENAME].odt#` file is present in the folder where the document is open.  This file is created when the 
+  file is currently edited via libreoffice or openoffice, and deleted when the programs in which it is edited are 
+  closed.
+- The first line of the document is occupied by a table (juste jump a line, it will solve the problem)
+- The background of document is an image, and is overlayed by many textfields
+
+## Functionnal
 - scans the template to extract the variables sheet
 - Search for all possible errors before filling
 
-## Non-functionnal:
+## Non-functionnal
 - filling the template
 - export the template
 
-## To do:
+## To do
 1. Faire un CLI local (fin connecté à un serv sur lequel tourne libreoffice juste)
    - faire des tests unitaires
    - ajouter le filler texte
@@ -72,3 +87,4 @@ variables statiques et des variables dynamiques en même temps à envisager, dem
    - coder
 3. implémenter l'API sur nemoweb
    - [se renseigner sur Ruby on Rails](https://www.eduonix.com/new_dashboard/Learn-Ruby-on-Rails-By-Building-Projects)
+   - coder
