@@ -6,6 +6,55 @@ import uno
 import unohelper
 
 
+class JsonException(Exception):
+    pass
+
+
+class TemplateException(Exception):
+    pass
+
+
+class TemplateVariableNotInLastRow(TemplateException):
+    pass
+
+
+class JsonGenericVariableError(JsonException):
+    def __init__(self, diff, _json: dict[str: str, dict[str: str]], _template: dict[str: str, dict[str: str]],
+                 message):
+        Exception.__init__(self, message)
+        self.json = _json
+        self.diff = diff
+        self.template = _template
+
+
+class JsonMissingRequiredVariable(JsonGenericVariableError):
+    pass
+
+
+class JsonUnknownVariable(JsonGenericVariableError):
+    pass
+
+
+class JsonIncorrectTabVariables(JsonException):
+    pass
+
+
+class JsonIncorrectValueType(JsonException):
+    pass
+
+
+class JsonEmptyValue(JsonException):
+    pass
+
+
+class JsonUnknownArgument(JsonException):
+    pass
+
+
+class JsonInvalidArgument(JsonException):
+    pass
+
+
 class Connexion:
 
     def __init__(self, host: str, port: str):
@@ -25,11 +74,8 @@ class Connexion:
 
 
 class Template:
-    class JsonException(Exception):
-        pass
 
-    class TemplateException(Exception):
-        pass
+    # TODO: ajouter le nom du template dans toutes les erreurs
 
     def scan(self) -> dict[str: dict, str]:
         """
@@ -37,9 +83,6 @@ class Template:
 
         :return: list containing all the variables founded in the template
         """
-
-        class TemplateVariableNotInLastRow(Template.TemplateException):
-            pass
 
         search = self.doc.createSearchDescriptor()
         search.SearchRegularExpression = True
@@ -105,35 +148,6 @@ class Template:
         template-variables
         :return: None
         """
-
-        class JsonGenericVariableError(Template.JsonException):
-            def __init__(self, diff, _json: dict[str: str, dict[str: str]], _template: dict[str: str, dict[str: str]],
-                         message):
-                Exception.__init__(self, message)
-                self.json = _json
-                self.diff = diff
-                self.template = _template
-
-        class JsonMissingRequiredVariable(JsonGenericVariableError):
-            pass
-
-        class JsonUnknownVariable(JsonGenericVariableError):
-            pass
-
-        class JsonIncorrectTabVariables(Template.JsonException):
-            pass
-
-        class JsonIncorrectValueType(Template.JsonException):
-            pass
-
-        class JsonEmptyValue(Template.JsonException):
-            pass
-
-        class JsonUnknownArgument(Template.JsonException):
-            pass
-
-        class JsonInvalidArgument(Template.JsonException):
-            pass
 
         def convert_to_datas_template(
                 json_name, json_var: dict[str: str, list[dict[str: str]]]) -> dict[str: str, dict[str: str]]:
