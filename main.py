@@ -99,10 +99,10 @@ class Template:
 
         tab_generator = set(var for var in var_generator if var.TextTable and var.TextTable.Name[0] == "$")
 
-        tab_vars_pos = {var.TextTable.Name[1:]: ({text_var.String[1:]: int(text_var.Cell.CellName[1]) for text_var in
-                                                  tab_generator if text_var.TextTable.Name == var.TextTable.Name},
-                                                 len(var.TextTable.getRows()))
-                        for var in tab_generator}
+        tab_vars_pos = {var.TextTable.Name[1:]:
+                        ({text_var.String[1:]: int("".join(filter(str.isdigit, text_var.Cell.CellName)))
+                          for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name},
+                         len(var.TextTable.getRows())) for var in tab_generator}
 
         for tab_name, tab_infos in tab_vars_pos.items():
             tab_cells = tab_infos[0]
@@ -115,8 +115,8 @@ class Template:
                         f"(got: row {repr(var_row)}, expected: row {repr(last_row)})")
 
         tab_vars = {var.TextTable.Name[1:]:
-                    [{text_var.String[1:]: None for text_var in tab_generator
-                        if text_var.TextTable.Name == var.TextTable.Name}] for var in tab_generator}
+                        [{text_var.String[1:]: None for text_var in tab_generator
+                          if text_var.TextTable.Name == var.TextTable.Name}] for var in tab_generator}
 
         img_vars = {elem[1:]: {"path": None} for elem in self.doc.getGraphicObjects().getElementNames()
                     if elem[0] == '$'}
