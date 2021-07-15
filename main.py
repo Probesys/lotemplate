@@ -91,7 +91,7 @@ class Template:
 
         var_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
 
-        text_vars = {var.String[1:]: None for var in var_generator if
+        text_vars = {var.String[1:]: "" for var in var_generator if
                      not var.TextTable or var.TextTable.Name[0] != "$"}
 
         if "" in text_vars.keys():
@@ -115,10 +115,10 @@ class Template:
                         f"(got: row {repr(var_row)}, expected: row {repr(last_row)})")
 
         tab_vars = {var.TextTable.Name[1:]:
-                        [{text_var.String[1:]: None for text_var in tab_generator
+                        [{text_var.String[1:]: "" for text_var in tab_generator
                           if text_var.TextTable.Name == var.TextTable.Name}] for var in tab_generator}
 
-        img_vars = {elem[1:]: {"path": None} for elem in self.doc.getGraphicObjects().getElementNames()
+        img_vars = {elem[1:]: {"path": ""} for elem in self.doc.getGraphicObjects().getElementNames()
                     if elem[0] == '$'}
 
         return tab_vars | text_vars | img_vars
@@ -211,7 +211,7 @@ class Template:
                     value = [cleaned[0]]
 
                 elif type(value) == str:
-                    value = None
+                    value = ""
 
                 elif type(value) == dict:
                     if not value:
@@ -226,7 +226,7 @@ class Template:
                                 f"The argument type {repr(type(image_value).__name__)} is not supported in an image "
                                 f"(image {repr(key)}, file {repr(json_name)})")
 
-                    value = {"path": None}
+                    value = {"path": ""}
 
                 else:
                     raise JsonIncorrectValueType(f"The value type {repr(type(value).__name__)} isn't accepted")
@@ -273,7 +273,7 @@ class Template:
                 :return: a printable value type, following the variable representations
                 """
 
-                if type(var) == type(None):
+                if type(var) == str:
                     return "text"
                 elif type(var) == list:
                     return "table"
