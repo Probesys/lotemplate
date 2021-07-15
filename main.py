@@ -71,8 +71,9 @@ class Template:
                         f"The variable {repr(var_name)} (table {repr(tab_name)}) isn't in the last row "
                         f"(got: row {repr(var_row)}, expected: row {repr(last_row)})")
 
-        tab_vars = {var.TextTable.Name[1:]: {text_var.String[1:]: None for text_var in tab_generator
-                                             if text_var.TextTable.Name == var.TextTable.Name} for var in tab_generator}
+        tab_vars = {var.TextTable.Name[1:]:
+                    [{text_var.String[1:]: None for text_var in tab_generator
+                        if text_var.TextTable.Name == var.TextTable.Name}] for var in tab_generator}
 
         img_vars = {elem[1:]: {"path": None} for elem in self.doc.getGraphicObjects().getElementNames()
                     if elem[0] == '$'}
@@ -171,7 +172,7 @@ class Template:
                             row_cleaned[row_key] = None
                         if not row_cleaned:
                             raise JsonEmptyValue(
-                                f"Row n°{repr(i)} is empty (table {repr(key)}, file {repr(json_name)})")
+                                f"The row n°{repr(i)} is empty (table {repr(key)}, file {repr(json_name)})")
                         cleaned.append(row_cleaned)
 
                     if not cleaned:
@@ -193,7 +194,7 @@ class Template:
                                     f"file {repr(json_name)}), "
                                     f"isn't present in the row {repr(i if i > 0 else len(cleaned))}") from None
 
-                    value = cleaned[0]
+                    value = [cleaned[0]]
 
                 elif type(value) == str:
                     value = None
