@@ -25,6 +25,10 @@ class Images(unittest.TestCase):
         self.assertEqual({"image": {"path": ""}},
                          ootemplate.Template("unittest/files/img_vars.odt", connexion, False).scan())
 
+    def test_multiple_images(self):
+        self.assertEqual({"image1": {"path": ""}, "image2": {"path": ""}, "image3": {"path": ""}},
+                         ootemplate.Template("unittest/files/multiple_img_vars.odt", connexion, False).scan())
+
 
 class Tables(unittest.TestCase):
 
@@ -51,6 +55,60 @@ class Tables(unittest.TestCase):
     def test_two_tabs_varied(self):
         self.assertEqual({"tab": [{"var1": ""}], "tab2": [{"1": "", "2": "", "3": "", "4": "", "5": ""}]},
                          ootemplate.Template("unittest/files/two_tabs_varied.odt", connexion, False).scan())
+
+
+class All(unittest.TestCase):
+
+    def test_multiple_variables(self):
+        self.assertEqual({"tab3": [{"var1": "", "var2": ""}], "tab1": [{"cell1": "", "cell2": ""}], "Nom": "",
+                          "prenon": "", "signature": "", "photo": {"path": ""}, "static1": "", "static2": "",
+                          "static3": ""},
+                         ootemplate.Template("unittest/files/multiple_variables.odt", connexion, False).scan())
+
+    def test_multiple_pages(self):
+        self.assertEqual({"tab3": [{"var1": "", "var2": ""}], "tab1": [{"cell1": "", "cell2": ""}], "Nom": "",
+                          "prenon": "", "signature": "", "photo": {"path": ""}, "static1": "", "static2": "",
+                          "static3": "", "date": "", "lieu": ""},
+                         ootemplate.Template("unittest/files/multiple_pages.odt", connexion, False).scan())
+
+    def test_online_doc(self):
+        self.assertEqual({}, ootemplate.Template(
+            "https://file-examples-com.github.io/uploads/2017/02/file-sample_100kB.docx", connexion, False).scan())
+
+    def test_invalid_path(self):
+        with self.assertRaises(Exception):
+            ootemplate.Template("bfevg", connexion, True)
+
+
+class OtherFormats(unittest.TestCase):
+
+    def test_ott(self):
+        self.assertEqual({"tab1": [{"cell1": "", "cell2": ""}], "Nom": "",
+                          "prenon": "", "signature": "", "photo": {"path": ""}},
+                         ootemplate.Template("unittest/files/format.ott", connexion, False).scan())
+
+    def test_docx(self):
+        self.assertEqual({"cell1": "", "cell2": "", "Nom": "",
+                          "prenon": "", "signature": "", "photo": {"path": ""}},
+                         ootemplate.Template("unittest/files/format.docx", connexion, False).scan())
+
+    def test_text(self):
+        self.assertEqual({"signature": ""},
+                         ootemplate.Template("unittest/files/format.txt", connexion, False).scan())
+
+    def test_html(self):
+        self.assertEqual({"cell1": "", "cell2": "", "Nom": "",
+                          "prenon": "", "signature": "", "photo": {"path": ""}},
+                         ootemplate.Template("unittest/files/format.html", connexion, False).scan())
+
+    def test_rtf(self):
+        self.assertEqual({"cell1": "", "cell2": "", "Nom": "",
+                          "prenon": "", "signature": ""},
+                         ootemplate.Template("unittest/files/format.rtf", connexion, False).scan())
+
+    def test_invalid(self):
+        with self.assertRaises(ootemplate.TemplateInvalidFormat):
+            ootemplate.Template("unittest/files/invalid_format.jpg", connexion, False).scan()
 
 
 if __name__ == '__main__':
