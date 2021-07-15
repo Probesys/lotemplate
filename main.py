@@ -18,6 +18,10 @@ class TemplateVariableNotInLastRow(TemplateException):
     pass
 
 
+class TemplateInvalidFormat(TemplateException):
+    pass
+
+
 class JsonGenericVariableError(JsonException):
     def __init__(self, diff, _json: dict[str: str, dict[str: str]], _template: dict[str: str, dict[str: str]],
                  message):
@@ -101,7 +105,7 @@ class Template:
 
         tab_vars_pos = {var.TextTable.Name[1:]:
                         ({text_var.String[1:]: int("".join(filter(str.isdigit, text_var.Cell.CellName)))
-                          for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name},
+                            for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name},
                          len(var.TextTable.getRows())) for var in tab_generator}
 
         for tab_name, tab_infos in tab_vars_pos.items():
@@ -115,8 +119,8 @@ class Template:
                         f"(got: row {repr(var_row)}, expected: row {repr(last_row)})")
 
         tab_vars = {var.TextTable.Name[1:]:
-                        [{text_var.String[1:]: "" for text_var in tab_generator
-                          if text_var.TextTable.Name == var.TextTable.Name}] for var in tab_generator}
+                    [{text_var.String[1:]: "" for text_var in tab_generator
+                        if text_var.TextTable.Name == var.TextTable.Name}] for var in tab_generator}
 
         img_vars = {elem[1:]: {"path": ""} for elem in self.doc.getGraphicObjects().getElementNames()
                     if elem[0] == '$'}
@@ -137,6 +141,8 @@ class Template:
         self.file_url = file_path if is_network_based(file_path) else \
             unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + "/" + file_path)
         self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
+        if not self.doc:
+            raise TemplateInvalidFormat(f"The given format is invalid.")
         self.variables = self.scan() if should_scan else None
 
     def compare_variables(self, given_variables: dict[str: dict[str: str, list[dict[str: str]]]]) -> None:
@@ -184,7 +190,7 @@ class Template:
                                 raise JsonIncorrectValueType(
                                     f"The value type {repr(type(row_value).__name__)} isn't accepted in a row "
                                     f"(row {repr(i)}, table {repr(key)}, file {repr(json_name)})")
-                            row_cleaned[row_key] = None
+                            row_cleaned[row_key] = ""
                         if not row_cleaned:
                             raise JsonEmptyValue(
                                 f"The row n°{repr(i)} is empty (table {repr(key)}, file {repr(json_name)})")
