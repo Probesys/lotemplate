@@ -156,90 +156,6 @@ class Template:
         :return: None
         """
 
-        def convert_to_datas_template(
-                json_name, json_var: dict[str: str, list[dict[str: str]]]) -> dict[str: str, dict[str: str]]:
-            """
-            converts a dictionary of variables for filling a template to a dictionary of variables types,
-            like the one returned by self.scan()
-
-            :param json_name: the name of the file
-            :param json_var: the dictionary to convert
-            :return: the converted dictionary
-            """
-
-            if type(json_var) is not dict:
-                raise JsonIncorrectValueType(f"The value type {repr(type(json_var).__name__)} isn't accepted in the "
-                                             f"json files (file {repr(json_name)})")
-
-            template = {}
-            for key, value in json_var.items():
-                if type(value) == list:
-
-                    cleaned = []
-
-                    for i in range(len(value)):
-                        if type(value[i]) != dict:
-                            raise JsonIncorrectValueType(
-                                f"The value type {repr(type(value[i]).__name__)} isn't accepted in a table "
-                                f"(table {repr(key)}, file {repr(json_name)}")
-
-                        row_cleaned = {}
-
-                        for row_key, row_value in value[i].items():
-                            if type(row_value) != str:
-                                raise JsonIncorrectValueType(
-                                    f"The value type {repr(type(row_value).__name__)} isn't accepted in a row "
-                                    f"(row {repr(i)}, table {repr(key)}, file {repr(json_name)})")
-                            row_cleaned[row_key] = ""
-                        if not row_cleaned:
-                            raise JsonEmptyValue(
-                                f"The row n°{repr(i)} is empty (table {repr(key)}, file {repr(json_name)})")
-                        cleaned.append(row_cleaned)
-
-                    if not cleaned:
-                        raise JsonEmptyValue(f"Table {repr(key)} is empty (file {repr(json_name)})")
-
-                    for i in range(len(cleaned)):
-                        if cleaned[i] != cleaned[i - 1]:
-
-                            try:
-                                search_error(cleaned[i], cleaned[i - 1], key)
-                            except JsonUnknownVariable as err:
-                                raise JsonIncorrectTabVariables(
-                                    f"The variable {repr(err.diff)}, (row {repr(i if i > 0 else len(cleaned))}, table "
-                                    f"{repr(key)}, file {repr(json_name)}), "
-                                    f"isn't present in the row {repr(i + 1)}") from None
-                            except JsonMissingRequiredVariable as err:
-                                raise JsonIncorrectTabVariables(
-                                    f"The variable {repr(err.diff)}, (row {repr(i + 1)}, table {repr(key)}, "
-                                    f"file {repr(json_name)}), "
-                                    f"isn't present in the row {repr(i if i > 0 else len(cleaned))}") from None
-
-                    value = [cleaned[0]]
-
-                elif type(value) == str:
-                    value = ""
-
-                elif type(value) == dict:
-                    if not value:
-                        raise JsonEmptyValue(f"Image {repr(key)} is empty (file {repr(json_name)})")
-                    for image_key, image_value in value.items():
-                        if image_key != "path":
-                            raise JsonUnknownArgument(
-                                f"The argument {repr(image_key)} is not supported in an image (image {repr(key)}, "
-                                f"file {repr(json_name)}")
-                        if type(image_value) != str:
-                            raise JsonInvalidArgument(
-                                f"The argument type {repr(type(image_value).__name__)} is not supported in an image "
-                                f"(image {repr(key)}, file {repr(json_name)})")
-
-                    value = {"path": ""}
-
-                else:
-                    raise JsonIncorrectValueType(f"The value type {repr(type(value).__name__)} isn't accepted")
-                template[key] = value
-            return template
-
         def search_error(template_vars: dict[str: str, dict[str: str]],
                          json_vars: dict[str: str, dict[str: str]],
                          file_name: str) -> None:
@@ -325,6 +241,91 @@ class Template:
     def export(self, name: str) -> None:
         # TODO: à coder
         return
+
+
+def convert_to_datas_template(
+        json_name, json_var: dict[str: str, list[dict[str: str]]]) -> dict[str: str, dict[str: str]]:
+    """
+    converts a dictionary of variables for filling a template to a dictionary of variables types,
+    like the one returned by self.scan()
+
+    :param json_name: the name of the file
+    :param json_var: the dictionary to convert
+    :return: the converted dictionary
+    """
+
+    if type(json_var) is not dict:
+        raise JsonIncorrectValueType(f"The value type {repr(type(json_var).__name__)} isn't accepted in the "
+                                     f"json files (file {repr(json_name)})")
+
+    template = {}
+    for key, value in json_var.items():
+        if type(value) == list:
+
+            cleaned = []
+
+            for i in range(len(value)):
+                if type(value[i]) != dict:
+                    raise JsonIncorrectValueType(
+                        f"The value type {repr(type(value[i]).__name__)} isn't accepted in a table "
+                        f"(table {repr(key)}, file {repr(json_name)}")
+
+                row_cleaned = {}
+
+                for row_key, row_value in value[i].items():
+                    if type(row_value) != str:
+                        raise JsonIncorrectValueType(
+                            f"The value type {repr(type(row_value).__name__)} isn't accepted in a row "
+                            f"(row {repr(i)}, table {repr(key)}, file {repr(json_name)})")
+                    row_cleaned[row_key] = ""
+                if not row_cleaned:
+                    raise JsonEmptyValue(
+                        f"The row n°{repr(i)} is empty (table {repr(key)}, file {repr(json_name)})")
+                cleaned.append(row_cleaned)
+
+            if not cleaned:
+                raise JsonEmptyValue(f"Table {repr(key)} is empty (file {repr(json_name)})")
+
+            for i in range(len(cleaned)):
+                if cleaned[i] != cleaned[i - 1]:
+
+                    try:
+                        search_error(cleaned[i], cleaned[i - 1], key)
+                    except JsonUnknownVariable as err:
+                        raise JsonIncorrectTabVariables(
+                            f"The variable {repr(err.diff)}, (row {repr(i if i > 0 else len(cleaned))}, table "
+                            f"{repr(key)}, file {repr(json_name)}), "
+                            f"isn't present in the row {repr(i + 1)}") from None
+                    except JsonMissingRequiredVariable as err:
+                        raise JsonIncorrectTabVariables(
+                            f"The variable {repr(err.diff)}, (row {repr(i + 1)}, table {repr(key)}, "
+                            f"file {repr(json_name)}), "
+                            f"isn't present in the row {repr(i if i > 0 else len(cleaned))}") from None
+
+            value = [cleaned[0]]
+
+        elif type(value) == str:
+            value = ""
+
+        elif type(value) == dict:
+            if not value:
+                raise JsonEmptyValue(f"Image {repr(key)} is empty (file {repr(json_name)})")
+            for image_key, image_value in value.items():
+                if image_key != "path":
+                    raise JsonUnknownArgument(
+                        f"The argument {repr(image_key)} is not supported in an image (image {repr(key)}, "
+                        f"file {repr(json_name)}")
+                if type(image_value) != str:
+                    raise JsonInvalidArgument(
+                        f"The argument type {repr(type(image_value).__name__)} is not supported in an image "
+                        f"(image {repr(key)}, file {repr(json_name)})")
+
+            value = {"path": ""}
+
+        else:
+            raise JsonIncorrectValueType(f"The value type {repr(type(value).__name__)} isn't accepted")
+        template[key] = value
+    return template
 
 
 def is_network_based(file: str) -> bool:
