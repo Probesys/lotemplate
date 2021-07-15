@@ -8,7 +8,8 @@ class Text(unittest.TestCase):
 
     def test_noformat(self):
         self.assertEqual({"gjerg": "", "jean": "", "aerhh": "", "rh": "", "aet": "", "h": ""},
-                         ootemplate.Template("unittest/files/templates/text_vars_noformat.odt", connexion, False).scan())
+                         ootemplate.Template("unittest/files/templates/text_vars_noformat.odt",
+                                             connexion, False).scan())
 
     def test_format(self):
         self.assertEqual({"gjerg": "", "jean": "", "aerhh": "", "rh": "", "aet": "", "h": ""},
@@ -38,11 +39,13 @@ class Tables(unittest.TestCase):
 
     def test_one_row_varied(self):
         self.assertEqual({"tab": [{"var": ""}]},
-                         ootemplate.Template("unittest/files/templates/one_row_tab_varied.odt", connexion, False).scan())
+                         ootemplate.Template("unittest/files/templates/one_row_tab_varied.odt",
+                                             connexion, False).scan())
 
     def test_two_row_varied(self):
         self.assertEqual({"tab": [{"var1": ""}]},
-                         ootemplate.Template("unittest/files/templates/two_row_tab_varied.odt", connexion, False).scan())
+                         ootemplate.Template("unittest/files/templates/two_row_tab_varied.odt",
+                                             connexion, False).scan())
 
     def test_invalid_var(self):
         with self.assertRaises(ootemplate.TemplateVariableNotInLastRow):
@@ -63,7 +66,8 @@ class All(unittest.TestCase):
         self.assertEqual({"tab3": [{"var1": "", "var2": ""}], "tab1": [{"cell1": "", "cell2": ""}], "Nom": "",
                           "prenon": "", "signature": "", "photo": {"path": ""}, "static1": "", "static2": "",
                           "static3": ""},
-                         ootemplate.Template("unittest/files/templates/multiple_variables.odt", connexion, False).scan())
+                         ootemplate.Template("unittest/files/templates/multiple_variables.odt", connexion,
+                                             False).scan())
 
     def test_multiple_pages(self):
         self.assertEqual({"tab3": [{"var1": "", "var2": ""}], "tab1": [{"cell1": "", "cell2": ""}], "Nom": "",
