@@ -57,5 +57,22 @@ class Tables(unittest.TestCase):
             ))
 
 
+class Images(unittest.TestCase):
+
+    temp = ootemplate.Template("unittest/files/comparaison/img_vars.odt", cnx, False)
+
+    def test_valid(self):
+        datas = to_data_list("files/comparaison/img_vars_valid.json")
+        self.assertEqual(datas, self.temp.compare_variables(datas))
+
+    def test_invalid_unknown_variable(self):
+        with self.assertRaises(ootemplate.err.JsonUnknownVariable):
+            self.temp.compare_variables(to_data_list("files/comparaison/img_vars_invalid_other_image.json"))
+
+    def test_invalid_missing_variable(self):
+        with self.assertRaises(ootemplate.err.JsonMissingRequiredVariable):
+            self.temp.compare_variables(to_data_list("unittest/files/comparaison/img_vars_invalid_missing_img.json"))
+
+
 if __name__ == '__main__':
     unittest.main()
