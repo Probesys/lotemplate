@@ -1,4 +1,6 @@
 import json
+import sys
+import traceback
 import configargparse as cparse
 import urllib.request
 
@@ -137,7 +139,8 @@ class Template:
             raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_url)})")
         self.variables = self.scan() if should_scan else None
 
-    def compare_variables(self, given_variables: dict[str: dict[str: str, list[dict[str: str]]]]) -> None:
+    def compare_variables(self, given_variables: dict[str: dict[str: str, list[dict[str: str]]]]) \
+            -> dict[str: dict[str: str, list[dict[str: str]]]]:
         """
         Compare all the *args* dictionaries to *self*,
         to verify if all the variables presents in *self* are presents in the given dictionaries, or inversely.
@@ -148,14 +151,25 @@ class Template:
         :return: None
         """
 
-        for file, json_dict in given_variables.items():
-            json_variables = convert_to_datas_template(file, json_dict)
+        valid_variables = {}
 
-            if not json_variables == self.variables:
-                search_error(self.variables, json_variables, file, self.file_url)
+        for file, json_dict in given_variables.items():
+            try:
+                json_variables = convert_to_datas_template(file, json_dict)
+
+                if not json_variables == self.variables:
+                    search_error(self.variables, json_variables, file, self.file_url)
+                else:
+                    valid_variables[file] = json_dict
+            except Exception as exception:
+                print(f'Ignoring exception on file {file}', file=sys.stderr)
+                traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+                continue
+
+        return valid_variables
 
     def fill(self, given_variables: dict[str: dict[str: str, list[dict[str: str]]]]) -> None:
-        self.compare_variables(given_variables)
+        vars_list = self.compare_variables(given_variables)
 
         # TODO: à coder
 
@@ -346,11 +360,16 @@ def get_files_json(file_path_list: list[str]) -> dict[str: dict[str: list[dict[s
     jsons = {}
 
     for file_path in file_path_list:
-        if is_network_based(file_path):
-            jsons[file_path] = json.loads(urllib.request.urlopen(file_path).read())
-        else:
-            with open(file_path) as f:
-                jsons[file_path] = json.loads(f.read())
+        try:
+            if is_network_based(file_path):
+                jsons[file_path] = json.loads(urllib.request.urlopen(file_path).read())
+            else:
+                with open(file_path) as f:
+                    jsons[file_path] = json.loads(f.read())
+        except Exception as exception:
+            print(f'Ignoring exception on file {file_path}', file=sys.stderr)
+            traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+            continue
 
     return jsons
 
