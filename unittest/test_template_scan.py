@@ -60,7 +60,7 @@ class Tables(unittest.TestCase):
                          ootemplate.Template("unittest/files/templates/two_tabs_varied.odt", connexion, False).scan())
 
 
-class All(unittest.TestCase):
+class Generic(unittest.TestCase):
 
     def test_multiple_variables(self):
         self.assertEqual({"tab3": [{"var1": "", "var2": ""}], "tab1": [{"cell1": "", "cell2": ""}], "Nom": "",
@@ -75,7 +75,7 @@ class All(unittest.TestCase):
                           "static3": "", "date": "", "lieu": ""},
                          ootemplate.Template("unittest/files/templates/multiple_pages.odt", connexion, False).scan())
 
-    def test_online_doc(self):
+    def test_online_empty_doc(self):
         self.assertEqual({}, ootemplate.Template(
             "https://file-examples-com.github.io/uploads/2017/02/file-sample_100kB.docx", connexion, False).scan())
 
