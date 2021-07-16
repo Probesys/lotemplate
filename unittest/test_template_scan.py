@@ -48,11 +48,11 @@ class Tables(unittest.TestCase):
                                              connexion, False).scan())
 
     def test_invalid_var(self):
-        with self.assertRaises(ootemplate.TemplateVariableNotInLastRow):
+        with self.assertRaises(ootemplate.err.TemplateVariableNotInLastRow):
             ootemplate.Template("unittest/files/templates/invalid_var_tab.odt", connexion, False).scan()
 
     def test_invalid_vars(self):
-        with self.assertRaises(ootemplate.TemplateVariableNotInLastRow):
+        with self.assertRaises(ootemplate.err.TemplateVariableNotInLastRow):
             ootemplate.Template("unittest/files/templates/invalid_vars_tab.odt", connexion, False).scan()
 
     def test_two_tabs_varied(self):
@@ -111,7 +111,7 @@ class OtherFormats(unittest.TestCase):
                          ootemplate.Template("unittest/files/templates/format.rtf", connexion, False).scan())
 
     def test_invalid(self):
-        with self.assertRaises(ootemplate.TemplateInvalidFormat):
+        with self.assertRaises(ootemplate.err.TemplateInvalidFormat):
             ootemplate.Template("unittest/files/templates/invalid_format.jpg", connexion, False).scan()
 
 
