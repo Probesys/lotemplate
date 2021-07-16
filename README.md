@@ -57,9 +57,6 @@ All the specified files can be local or network-based
   the array, but only on the last line. in the same way as for images, name your array variable
   with a '$' in front of it.
 
-*Note: envisager la possibilitée de noter les variables de tableaux d'une autre manière (ex : '&') pour pouvoir placer
-des variables statiques et des variables de tableau dynamiques, demander son avis à cyril dès son retour*
-
 Get a file to fill with the `--scan` argument, and fill the fields you want. Add elements to the list
 of an array to dynamically add rows
 
@@ -108,3 +105,9 @@ Here is a non-exhaustive list of cases that can cause this bug :
 3. implémenter l'API sur nemoweb
    - [se renseigner sur Ruby on Rails](https://www.eduonix.com/new_dashboard/Learn-Ruby-on-Rails-By-Building-Projects)
    - coder
+    
+## To consider
+
+- la possibilitée de noter les variables de tableaux d'une autre manière (ex : '&') pour pouvoir placer
+des variables statiques et des variables de tableau dynamiques, demander son avis à cyril dès son retour
+- la possibilitée d'avoir des images dans les tableaux dynamiques
