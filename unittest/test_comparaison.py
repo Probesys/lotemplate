@@ -1,0 +1,30 @@
+import unittest
+import main as ootemplate
+import test_json_convertion
+
+cnx = ootemplate.Connexion("localhost", "2002")
+
+
+def to_data_list(file: str) -> dict:
+    return {file: ootemplate.convert_to_datas_template(file, test_json_convertion.file_to_dict(file))}
+
+
+class Text(unittest.TestCase):
+
+    temp = ootemplate.Template("unittest/files/comparaison/text_vars.odt", cnx, False)
+
+    def test_valid(self):
+        datas = to_data_list("files/comparaison/text_vars_valid.json")
+        self.assertEqual(datas, self.temp.compare_variables(datas))
+
+    def test_invalid_supplement_variable(self):
+        with self.assertRaises(ootemplate.err.JsonUnknownVariable):
+            self.temp.compare_variables(to_data_list("files/comparaison/text_vars_invalid_variable.json"))
+
+    def test_invalid_missing_variable(self):
+        with self.assertRaises(ootemplate.err.JsonMissingRequiredVariable):
+            self.temp.compare_variables(to_data_list("files/comparaison/text_vars_invalid_missing_variable.json"))
+
+
+if __name__ == '__main__':
+    unittest.main()

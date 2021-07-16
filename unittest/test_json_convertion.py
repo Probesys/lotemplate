@@ -5,7 +5,7 @@ import urllib.request
 import main as ootemplate
 
 
-def file_to_dict(file_path: str):
+def file_to_dict(file_path: str) -> dict:
     if ootemplate.is_network_based(file_path):
         return json.loads(urllib.request.urlopen(file_path).read())
     else:
