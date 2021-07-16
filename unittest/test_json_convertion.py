@@ -4,8 +4,6 @@ import urllib.request
 
 import main as ootemplate
 
-connexion = ootemplate.Connexion("localhost", "2002")
-
 
 def file_to_dict(file_path: str):
     if ootemplate.is_network_based(file_path):
