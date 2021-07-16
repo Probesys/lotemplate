@@ -1,0 +1,11 @@
+{
+	"tab": [
+		{"var": "test"},
+		{"var": "test2"}
+	],
+	"tab2": [
+		{"var1": "test", "var2": "qergh"},
+		{"var1": "erh", "var2": "qergh"},
+		{"var1": "qerh", "var2": "erh"}
+	]
+}
