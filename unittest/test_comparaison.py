@@ -11,7 +11,7 @@ def to_data_list(file: str) -> dict:
 
 class Text(unittest.TestCase):
 
-    temp = ootemplate.Template("unittest/files/comparaison/text_vars.odt", cnx, False)
+    temp = ootemplate.Template("unittest/files/comparaison/text_vars.odt", cnx, True)
 
     def test_valid(self):
         datas = to_data_list("files/comparaison/text_vars_valid.json")
@@ -29,16 +29,16 @@ class Text(unittest.TestCase):
         with self.assertRaises(ootemplate.err.JsonIncorrectValueType):
             self.temp.compare_variables(to_data_list("files/comparaison/text_vars_incorrect_value.json"))
 
-    temp_tab = ootemplate.Template("unittest/files/comparaison/static_tab.odt", cnx, False)
+    temp_tab = ootemplate.Template("unittest/files/comparaison/static_tab.odt", cnx, True)
 
     def test_tab_valid(self):
         datas = to_data_list("files/comparaison/static_tab_valid.json")
-        self.assertEqual(datas, self.temp.compare_variables(datas))
+        self.assertEqual(datas, self.temp_tab.compare_variables(datas))
 
 
 class Tables(unittest.TestCase):
 
-    temp = ootemplate.Template("unittest/files/comparaison/two_row_tab_varied.odt", cnx, False)
+    temp = ootemplate.Template("unittest/files/comparaison/two_row_tab_varied.odt", cnx, True)
 
     def test_valid(self):
         datas = to_data_list("files/comparaison/two_row_tab_varied_valid.json")
@@ -59,7 +59,7 @@ class Tables(unittest.TestCase):
 
 class Images(unittest.TestCase):
 
-    temp = ootemplate.Template("unittest/files/comparaison/img_vars.odt", cnx, False)
+    temp = ootemplate.Template("unittest/files/comparaison/img_vars.odt", cnx, True)
 
     def test_valid(self):
         datas = to_data_list("files/comparaison/img_vars_valid.json")
@@ -71,7 +71,7 @@ class Images(unittest.TestCase):
 
     def test_invalid_missing_variable(self):
         with self.assertRaises(ootemplate.err.JsonMissingRequiredVariable):
-            self.temp.compare_variables(to_data_list("unittest/files/comparaison/img_vars_invalid_missing_img.json"))
+            self.temp.compare_variables(to_data_list("files/comparaison/img_vars_invalid_missing_img.json"))
 
 
 if __name__ == '__main__':
