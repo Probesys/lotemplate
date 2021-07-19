@@ -1,3 +1,4 @@
+import os
 import json
 import sys
 import traceback
@@ -6,6 +7,8 @@ import urllib.request
 
 import uno
 import unohelper
+from com.sun.star.beans import PropertyValue
+from com.sun.star.io import IOException
 
 
 class Errors:
@@ -14,6 +17,9 @@ class Errors:
         pass
 
     class TemplateException(Exception):
+        pass
+
+    class ExportException(Exception):
         pass
 
     class TemplateVariableNotInLastRow(TemplateException):
@@ -49,6 +55,9 @@ class Errors:
         pass
 
     class JsonInvalidArgument(JsonException):
+        pass
+
+    class ExportInvalidFormat(ExportException):
         pass
 
 
@@ -129,17 +138,18 @@ class Template:
         :param cnx:
         :param should_scan:
         """
-        import os
 
         self.cnx = cnx
         self.file_url = file_path if is_network_based(file_path) else \
-            unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + "/" + file_path)
+            (unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + "/" + file_path if
+                                           file_path[0] != '/' else file_path))
         self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
         if not self.doc:
             raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_url)})")
         self.variables = self.scan() if should_scan else None
+        self.new = None
 
-    def compare_variables(self, given_variables: dict[str: dict[str: str, list[dict[str: str]]]]) \
+    def compare_variables(self, given_variables: dict[str: dict[str: str, dict[str: str], list[dict[str: str]]]]) \
             -> dict[str: dict[str: str, list[dict[str: str]]]]:
         """
         Compare all the *args* dictionaries to *self*,
@@ -168,17 +178,70 @@ class Template:
 
         return valid_variables
 
-    def fill(self, given_variables: dict[str: dict[str: str, list[dict[str: str]]]]) -> None:
-        vars_list = self.compare_variables(given_variables)
+    def fill(self, variables: dict[str: str, list[dict[str: str]], dict[str: str]]) -> None:
 
-        # TODO: à coder
+        if self.new:
+            self.new.dispose()
+            self.new.close(True)
 
-    def export(self, name: str) -> None:
-        # TODO: à coder
-        return
+        self.new = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
+
+        for variable, value in vars_list.items():
+            # TODO: à coder
+            pass
+
+    def export(self, name: str) -> [str, None]:
+        """
+        Exports the newly generated document, if any.
+
+        :param name: the path/name with file extension of the file to export.
+        file type is automatically deducted from it.
+        :return: the full path of the exported document, or None if there is no document to export
+        """
+
+        if not self.new:
+            return
+
+        file_type = name.split(".")[-1]
+        path = os.path.dirname(os.path.abspath(__file__)) + "/" + name if name[0] != '/' else name
+        path_without_num = path
+        i = 1
+        while os.path.isfile(path):
+            path = path_without_num[:-(len(file_type) + 1)] + f"_{i}." + file_type
+            i += 1
+
+        url = unohelper.systemPathToFileUrl(path)
+        formats = {
+            "odt": "writer8",
+            "pdf": "writer_pdf_Export",
+            "html": "HTML (StarWriter)",
+            "docx": "Office Open XML Text",
+            "png": "writer_png_Export",
+        }
+
+        try:
+            self.new.storeToURL(url, (PropertyValue("FilterName", 0, formats[file_type], 0),))
+
+        except KeyError:
+            raise err.ExportInvalidFormat(f"Invalid export format {repr(file_type)}")
+        except IOException as e:
+            raise err.ExportException(f"Unable to save document to {repr(path)} : error {e.value}")
+
+    def close(self) -> None:
+        """
+        close the template
+
+        :return: None
+        """
+        if self.new:
+            self.new.dispose()
+            self.new.close(True)
+        self.doc.dispose()
+        self.doc.close(True)
 
 
-def search_error(template_vars: dict[str: str, dict[str: str]], json_vars: dict[str: str, dict[str: str]],
+def search_error(template_vars: dict[str: str, dict[str: str], list[dict[str: str]]],
+                 json_vars: dict[str: str, dict[str: str],  list[dict[str: str]]],
                  json_name: str, template_name: str) -> None:
     """
     find out which variable is a problem, and raise the required error
@@ -255,8 +318,8 @@ def search_error(template_vars: dict[str: str, dict[str: str]], json_vars: dict[
         f"template {repr(template_name)}, but no reason was found")
 
 
-def convert_to_datas_template(
-        json_name: str, json_var: dict[str: str, list[dict[str: str]]]) -> dict[str: str, dict[str: str]]:
+def convert_to_datas_template(json_name: str, json_var: dict[str: str, dict[str, str], list[dict[str: str]]]) \
+        -> dict[str: str, dict[str: str], list[dict[str: str]]]:
     """
     converts a dictionary of variables for filling a template to a dictionary of variables types,
     like the one returned by self.scan()
@@ -352,7 +415,7 @@ def is_network_based(file: str) -> bool:
     return bool(file[:8] == "https://" or file[:7] == "http://" or file[:6] == "ftp://" or file[:7] == "file://")
 
 
-def get_files_json(file_path_list: list[str]) -> dict[str: dict[str: list[dict[str: str]], str]]:
+def get_files_json(file_path_list: list[str]) -> dict[str: dict[str: list[dict[str: str]], str, dict[str: str]]]:
     """
     converts all the specified json files to file_name: dict
 
@@ -390,8 +453,9 @@ def set_arguments() -> cparse.Namespace:
                    help="Template file to scan or fill")
     p.add_argument('--json', '-j', nargs='+', default=sys.stdin,
                    help="Json file(s) that must fill the template, if any")
-    p.add_argument('--output', '-o', default="output.odt",
-                   help="Name of the filled file, if the template should be filled")
+    p.add_argument('--output', '-o', default="output.pdf",
+                   help="Name of the filled file, if the template should be filled. supported formats: "
+                        "pdf, html, docx, png, odt")
     p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
     p.add_argument('--host', required=True, help='Host address to use for the libreoffice connection')
     p.add_argument('--port', required=True, help='Port to use for the libreoffice connexion')
@@ -426,5 +490,12 @@ if __name__ == '__main__':
 
     # fill and export the template if it should
     else:
-        document.fill(get_files_json(args.json))
-        document.export(args.output)
+        vars_list = document.compare_variables(get_files_json(args.json))
+        for json_name, json_values in vars_list.items():
+            document.fill(get_files_json(args.json))
+            document.export(
+                args.output if len(vars_list) == 1 else
+                ".".join(args.output.split(".")[:-1]) + '_' + json_name.split("/")[-1][:-5] + "." +
+                args.output.split(".")[-1]
+            )
+    document.close()
