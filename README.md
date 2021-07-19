@@ -18,8 +18,9 @@ on your terminal or a server
 
 Then run the script with the following arguments :
 ```
-usage: main.py [-h] [--json [JSON]] [--output OUTPUT] [--config CONFIG] --host
-               HOST --port PORT [--scan] [--force_replacement]
+usage: main.py [-h] [--json JSON [JSON ...]] [--output OUTPUT]
+               [--config CONFIG] --host HOST --port PORT [--scan]
+               [--force_replacement]
                template_file
 
 positional arguments:
@@ -27,11 +28,11 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --json [JSON], -j [JSON]
+  --json JSON [JSON ...], -j JSON [JSON ...]
                         Json file(s) that must fill the template, if any
   --output OUTPUT, -o OUTPUT
                         Name of the filled file, if the template should be
-                        filled
+                        filled. supported formats: pdf, html, docx, png, odt
   --config CONFIG, -c CONFIG
                         Configuration file path
   --host HOST           Host address to use for the libreoffice connection
@@ -80,6 +81,13 @@ Here is a non-exhaustive list of cases that can cause this bug :
   closed.
 - The first line of the document is occupied by a table (juste jump a line, it will solve the problem)
 - The background of document is an image, and is overlayed by many textfields
+
+The amount of memory used by soffice can increase with its use, even when open files are properly closed (which is the 
+case). Again, this is a bug in OpenOffice/soffice that has existed for years.
+
+For trying to fix these problems, you can try:
+- Use the most recent stable release of LibreOffice (less memory, more stable, fewer crashes)
+- Use the native LibreOffice python binary to run this script
 
 ## Functionnal
 - scans the template to extract the variables sheet
