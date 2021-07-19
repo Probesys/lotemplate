@@ -102,8 +102,6 @@ For trying to fix these problems, you can try:
    - ajouter le filler texte
    - ajouter le filler tableaux
    - ajouter le filler graphique
-   - ajouter l'export (pdf, docx, odt)
-   - ajouter l'import docx et pdf - skipper les tableaux et les images, irréalisable en l'état
    - séparer le core de la couche CLI
    - débogger un max
 2. en faire une API REST basée sur le même noyau avec flask
