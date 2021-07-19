@@ -91,7 +91,6 @@ Here is a non-exhaustive list of cases that can cause this bug :
 
 ## To do
 1. Faire un CLI local (fin connecté à un serv sur lequel tourne libreoffice juste)
-   - fix tous les bug du comparateur
    - ajouter le filler texte
    - ajouter le filler tableaux
    - ajouter le filler graphique
