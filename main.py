@@ -190,6 +190,9 @@ def search_error(template_vars: dict[str: str, dict[str: str]], json_vars: dict[
     :return: None
     """
 
+    if json_vars == template_vars:
+        return
+
     def get_printable_value_type(var) -> str:
         """
         returns the value type of the variable within the document, not the pythonic type
