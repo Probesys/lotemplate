@@ -190,6 +190,8 @@ def search_error(template_vars: dict[str: str, dict[str: str]], json_vars: dict[
     :return: None
     """
 
+    print(template_vars, json_vars, sep="\n")
+
     if json_vars == template_vars:
         return
 
@@ -235,14 +237,14 @@ def search_error(template_vars: dict[str: str, dict[str: str]], json_vars: dict[
             f"{repr(get_printable_value_type(template_vars[bad_key]))}, but is of type "
             f"{repr(get_printable_value_type(json_incorrect[bad_key]))}, like in the template {repr(template_name)}")
 
-    json_missing = [key for key in set(template_vars[bad_key]) - set(json_vars[bad_key])]
+    json_missing = [key for key in set(template_vars[bad_key][0]) - set(json_vars[bad_key][0])]
     if json_missing:
         raise err.JsonMissingRequiredVariable(
             json_missing[0], json_vars, template_vars,
             f"The value {repr(json_missing[0])}, present in the template {repr(template_name)}, isn't present in the "
             f"table {repr(bad_key)}, file {repr(json_name)}")
 
-    template_missing = [key for key in set(json_vars[bad_key]) - set(template_vars[bad_key])]
+    template_missing = [key for key in set(json_vars[bad_key][0]) - set(template_vars[bad_key][0])]
     if template_missing:
         raise err.JsonUnknownVariable(
             template_missing[0], json_vars, template_vars,
