@@ -190,8 +190,6 @@ def search_error(template_vars: dict[str: str, dict[str: str]], json_vars: dict[
     :return: None
     """
 
-    print(template_vars, json_vars, sep="\n")
-
     if json_vars == template_vars:
         return
 
