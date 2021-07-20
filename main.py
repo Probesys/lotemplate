@@ -9,6 +9,8 @@ import uno
 import unohelper
 from com.sun.star.beans import PropertyValue
 from com.sun.star.io import IOException
+from com.sun.star.lang import DisposedException
+from com.sun.star.connection import NoConnectException
 
 
 class Errors:
@@ -60,6 +62,15 @@ class Errors:
     class ExportInvalidFormat(ExportException):
         pass
 
+    class UnoException(Exception):
+        pass
+
+    class UnoBridgeException(UnoException):
+        pass
+
+    class UnoConnectionError(UnoException):
+        pass
+
 
 err = Errors()
 
@@ -75,9 +86,17 @@ class Connexion:
         """
 
         self.local_ctx = uno.getComponentContext()
-        self.ctx = self.local_ctx.ServiceManager.createInstanceWithContext(
-            "com.sun.star.bridge.UnoUrlResolver", self.local_ctx
-        ).resolve("uno:socket,host=%s,port=%s;urp;StarOffice.ComponentContext" % (host, port))
+        try:
+            self.ctx = self.local_ctx.ServiceManager.createInstanceWithContext(
+                "com.sun.star.bridge.UnoUrlResolver", self.local_ctx
+            ).resolve(f"uno:socket,host={host},port={port};urp;StarOffice.ComponentContext")
+        except NoConnectException as e:
+            raise err.UnoConnectionError(
+                f"Couldn't find/connect to the soffice process on \'{host}:{port}\'. "
+                f"Make sure the soffice process is correctly running with correct host and port informations. "
+                f"Read the README file, section 'Executing the script' for more informations about how to "
+                f"run the script."
+            ) from e
         self.desktop = self.ctx.ServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", self.ctx)
         self.graphic_provider = self.ctx.ServiceManager.createInstance('com.sun.star.graphic.GraphicProvider')
 
@@ -143,7 +162,14 @@ class Template:
         self.file_url = file_path if is_network_based(file_path) else \
             (unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + "/" + file_path if
                                            file_path[0] != '/' else file_path))
-        self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
+        try:
+            self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
+        except DisposedException as e:
+            raise err.UnoBridgeException(
+                f"The connection bridge crashed on file opening. Please restart the soffice process. For more "
+                f"informations on what caused this bug and how to avoid it, please read the README file, "
+                f"section 'Unsolvable Problems'."
+            ) from e
         if not self.doc:
             raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_url)})")
         self.variables = self.scan() if should_scan else None
