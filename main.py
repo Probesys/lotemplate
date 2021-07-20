@@ -284,8 +284,23 @@ class Template:
         return valid_variables
 
     def fill(self, variables: dict[str: str, list[dict[str: str]], dict[str: str]]) -> None:
+        """
+        Fills a template copy with the given values
+
+        :param variables: the values to fill in the template
+        :return: None
+        """
 
         def text_fill(doc, variable: str, value: str) -> None:
+            """
+            Fills all the text-related content
+
+            :param doc: the document to fill
+            :param variable: the variable to search
+            :param value: the value to replace with
+            :return: None
+            """
+
             search = doc.createSearchDescriptor()
             search.SearchString = '$' + variable
             founded = doc.findAll(search)
@@ -295,10 +310,28 @@ class Template:
                 string.String = string.String.replace('$' + variable, value)
 
         def image_fill(doc, variable: str, value: dict[str: str]) -> None:
+            """
+            Fills all the image-related content
+
+            :param doc: the document to fill
+            :param variable: the variable to search
+            :param value: the value to replace with
+            :return: None
+            """
+
             # TODO: à coder
             pass
 
         def table_fill(doc, variable: str, value: list[dict[str: str]]) -> None:
+            """
+            Fills all the table-related content
+
+            :param doc: the document to fill
+            :param variable: the variable to search
+            :param value: the value to replace with
+            :return: None
+            """
+
             # TODO: à coder
             pass
 
@@ -306,7 +339,14 @@ class Template:
             self.new.dispose()
             self.new.close(True)
 
-        self.new = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
+        try:
+            self.new = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
+        except DisposedException as e:
+            raise err.UnoBridgeException(
+                f"The connection bridge crashed on file opening. Please restart the soffice process. For more "
+                f"informations on what caused this bug and how to avoid it, please read the README file, "
+                f"section 'Unsolvable Problems'."
+            ) from e
 
         for variable, value in variables.items():
             
