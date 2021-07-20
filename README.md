@@ -50,7 +50,7 @@ override config file values which override defaults.
 
 All the specified files can be local or network-based
 
-## Utilisation:
+## Utilisation
 - text variables : putting '$variable' in the document is enough to add the variable 'variable'.
 - image variables : add any image in the document, and put in the name of the image (properties) '$' followed by
   the desired name ('$image' for example to add the image 'image')
