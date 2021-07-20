@@ -117,7 +117,6 @@ For trying to fix these problems, you can try:
 ## To do
 1. Faire un CLI local (fin connecté à un serv sur lequel tourne libreoffice juste)
    - ajouter le filler graphique
-   - ajouter le filler tableaux
    - séparer le core de la couche CLI
    - débogger un max
 2. en faire une API REST basée sur le même noyau avec flask

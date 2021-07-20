@@ -332,8 +332,18 @@ class Template:
             :return: None
             """
 
-            # TODO: à coder
-            pass
+            table = doc.getTextTables().getByName("$" + variable)
+            var_row_pos = len(table.getRows()) - 1
+            table.getRows().insertByIndex(len(table.getRows()), len(value) - 1)
+            tab_values = table.getDataArray()
+            var_row = tab_values[var_row_pos]
+            static_rows = tab_values[:var_row_pos]
+            for row_datas in value:
+                new_row = var_row
+                for row_variable, row_value in row_datas.items():
+                    new_row = tuple(elem.replace('$' + row_variable, row_value) for elem in new_row)
+                static_rows += (new_row,)
+            table.setDataArray(static_rows)
 
         if self.new:
             self.new.dispose()
