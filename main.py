@@ -212,9 +212,15 @@ class Template:
 
         self.new = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
 
-        for variable, value in vars_list.items():
+        for variable, value in variables.items():
             # TODO: à coder
-            pass
+            
+            if isinstance(value, str):
+                self.text_fill(variable, value)
+            elif isinstance(value, list):
+                pass
+            elif isinstance(value, dict):
+                pass
 
     def export(self, name: str) -> [str, None]:
         """
@@ -252,6 +258,17 @@ class Template:
             raise err.ExportInvalidFormat(f"Invalid export format {repr(file_type)}")
         except IOException as e:
             raise err.ExportException(f"Unable to save document to {repr(path)} : error {e.value}")
+
+        return path
+
+    def text_fill(self, variable: str, value: str) -> None:
+        search = self.new.createSearchDescriptor()
+        search.SearchString = '$' + variable
+        founded = self.new.findAll(search)
+        instances = [founded.getByIndex(i) for i in range(founded.getCount())]
+
+        for string in instances:
+            string.String = string.String.replace('$' + variable, value)
 
     def close(self) -> None:
         """
@@ -528,10 +545,15 @@ if __name__ == '__main__':
     else:
         vars_list = document.compare_variables(get_files_json(args.json))
         for json_name, json_values in vars_list.items():
-            document.fill(get_files_json(args.json))
-            document.export(
-                args.output if len(vars_list) == 1 else
-                ".".join(args.output.split(".")[:-1]) + '_' + json_name.split("/")[-1][:-5] + "." +
-                args.output.split(".")[-1]
+            document.fill(json_values)
+            print(
+                "File " +
+                repr(json_name) +
+                " : Document saved as " +
+                repr(document.export(
+                    args.output if len(vars_list) == 1 else
+                    ".".join(args.output.split(".")[:-1]) + '_' + json_name.split("/")[-1][:-5] + "." +
+                    args.output.split(".")[-1]
+                ))
             )
     document.close()
