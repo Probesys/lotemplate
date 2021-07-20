@@ -160,9 +160,7 @@ class Template:
 
         self.cnx = cnx
         self.file_name = file_path
-        self.file_url = file_path if is_network_based(file_path) else \
-            (unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + "/" + file_path if
-                                           file_path[0] != '/' else file_path))
+        self.file_url = get_file_url(file_path)
         try:
             self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
         except DisposedException as e:
@@ -526,6 +524,14 @@ def is_network_based(file: str) -> bool:
     """
 
     return bool(file[:8] == "https://" or file[:7] == "http://" or file[:6] == "ftp://" or file[:7] == "file://")
+
+
+def get_file_url(file: str) -> str:
+    return file if is_network_based(file) else (
+        unohelper.systemPathToFileUrl(
+            os.path.dirname(os.path.abspath(__file__)) + "/" + file if file[0] != '/' else file
+        )
+    )
 
 
 def get_files_json(file_path_list: list[str]) -> dict[str: dict[str: list[dict[str: str]], str, dict[str: str]]]:
