@@ -63,11 +63,20 @@ of an array to dynamically add rows
 
 ## Supported formats
 
+### Import
 | Format                  | ODT, OTT | DOC, DOCX | HTML | RTF | TXT | OTHER |
 |-------------------------|----------|-----------|------|-----|-----|-------|
 | text variables support  | ✅        | ✅         | ✅    | ✅   | ✅   | ❌     |
 | image variables support | ✅        | ✅         | ✅    | ❌   | ❌   | ❌     |
 | dynamic tables support  | ✅        | ❌         | ❌    | ❌   | ❌   | ❌     |
+### Export
+odt, pdf, html, docx, png.
+
+Other formats can be easily added by adding the format information in the dictionary `formats` in 
+[main.py](main.py) > Template > export().
+
+Format information can be found on the 
+[unoconv repo](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391).
 
 ## Unsolvable problems
 
@@ -91,11 +100,11 @@ For trying to fix these problems, you can try:
 
 ## Functionnal
 - scans the template to extract the variables sheet
-- Search for all possible errors before filling
+- search for all possible errors before filling
+- export the template
 
 ## Non-functionnal
 - filling the template
-- export the template
 
 ## To do
 1. Faire un CLI local (fin connecté à un serv sur lequel tourne libreoffice juste)
