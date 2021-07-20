@@ -159,6 +159,7 @@ class Template:
         """
 
         self.cnx = cnx
+        self.file_name = file_path
         self.file_url = file_path if is_network_based(file_path) else \
             (unohelper.systemPathToFileUrl(os.path.dirname(os.path.abspath(__file__)) + "/" + file_path if
                                            file_path[0] != '/' else file_path))
@@ -174,6 +175,86 @@ class Template:
             raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_url)})")
         self.variables = self.scan() if should_scan else None
         self.new = None
+
+    def search_error(self, json_vars: dict[str: str, dict[str: str], list[dict[str: str]]], json_name: str) -> None:
+        """
+        find out which variable is a problem, and raise the required error
+
+        :param json_name: the name of the json file where the error is
+        :param json_vars: the given json variables
+        :return: None
+        """
+
+        if json_vars == self.variables:
+            return
+
+        def get_printable_value_type(var) -> str:
+            """
+            returns the value type of the variable within the document, not the pythonic type
+
+            :param var: the variable whose type is to be retrieved
+            :return: a printable value type, following the variable representations
+            """
+
+            if type(var) == str:
+                return "text"
+            elif type(var) == list:
+                return "table"
+            elif type(var) == dict:
+                return "image"
+            else:
+                return type(var).__name__
+
+        json_missing = [key for key in set(self.variables) - set(json_vars)]
+        if json_missing:
+            raise err.JsonMissingRequiredVariable(
+                json_missing[0], json_vars, self.variables,
+                f"The value {repr(json_missing[0])}, present in the template {repr(self.file_name)}, isn't present in "
+                f"the file {repr(json_name)}"
+            )
+
+        template_missing = [key for key in set(json_vars) - set(self.variables)]
+        if template_missing:
+            raise err.JsonUnknownVariable(
+                template_missing[0], json_vars, self.variables,
+                f"The variable {repr(template_missing[0])} (file {repr(json_name)}) isn't present in the template "
+                f"{repr(self.file_name)}"
+            )
+
+        json_incorrect = {key: json_vars[key] for key in json_vars if json_vars[key] != self.variables[key]}
+        bad_keys = list(json_incorrect.keys())
+        bad_keys.sort()
+        bad_key = bad_keys[0]
+
+        if type(json_incorrect[bad_key]) is not type(self.variables[bad_key]):
+            raise err.JsonIncorrectValueType(
+                f"The variable {repr(bad_key)} (file {repr(json_name)}) should be of type "
+                f"{repr(get_printable_value_type(self.variables[bad_key]))}, but is of type "
+                f"{repr(get_printable_value_type(json_incorrect[bad_key]))}, like in the template "
+                f"{repr(self.file_name)}"
+            )
+
+        json_missing = [key for key in set(self.variables[bad_key][0]) - set(json_vars[bad_key][0])]
+        if json_missing:
+            raise err.JsonMissingRequiredVariable(
+                json_missing[0], json_vars, self.variables,
+                f"The value {repr(json_missing[0])}, present in the template {repr(self.file_name)}, isn't present in "
+                f"the table {repr(bad_key)}, file {repr(json_name)}"
+            )
+
+        template_missing = [key for key in set(json_vars[bad_key][0]) - set(self.variables[bad_key][0])]
+        if template_missing:
+            raise err.JsonUnknownVariable(
+                template_missing[0], json_vars, self.variables,
+                f"The variable {repr(template_missing[0])} (table {repr(bad_key)}, file {repr(json_name)}) "
+                f"isn't present in the template {repr(self.file_name)}"
+            )
+
+        raise err.JsonGenericVariableError(
+            None, json_vars, self.variables,
+            f"Variables given in the file {repr(json_name)} don't match with the given "
+            f"template {repr(self.file_name)}, but no reason was found"
+        )
 
     def compare_variables(self, given_variables: dict[str: dict[str: str, dict[str: str], list[dict[str: str]]]]) \
             -> dict[str: dict[str: str, list[dict[str: str]]]]:
@@ -193,10 +274,8 @@ class Template:
             try:
                 json_variables = convert_to_datas_template(file, json_dict)
 
-                if not json_variables == self.variables:
-                    search_error(self.variables, json_variables, file, self.file_url)
-                else:
-                    valid_variables[file] = json_dict
+                self.search_error(json_variables, file)
+                valid_variables[file] = json_dict
             except Exception as exception:
                 print(f'Ignoring exception on file {file}', file=sys.stderr)
                 traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
@@ -206,6 +285,23 @@ class Template:
 
     def fill(self, variables: dict[str: str, list[dict[str: str]], dict[str: str]]) -> None:
 
+        def text_fill(doc, variable: str, value: str) -> None:
+            search = doc.createSearchDescriptor()
+            search.SearchString = '$' + variable
+            founded = doc.findAll(search)
+            instances = [founded.getByIndex(i) for i in range(founded.getCount())]
+
+            for string in instances:
+                string.String = string.String.replace('$' + variable, value)
+
+        def image_fill(doc, variable: str, value: dict[str: str]) -> None:
+            # TODO: à coder
+            pass
+
+        def table_fill(doc, variable: str, value: list[dict[str: str]]) -> None:
+            # TODO: à coder
+            pass
+
         if self.new:
             self.new.dispose()
             self.new.close(True)
@@ -213,14 +309,13 @@ class Template:
         self.new = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
 
         for variable, value in variables.items():
-            # TODO: à coder
             
             if isinstance(value, str):
-                self.text_fill(variable, value)
+                text_fill(self.new, variable, value)
             elif isinstance(value, list):
-                pass
+                table_fill(self.new, variable, value)
             elif isinstance(value, dict):
-                pass
+                image_fill(self.new, variable, value)
 
     def export(self, name: str) -> [str, None]:
         """
@@ -261,15 +356,6 @@ class Template:
 
         return path
 
-    def text_fill(self, variable: str, value: str) -> None:
-        search = self.new.createSearchDescriptor()
-        search.SearchString = '$' + variable
-        founded = self.new.findAll(search)
-        instances = [founded.getByIndex(i) for i in range(founded.getCount())]
-
-        for string in instances:
-            string.String = string.String.replace('$' + variable, value)
-
     def close(self) -> None:
         """
         close the template
@@ -281,84 +367,6 @@ class Template:
             self.new.close(True)
         self.doc.dispose()
         self.doc.close(True)
-
-
-def search_error(template_vars: dict[str: str, dict[str: str], list[dict[str: str]]],
-                 json_vars: dict[str: str, dict[str: str],  list[dict[str: str]]],
-                 json_name: str, template_name: str) -> None:
-    """
-    find out which variable is a problem, and raise the required error
-
-    :param template_name: the name of the template file
-    :param json_name: the name of the json file where the error is
-    :param template_vars: the template variables
-    :param json_vars: the given json variables
-    :return: None
-    """
-
-    if json_vars == template_vars:
-        return
-
-    def get_printable_value_type(var) -> str:
-        """
-        returns the value type of the variable within the document, not the pythonic type
-
-        :param var: the variable whose type is to be retrieved
-        :return: a printable value type, following the variable representations
-        """
-
-        if type(var) == str:
-            return "text"
-        elif type(var) == list:
-            return "table"
-        elif type(var) == dict:
-            return "image"
-        else:
-            return type(var).__name__
-
-    json_missing = [key for key in set(template_vars) - set(json_vars)]
-    if json_missing:
-        raise err.JsonMissingRequiredVariable(
-            json_missing[0], json_vars, template_vars,
-            f"The value {repr(json_missing[0])}, present in the template {repr(template_name)}, isn't present in the "
-            f"file {repr(json_name)}")
-
-    template_missing = [key for key in set(json_vars) - set(template_vars)]
-    if template_missing:
-        raise err.JsonUnknownVariable(
-            template_missing[0], json_vars, template_vars,
-            f"The variable {repr(template_missing[0])} (file {repr(json_name)}) isn't present in the template "
-            f"{repr(template_name)}")
-
-    json_incorrect = {key: json_vars[key] for key in json_vars if json_vars[key] != template_vars[key]}
-    bad_keys = list(json_incorrect.keys())
-    bad_keys.sort()
-    bad_key = bad_keys[0]
-
-    if type(json_incorrect[bad_key]) is not type(template_vars[bad_key]):
-        raise err.JsonIncorrectValueType(
-            f"The variable {repr(bad_key)} (file {repr(json_name)}) should be of type "
-            f"{repr(get_printable_value_type(template_vars[bad_key]))}, but is of type "
-            f"{repr(get_printable_value_type(json_incorrect[bad_key]))}, like in the template {repr(template_name)}")
-
-    json_missing = [key for key in set(template_vars[bad_key][0]) - set(json_vars[bad_key][0])]
-    if json_missing:
-        raise err.JsonMissingRequiredVariable(
-            json_missing[0], json_vars, template_vars,
-            f"The value {repr(json_missing[0])}, present in the template {repr(template_name)}, isn't present in the "
-            f"table {repr(bad_key)}, file {repr(json_name)}")
-
-    template_missing = [key for key in set(json_vars[bad_key][0]) - set(template_vars[bad_key][0])]
-    if template_missing:
-        raise err.JsonUnknownVariable(
-            template_missing[0], json_vars, template_vars,
-            f"The variable {repr(template_missing[0])} (table {repr(bad_key)}, file {repr(json_name)}) "
-            f"isn't present in the template {repr(template_name)}")
-
-    raise err.JsonGenericVariableError(
-        None, json_vars, template_vars,
-        f"Variables given in the file {repr(json_name)} don't match with the given "
-        f"template {repr(template_name)}, but no reason was found")
 
 
 def convert_to_datas_template(json_name: str, json_var: dict) -> dict[str: str, dict[str: str], list[dict[str: str]]]:
@@ -408,18 +416,20 @@ def convert_to_datas_template(json_name: str, json_var: dict) -> dict[str: str, 
         for i in range(len(cleaned)):
             if cleaned[i] != cleaned[i - 1]:
 
-                try:
-                    search_error(cleaned[i], cleaned[i - 1], variable, variable)
-                except err.JsonUnknownVariable as error:
+                missing = [elem for elem in set(cleaned[i - 1]) - set(cleaned[i])]
+                if missing:
                     raise err.JsonIncorrectTabVariables(
-                        f"The variable {repr(error.diff)}, (row {repr(i if i > 0 else len(cleaned))}, table "
+                        f"The variable {repr(missing[0])}, (row {repr(i if i > 0 else len(cleaned))}, table "
                         f"{repr(variable)}, file {repr(json_name)}), "
-                        f"isn't present in the row {repr(i + 1)}") from None
-                except err.JsonMissingRequiredVariable as error:
+                        f"isn't present in the row {repr(i + 1)}"
+                    )
+                missing = [elem for elem in set(cleaned[i]) - set(cleaned[i - 1])]
+                if missing:
                     raise err.JsonIncorrectTabVariables(
-                        f"The variable {repr(error.diff)}, (row {repr(i + 1)}, table {repr(variable)}, "
+                        f"The variable {repr(missing[0])}, (row {repr(i + 1)}, table {repr(variable)}, "
                         f"file {repr(json_name)}), "
-                        f"isn't present in the row {repr(i if i > 0 else len(cleaned))}") from None
+                        f"isn't present in the row {repr(i if i > 0 else len(cleaned))}"
+                    )
 
         return [cleaned[0]]
 
