@@ -106,6 +106,14 @@ For trying to fix these problems, you can try:
 ## Non-functionnal
 - filling the template
 
+## Useful links
+- [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
+- [The unoconv source code, written in python with PyUNO](https://github.com/unoconv/unoconv/blob/master/unoconv)
+- [Unoconv source code for list formats - and properties - compatible with LibreOffice for export](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391)
+- [OpenOffice Python Bridge informations and code exemples](http://www.openoffice.org/udk/python/python-bridge.html)
+- [com.sun.star Java API docs (On which pyuno is based - but is not identical)](https://www.openoffice.org/api/docs/common/ref/com/sun/star/module-ix.html)
+- [Old OOTemplate code](https://gitlab.probesys.com/troizaire/ootemplate/-/blob/c8f1e759db9494823fa4dded8c70a31d4e047c05/old.py)
+
 ## To do
 1. Faire un CLI local (fin connecté à un serv sur lequel tourne libreoffice juste)
    - ajouter le filler texte
