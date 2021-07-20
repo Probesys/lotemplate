@@ -318,8 +318,7 @@ def search_error(template_vars: dict[str: str, dict[str: str], list[dict[str: st
         f"template {repr(template_name)}, but no reason was found")
 
 
-def convert_to_datas_template(json_name: str, json_var: dict[str: str, dict[str, str], list[dict[str: str]]]) \
-        -> dict[str: str, dict[str: str], list[dict[str: str]]]:
+def convert_to_datas_template(json_name: str, json_var: dict) -> dict[str: str, dict[str: str], list[dict[str: str]]]:
     """
     converts a dictionary of variables for filling a template to a dictionary of variables types,
     like the one returned by self.scan()
@@ -329,6 +328,73 @@ def convert_to_datas_template(json_name: str, json_var: dict[str: str, dict[str,
     :return: the converted dictionary
     """
 
+    def get_cleaned_table(json_name: str, variable: str, value: list) -> list[dict[str: str]]:
+        """
+        clean a table variable
+
+        :param json_name: the name of the json
+        :param variable: the variable name
+        :param value: the table
+        :return: the cleaned table
+        """
+
+        cleaned = []
+
+        for i in range(len(value)):
+            if type(value[i]) != dict:
+                raise err.JsonIncorrectValueType(
+                    f"The value type {repr(type(value[i]).__name__)} isn't accepted in a table "
+                    f"(table {repr(variable)}, file {repr(json_name)}")
+
+            row_cleaned = {}
+
+            for row_key, row_value in value[i].items():
+                if type(row_value) != str:
+                    raise err.JsonIncorrectValueType(
+                        f"The value type {repr(type(row_value).__name__)} isn't accepted in a row "
+                        f"(row {repr(i)}, table {repr(variable)}, file {repr(json_name)})")
+                row_cleaned[row_key] = ""
+            if not row_cleaned:
+                raise err.JsonEmptyValue(
+                    f"The row n°{repr(i)} is empty (table {repr(variable)}, file {repr(json_name)})")
+            cleaned.append(row_cleaned)
+
+        if not cleaned:
+            raise err.JsonEmptyValue(f"Table {repr(variable)} is empty (file {repr(json_name)})")
+
+        for i in range(len(cleaned)):
+            if cleaned[i] != cleaned[i - 1]:
+
+                try:
+                    search_error(cleaned[i], cleaned[i - 1], variable, variable)
+                except err.JsonUnknownVariable as error:
+                    raise err.JsonIncorrectTabVariables(
+                        f"The variable {repr(error.diff)}, (row {repr(i if i > 0 else len(cleaned))}, table "
+                        f"{repr(variable)}, file {repr(json_name)}), "
+                        f"isn't present in the row {repr(i + 1)}") from None
+                except err.JsonMissingRequiredVariable as error:
+                    raise err.JsonIncorrectTabVariables(
+                        f"The variable {repr(error.diff)}, (row {repr(i + 1)}, table {repr(variable)}, "
+                        f"file {repr(json_name)}), "
+                        f"isn't present in the row {repr(i if i > 0 else len(cleaned))}") from None
+
+        return [cleaned[0]]
+
+    def get_cleaned_image(json_name: str, variable: str, value: dict) -> dict[str: str]:
+        if not value:
+            raise err.JsonEmptyValue(f"Image {repr(variable)} is empty (file {repr(json_name)})")
+        for image_key, image_value in value.items():
+            if image_key != "path":
+                raise err.JsonUnknownArgument(
+                    f"The argument {repr(image_key)} is not supported in an image (image {repr(variable)}, "
+                    f"file {repr(json_name)}")
+            if type(image_value) != str:
+                raise err.JsonInvalidArgument(
+                    f"The argument type {repr(type(image_value).__name__)} is not supported in an image "
+                    f"(image {repr(variable)}, file {repr(json_name)})")
+
+        return {"path": ""}
+
     if type(json_var) is not dict:
         raise err.JsonIncorrectValueType(f"The value type {repr(type(json_var).__name__)} isn't accepted in "
                                          f"json files (file {repr(json_name)})")
@@ -336,67 +402,11 @@ def convert_to_datas_template(json_name: str, json_var: dict[str: str, dict[str,
     template = {}
     for key, value in json_var.items():
         if type(value) == list:
-
-            cleaned = []
-
-            for i in range(len(value)):
-                if type(value[i]) != dict:
-                    raise err.JsonIncorrectValueType(
-                        f"The value type {repr(type(value[i]).__name__)} isn't accepted in a table "
-                        f"(table {repr(key)}, file {repr(json_name)}")
-
-                row_cleaned = {}
-
-                for row_key, row_value in value[i].items():
-                    if type(row_value) != str:
-                        raise err.JsonIncorrectValueType(
-                            f"The value type {repr(type(row_value).__name__)} isn't accepted in a row "
-                            f"(row {repr(i)}, table {repr(key)}, file {repr(json_name)})")
-                    row_cleaned[row_key] = ""
-                if not row_cleaned:
-                    raise err.JsonEmptyValue(
-                        f"The row n°{repr(i)} is empty (table {repr(key)}, file {repr(json_name)})")
-                cleaned.append(row_cleaned)
-
-            if not cleaned:
-                raise err.JsonEmptyValue(f"Table {repr(key)} is empty (file {repr(json_name)})")
-
-            for i in range(len(cleaned)):
-                if cleaned[i] != cleaned[i - 1]:
-
-                    try:
-                        search_error(cleaned[i], cleaned[i - 1], key, key)
-                    except err.JsonUnknownVariable as error:
-                        raise err.JsonIncorrectTabVariables(
-                            f"The variable {repr(error.diff)}, (row {repr(i if i > 0 else len(cleaned))}, table "
-                            f"{repr(key)}, file {repr(json_name)}), "
-                            f"isn't present in the row {repr(i + 1)}") from None
-                    except err.JsonMissingRequiredVariable as error:
-                        raise err.JsonIncorrectTabVariables(
-                            f"The variable {repr(error.diff)}, (row {repr(i + 1)}, table {repr(key)}, "
-                            f"file {repr(json_name)}), "
-                            f"isn't present in the row {repr(i if i > 0 else len(cleaned))}") from None
-
-            value = [cleaned[0]]
-
+            value = get_cleaned_table(json_name, key, value)
         elif type(value) == str:
             value = ""
-
         elif type(value) == dict:
-            if not value:
-                raise err.JsonEmptyValue(f"Image {repr(key)} is empty (file {repr(json_name)})")
-            for image_key, image_value in value.items():
-                if image_key != "path":
-                    raise err.JsonUnknownArgument(
-                        f"The argument {repr(image_key)} is not supported in an image (image {repr(key)}, "
-                        f"file {repr(json_name)}")
-                if type(image_value) != str:
-                    raise err.JsonInvalidArgument(
-                        f"The argument type {repr(type(image_value).__name__)} is not supported in an image "
-                        f"(image {repr(key)}, file {repr(json_name)})")
-
-            value = {"path": ""}
-
+            value = get_cleaned_image(json_name, key, value)
         else:
             raise err.JsonIncorrectValueType(f"The value type {repr(type(value).__name__)} isn't accepted")
         template[key] = value
