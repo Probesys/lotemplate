@@ -106,6 +106,24 @@ class Connexion:
 
 class Template:
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def __str__(self):
+        return str(self.file_name)
+
+    def __repr__(self):
+        return repr(self.file_url)
+
+    def __len__(self):
+        return len(self.variables) if self.variables else 0
+
+    def __getitem__(self, item):
+        return self.variables[item] if self.variables else None
+
     def scan(self) -> dict[str: dict, str]:
         """
         scans the variables contained in the template. Supports text, tables and images
