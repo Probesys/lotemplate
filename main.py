@@ -560,7 +560,7 @@ def get_file_url(file: str) -> str:
     )
 
 
-def get_files_json(file_path_list: list[str]) -> dict[str: dict[str: list[dict[str: str]], str, dict[str: str]]]:
+def get_files_json(file_path_list: list[str]) -> dict[str: dict]:
     """
     converts all the specified json files to file_name: dict
 
@@ -585,19 +585,40 @@ def get_files_json(file_path_list: list[str]) -> dict[str: dict[str: list[dict[s
     return jsons
 
 
+def get_normized_json(json_strings: list[str]) -> dict[str: dict]:
+    """
+    converts a given list of strings to and code-usable dict of jsons
+
+    :param json_strings: the list of strings to convert to dict
+    :return:
+    """
+
+    jsons = {}
+
+    for i in range(len(json_strings)):
+        try:
+            jsons["string_n" + str(i + 1)] = json.loads(json_strings[i])
+        except Exception as exception:
+            print(f'Ignoring exception on json string n°{i + 1}', file=sys.stderr)
+            traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+
+    return jsons
+
+
 def set_arguments() -> cparse.Namespace:
     """
     set up all the necessaries arguments, and return them with their values
 
     :return: user-given values for set up command-line arguments
     """
-    import sys
 
     p = cparse.ArgumentParser(default_config_files=['config.ini'])
     p.add_argument('template_file',
                    help="Template file to scan or fill")
-    p.add_argument('--json', '-j', nargs='+', default=sys.stdin,
+    p.add_argument('--json_file', '-jf', nargs='+', default=[],
                    help="Json file(s) that must fill the template, if any")
+    p.add_argument('--json', '-j', nargs='+', default=[],
+                   help="Json strings that must fill the template, if any")
     p.add_argument('--output', '-o', default="output.pdf",
                    help="Name of the filled file, if the template should be filled. supported formats: "
                         "pdf, html, docx, png, odt")
@@ -620,8 +641,6 @@ if __name__ == '__main__':
     read the README file for more infos
     """
 
-    # TODO: ajouter possibilitée d'importer du json directement depuis une str, une entrée en argument quoi
-
     # get the necessaries arguments
     args = set_arguments()
 
@@ -637,7 +656,7 @@ if __name__ == '__main__':
 
     # fill and export the template if it should
     else:
-        vars_list = document.compare_variables(get_files_json(args.json))
+        vars_list = document.compare_variables(get_files_json(args.json_file) | get_normized_json(args.json))
         for json_name, json_values in vars_list.items():
             document.fill(json_values)
             print(
@@ -646,8 +665,10 @@ if __name__ == '__main__':
                 " : Document saved as " +
                 repr(document.export(
                     args.output if len(vars_list) == 1 else
-                    ".".join(args.output.split(".")[:-1]) + '_' + json_name.split("/")[-1][:-5] + "." +
-                    args.output.split(".")[-1]
+                    ".".join(args.output.split(".")[:-1]) + '_' + (
+                        json_name.split("/")[-1][:-5] if json_name.split("/")[-1][-5:] == ".json"
+                        else json_name.split("/")[-1]
+                    ) + "." + args.output.split(".")[-1]
                 ))
             )
     document.close()
