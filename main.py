@@ -314,7 +314,7 @@ class Template:
             """
             Fills all the image-related content
 
-            :param should_resize: specify if the image should be resized to keep his original size
+            :param should_resize: specify if the image should be resized to keep his original size ratio
             :param graphic_provider: the graphic provider, from the established connection
             :param doc: the document to fill
             :param variable: the variable to search
