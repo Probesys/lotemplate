@@ -5,6 +5,7 @@ import traceback
 import configargparse as cparse
 import urllib.request
 import urllib.error
+from PIL import Image
 
 import uno
 import unohelper
@@ -12,6 +13,7 @@ from com.sun.star.beans import PropertyValue
 from com.sun.star.io import IOException
 from com.sun.star.lang import DisposedException
 from com.sun.star.connection import NoConnectException
+from com.sun.star.awt import Size
 
 
 class Errors:
@@ -308,18 +310,31 @@ class Template:
             for string in instances:
                 string.String = string.String.replace('$' + variable, value)
 
-        def image_fill(doc, variable: str, value: dict[str: str]) -> None:
+        def image_fill(doc, graphic_provider, variable: str, value: dict[str: str], should_resize=True) -> None:
             """
             Fills all the image-related content
 
+            :param should_resize: specify if the image should be resized to keep his original size
+            :param graphic_provider: the graphic provider, from the established connection
             :param doc: the document to fill
             :param variable: the variable to search
             :param value: the value to replace with
             :return: None
             """
 
-            # TODO: à coder
-            pass
+            graphic_object = doc.getGraphicObjects().getByName('$' + variable)
+            path = value['path']
+            new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0), ))
+
+            if should_resize:
+                image = Image.open(urllib.request.urlopen(path) if is_network_based(path) else path)
+                ratio = image.width / image.height
+                new_size = Size()
+                new_size.Height = graphic_object.Size.Height
+                new_size.Width = graphic_object.Size.Height * ratio
+                graphic_object.setSize(new_size)
+
+            graphic_object.Graphic = new_image
 
         def table_fill(doc, variable: str, value: list[dict[str: str]]) -> None:
             """
@@ -364,7 +379,7 @@ class Template:
             elif isinstance(value, list):
                 table_fill(self.new, variable, value)
             elif isinstance(value, dict):
-                image_fill(self.new, variable, value)
+                image_fill(self.new, self.cnx.graphic_provider, variable, value)
 
     def export(self, name: str) -> [str, None]:
         """
