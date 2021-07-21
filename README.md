@@ -18,9 +18,9 @@ on your terminal or a server
 
 Then run the script with the following arguments :
 ```
-usage: main.py [-h] [--json JSON [JSON ...]] [--output OUTPUT]
-               [--config CONFIG] --host HOST --port PORT [--scan]
-               [--force_replacement]
+usage: main.py [-h] [--json_file JSON_FILE [JSON_FILE ...]]
+               [--json JSON [JSON ...]] [--output OUTPUT] [--config CONFIG]
+               --host HOST --port PORT [--scan] [--force_replacement]
                template_file
 
 positional arguments:
@@ -28,8 +28,10 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --json JSON [JSON ...], -j JSON [JSON ...]
+  --json_file JSON_FILE [JSON_FILE ...], -jf JSON_FILE [JSON_FILE ...]
                         Json file(s) that must fill the template, if any
+  --json JSON [JSON ...], -j JSON [JSON ...]
+                        Json strings that must fill the template, if any
   --output OUTPUT, -o OUTPUT
                         Name of the filled file, if the template should be
                         filled. supported formats: pdf, html, docx, png, odt
@@ -101,10 +103,8 @@ For trying to fix these problems, you can try:
 ## Functionnal
 - scans the template to extract the variables sheet
 - search for all possible errors before filling
-- export the template
-
-## Non-functionnal
 - filling the template
+- export the template
 
 ## Useful links
 - [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
@@ -115,15 +115,10 @@ For trying to fix these problems, you can try:
 - [Old OOTemplate code](https://gitlab.probesys.com/troizaire/ootemplate/-/blob/c8f1e759db9494823fa4dded8c70a31d4e047c05/old.py)
 
 ## To do
-1. Faire un CLI local (fin connecté à un serv sur lequel tourne libreoffice juste)
-   - séparer le core de la couche CLI
-   - débogger un max
-2. en faire une API REST basée sur le même noyau avec flask
+1. faire du CLI une API REST basée sur le même noyau avec flask
    - [se renseigner sur Flask](https://flask.palletsprojects.com/en/2.0.x/)
-   - coder
-3. implémenter l'API sur nemoweb
+2. implémenter l'API sur nemoweb
    - [se renseigner sur Ruby on Rails](https://www.eduonix.com/new_dashboard/Learn-Ruby-on-Rails-By-Building-Projects)
-   - coder
     
 ## To consider
 
