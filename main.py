@@ -4,6 +4,7 @@ import sys
 import traceback
 import configargparse as cparse
 import urllib.request
+import urllib.error
 
 import uno
 import unohelper
@@ -494,6 +495,16 @@ def convert_to_datas_template(json_name: str, json_var: dict) -> dict[str: str, 
                     f"The argument type {repr(type(image_value).__name__)} is not supported in an image "
                     f"(image {repr(variable)}, file {repr(json_name)})")
 
+        if not is_network_based(value["path"]) and not os.path.isfile(value["path"]):
+            raise FileNotFoundError("The file " + value["path"] +
+                                    f" don't exist (image {repr(variable)}, file {repr(json_name)})")
+        elif is_network_based(value["path"]):
+            try:
+                urllib.request.urlopen(value["path"])
+            except urllib.error.URLError as error:
+                raise FileNotFoundError("The file " + value["path"] +
+                                        f" don't exist (image {repr(variable)}, file {repr(json_name)})") from error
+
         return {"path": ""}
 
     if type(json_var) is not dict:
@@ -593,6 +604,8 @@ if __name__ == '__main__':
     
     read the README file for more infos
     """
+
+    # TODO: ajouter possibilitée d'importer du json directement depuis une str, une entrée en argument quoi
 
     # get the necessaries arguments
     args = set_arguments()
