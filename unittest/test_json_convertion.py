@@ -63,6 +63,12 @@ class Images(unittest.TestCase):
                 "img_two_vars_valid", file_to_dict("files/jsons/img_two_vars_valid.json"))
         )
 
+    def test_web_valid(self):
+        self.assertEqual(
+            {"image": {"path": ""}}, ootemplate.convert_to_datas_template(
+                "img_vars_valid_from_web", file_to_dict("files/jsons/img_vars_valid_from_web.json"))
+        )
+
     def test_invalid_empty_value(self):
         with self.assertRaises(ootemplate.err.JsonEmptyValue):
             ootemplate.convert_to_datas_template(
@@ -85,6 +91,18 @@ class Images(unittest.TestCase):
         with self.assertRaises(ootemplate.err.JsonInvalidArgument):
             ootemplate.convert_to_datas_template(
                 "img_vars_invalid_path_type", file_to_dict("files/jsons/img_vars_invalid_path_type.json")
+            )
+
+    def test_invalid_path(self):
+        with self.assertRaises(FileNotFoundError):
+            ootemplate.convert_to_datas_template(
+                "img_vars_invalid_path", file_to_dict("files/jsons/img_vars_invalid_path.json")
+            )
+
+    def test_invalid_path_from_web(self):
+        with self.assertRaises(FileNotFoundError):
+            ootemplate.convert_to_datas_template(
+                "img_vars_invalid_path_from_web", file_to_dict("files/jsons/img_vars_invalid_path_from_web.json")
             )
 
 
