@@ -327,8 +327,8 @@ class Template:
             new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0), ))
 
             if should_resize:
-                image = Image.open(urllib.request.urlopen(path) if is_network_based(path) else path)
-                ratio = image.width / image.height
+                with Image.open(urllib.request.urlopen(path) if is_network_based(path) else path) as image:
+                    ratio = image.width / image.height
                 new_size = Size()
                 new_size.Height = graphic_object.Size.Height
                 new_size.Width = graphic_object.Size.Height * ratio
