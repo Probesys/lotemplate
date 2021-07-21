@@ -117,6 +117,10 @@ For trying to fix these problems, you can try:
 ## To do
 1. faire du CLI une API REST basée sur le même noyau avec flask
    - [se renseigner sur Flask](https://flask.palletsprojects.com/en/2.0.x/)
+   - faire une route pour upload un template et qui renvoie le json du scan
+   - faire une route pour delete un template
+   - faire une route qui delete est recréée (modif)
+   - faire une route pour remplir et renvoyer le document rempli
 2. implémenter l'API sur nemoweb
    - [se renseigner sur Ruby on Rails](https://www.eduonix.com/new_dashboard/Learn-Ruby-on-Rails-By-Building-Projects)
     
