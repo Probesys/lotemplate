@@ -11,6 +11,7 @@ import uno
 import unohelper
 from com.sun.star.beans import PropertyValue
 from com.sun.star.io import IOException
+from com.sun.star.lang import IllegalArgumentException
 from com.sun.star.lang import DisposedException
 from com.sun.star.connection import NoConnectException
 from com.sun.star.awt import Size
@@ -186,10 +187,14 @@ class Template:
             self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
         except DisposedException as e:
             raise err.UnoBridgeException(
-                f"The connection bridge crashed on file opening. Please restart the soffice process. For more "
-                f"informations on what caused this bug and how to avoid it, please read the README file, "
-                f"section 'Unsolvable Problems'."
+                f"The connection bridge crashed on file opening (file {repr(self.file_url)})."
+                f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
+                f"it, please read the README file, section 'Unsolvable Problems'."
             ) from e
+        except IllegalArgumentException:
+            raise FileNotFoundError(
+                f"the given file does not exist or has not been found (file {repr(self.file_url)})"
+            ) from None
         if not self.doc:
             raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_url)})")
         self.variables = self.scan() if should_scan else None
@@ -385,9 +390,9 @@ class Template:
             self.new = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
         except DisposedException as e:
             raise err.UnoBridgeException(
-                f"The connection bridge crashed on file opening. Please restart the soffice process. For more "
-                f"informations on what caused this bug and how to avoid it, please read the README file, "
-                f"section 'Unsolvable Problems'."
+                f"The connection bridge crashed on file opening (file {repr(self.file_url)})."
+                f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
+                f"it, please read the README file, section 'Unsolvable Problems'."
             ) from e
 
         for variable, value in variables.items():
@@ -608,7 +613,7 @@ def get_normized_json(json_strings: list[str]) -> dict[str: dict]:
     converts a given list of strings to and code-usable dict of jsons
 
     :param json_strings: the list of strings to convert to dict
-    :return:
+    :return: format {file_name: values_dict,...} the converted list of dictionaries
     """
 
     jsons = {}
