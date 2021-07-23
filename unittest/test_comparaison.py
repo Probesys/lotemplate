@@ -1,5 +1,5 @@
 import unittest
-import main as ootemplate
+import ootemplate
 import test_json_convertion
 
 cnx = ootemplate.Connexion("localhost", "2002")
@@ -14,7 +14,7 @@ def to_data_list(file: str) -> list:
 
 class Text(unittest.TestCase):
 
-    temp = ootemplate.Template("unittest/files/comparaison/text_vars.odt", cnx, True)
+    temp = ootemplate.Template("files/comparaison/text_vars.odt", cnx, True)
 
     def test_valid(self):
         self.temp.search_error(*to_data_list("files/comparaison/text_vars_valid.json"))
@@ -31,7 +31,7 @@ class Text(unittest.TestCase):
         with self.assertRaises(ootemplate.err.JsonIncorrectValueType):
             self.temp.search_error(*to_data_list("files/comparaison/text_vars_incorrect_value.json"))
 
-    temp_tab = ootemplate.Template("unittest/files/comparaison/static_tab.odt", cnx, True)
+    temp_tab = ootemplate.Template("files/comparaison/static_tab.odt", cnx, True)
 
     def test_tab_valid(self):
         self.temp_tab.search_error(*to_data_list("files/comparaison/static_tab_valid.json"))
@@ -39,7 +39,7 @@ class Text(unittest.TestCase):
 
 class Tables(unittest.TestCase):
 
-    temp = ootemplate.Template("unittest/files/comparaison/two_row_tab_varied.odt", cnx, True)
+    temp = ootemplate.Template("files/comparaison/two_row_tab_varied.odt", cnx, True)
 
     def test_valid(self):
         self.temp.search_error(*to_data_list("files/comparaison/two_row_tab_varied_valid.json"))
@@ -57,7 +57,7 @@ class Tables(unittest.TestCase):
 
 class Images(unittest.TestCase):
 
-    temp = ootemplate.Template("unittest/files/comparaison/img_vars.odt", cnx, True)
+    temp = ootemplate.Template("files/comparaison/img_vars.odt", cnx, True)
 
     def test_valid(self):
         self.temp.search_error(*to_data_list("files/comparaison/img_vars_valid.json"))

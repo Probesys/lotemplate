@@ -2,7 +2,6 @@ import os
 import json
 import sys
 import traceback
-import configargparse as cparse
 import urllib.request
 import urllib.error
 from PIL import Image
@@ -18,7 +17,6 @@ from com.sun.star.awt import Size
 
 
 class Errors:
-
     class JsonException(Exception):
         pass
 
@@ -148,9 +146,9 @@ class Template:
         tab_generator = set(var for var in var_generator if var.TextTable and var.TextTable.Name[0] == "$")
 
         tab_vars_pos = {var.TextTable.Name[1:]:
-                        ({text_var.String[1:]: int("".join(filter(str.isdigit, text_var.Cell.CellName)))
-                            for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name},
-                         len(var.TextTable.getRows())) for var in tab_generator}
+                            ({text_var.String[1:]: int("".join(filter(str.isdigit, text_var.Cell.CellName)))
+                              for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name},
+                             len(var.TextTable.getRows())) for var in tab_generator}
 
         for tab_name, tab_infos in tab_vars_pos.items():
             tab_cells = tab_infos[0]
@@ -163,8 +161,8 @@ class Template:
                         f"the last row (got: row {repr(var_row)}, expected: row {repr(last_row)})")
 
         tab_vars = {var.TextTable.Name[1:]:
-                    [{text_var.String[1:]: "" for text_var in tab_generator
-                        if text_var.TextTable.Name == var.TextTable.Name}] for var in tab_generator}
+                        [{text_var.String[1:]: "" for text_var in tab_generator
+                          if text_var.TextTable.Name == var.TextTable.Name}] for var in tab_generator}
 
         img_vars = {elem[1:]: {"path": ""} for elem in self.doc.getGraphicObjects().getElementNames()
                     if elem[0] == '$'}
@@ -347,7 +345,7 @@ class Template:
 
             graphic_object = doc.getGraphicObjects().getByName('$' + variable)
             path = value['path']
-            new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0), ))
+            new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0),))
 
             if should_resize:
                 with Image.open(urllib.request.urlopen(path) if is_network_based(path) else path) as image:
@@ -396,7 +394,7 @@ class Template:
             ) from e
 
         for variable, value in variables.items():
-            
+
             if isinstance(value, str):
                 text_fill(self.new, variable, value)
             elif isinstance(value, list):
@@ -417,7 +415,7 @@ class Template:
             return
 
         file_type = name.split(".")[-1]
-        path = os.path.dirname(os.path.abspath(__file__)) + "/" + name if name[0] != '/' else name
+        path = os.getcwd() + "/" + name if name[0] != '/' else name
         path_without_num = path
         i = 1
         while os.path.isfile(path):
@@ -578,7 +576,7 @@ def is_network_based(file: str) -> bool:
 def get_file_url(file: str) -> str:
     return file if is_network_based(file) else (
         unohelper.systemPathToFileUrl(
-            os.path.dirname(os.path.abspath(__file__)) + "/" + file if file[0] != '/' else file
+            os.getcwd() + "/" + file if file[0] != '/' else file
         )
     )
 
@@ -626,72 +624,3 @@ def get_normized_json(json_strings: list[str]) -> dict[str: dict]:
             traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
     return jsons
-
-
-def set_arguments() -> cparse.Namespace:
-    """
-    set up all the necessaries arguments, and return them with their values
-
-    :return: user-given values for set up command-line arguments
-    """
-
-    p = cparse.ArgumentParser(default_config_files=['config.ini'])
-    p.add_argument('template_file',
-                   help="Template file to scan or fill")
-    p.add_argument('--json_file', '-jf', nargs='+', default=[],
-                   help="Json file(s) that must fill the template, if any")
-    p.add_argument('--json', '-j', nargs='+', default=[],
-                   help="Json strings that must fill the template, if any")
-    p.add_argument('--output', '-o', default="output.pdf",
-                   help="Name of the filled file, if the template should be filled. supported formats: "
-                        "pdf, html, docx, png, odt")
-    p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
-    p.add_argument('--host', required=True, help='Host address to use for the libreoffice connection')
-    p.add_argument('--port', required=True, help='Port to use for the libreoffice connexion')
-    p.add_argument('--scan', '-s', action='store_true',
-                   help="Specify if the program should just scan the template and return the information, or fill it.")
-    p.add_argument('--force_replacement', '-f', action='store_true',
-                   help="Specify if the program should ignore the scan's result")
-    return p.parse_args()
-
-
-if __name__ == '__main__':
-    """
-    before running the script, please run the following command on your OpenOffice host:
-    
-    soffice "--accept=socket,host=localhost,port=2002;urp;StarOffice.ServiceManager"
-    
-    read the README file for more infos
-    """
-
-    # get the necessaries arguments
-    args = set_arguments()
-
-    # establish the connection to the server
-    connexion = Connexion(args.host, args.port)
-
-    # generate the document to operate and its parameters
-    document = Template(args.template_file, connexion, not args.force_replacement)
-
-    # prints scan result in json format if it should
-    if args.scan:
-        print(json.dumps(document.variables))
-
-    # fill and export the template if it should
-    else:
-        vars_list = document.compare_variables(get_files_json(args.json_file) | get_normized_json(args.json))
-        for json_name, json_values in vars_list.items():
-            document.fill(json_values)
-            print(
-                "File " +
-                repr(json_name) +
-                " : Document saved as " +
-                repr(document.export(
-                    args.output if len(vars_list) == 1 else
-                    ".".join(args.output.split(".")[:-1]) + '_' + (
-                        json_name.split("/")[-1][:-5] if json_name.split("/")[-1][-5:] == ".json"
-                        else json_name.split("/")[-1]
-                    ) + "." + args.output.split(".")[-1]
-                ))
-            )
-    document.close()
