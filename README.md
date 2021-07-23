@@ -16,7 +16,7 @@ For more information on a specific usage, read, the `Execute and use the API` or
 - a Java JRE
 - the package `libreoffice-java-common`
 - some python packages specified in [requirement.txt](requirements.txt) that you can install with
-  `pip install -r requirements.txt`. `Flask` is optionnal, as it is used only for the API, as well
+  `pip install -r requirements.txt`. `Flask` is optional, as it is used only for the API, as well
   as `configargparse`, used only for the CLI.
 
 more informations on [the github page of unotools](https://github.com/t2y/unotools)
