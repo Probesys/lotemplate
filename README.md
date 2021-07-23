@@ -114,7 +114,7 @@ Format information can be found on the
 
 ## Unsolvable problems
 
-The error `UnoBridgeException` (or `Internal server error on file opening, 500` for the API) happens frequently and 
+The error `UnoBridgeException`happens frequently and 
 unpredictably, and this error stops the soffice processus. This error, particularly annoying, is unfortunately 
 impossible to fix, since it's a pyUNO - or soffice - bug, unresolved since 2015. It is therefore very unlikely that 
 this bug will ever be fixed.

@@ -1,3 +1,5 @@
+from copy import copy
+
 from flask import *
 import ootemplate as ot
 from ootemplate import err
@@ -11,6 +13,59 @@ config.read("config.ini")
 cnx = ot.Connexion(config['Connect']['host'], config['Connect']['port'])
 
 
+def error_format(exception: Exception, message: str = None) -> dict:
+    """
+    put all informations about an error in a dictionary for better error handling when using the API.
+    You can also overwrite the provided error message
+
+    :param exception: the exception to format
+    :param message: the message with which it should replace the provided error message
+    :return: the formatted dictionary
+    """
+
+    class ReservedVariable(Exception):
+        pass
+
+    variables = copy(exception.__dict__)
+    if 'file' in variables.keys():
+        variables['file'] = variables['file'].split("/")[-1]
+    if 'variables' in variables.keys():
+        raise ReservedVariable(
+            "The variable 'variables' is reserved for formatting, and so the exception cannot be formatted"
+        )
+    if 'error' in variables.keys():
+        raise ReservedVariable(
+            "The variable 'error' is reserved for formatting, and so the exception cannot be formatted"
+        )
+    if 'message' in variables.keys():
+        raise ReservedVariable(
+            "The variable 'message' is reserved for formatting, and so the exception cannot be formatted"
+        )
+    formatted = (
+        {
+           'error': type(exception).__name__,
+           'message': str(exception),
+           'variables': [elem for elem in variables.keys()]
+        }
+        | variables
+    )
+    if message:
+        formatted['message'] = message
+    return formatted
+
+
+def error_sim(exception: str, message: str) -> dict:
+    """
+    Simulate an error catch, ans return a error-formatted dict in the same way as error_format does
+
+    :param exception: the exception name
+    :param message: the message of the exception
+    :return: the formatted dict
+    """
+
+    return {'error': exception, 'message': message, 'variables': []}
+
+
 @app.route("/", methods=['POST'])
 def main():
     """
@@ -21,7 +76,7 @@ def main():
     """
     f = request.files.get('file')
     if not f:
-        return "You must provide a valid file in the body, key 'file'", 400
+        return error_sim("MissingFileError", "You must provide a valid file in the body, key 'file'"), 400
     name = secure_filename(f.filename)
     file_type = name.split(".")[-1]
     name_without_num = name
@@ -35,17 +90,26 @@ def main():
     try:
         with ot.Template(f"uploads/{name}", cnx, True) as temp:
             values = temp.variables
-    except err.TemplateInvalidFormat:
+    except err.TemplateInvalidFormat as e:
         os.remove(f"uploads/{name}")
-        return "The given format is invalid. You can upload ODT, OTT, DOC, DOCX, HTML, RTF or TXT.", 415
-    except err.UnoBridgeException:
+        return (
+            error_format(e, "The given format is invalid. You can upload ODT, OTT, DOC, DOCX, HTML, RTF or TXT."),
+            415
+        )
+    except err.UnoBridgeException as e:
         os.remove(f"uploads/{name}")
-        return "Internal server error on file opening. Please checks the README file, section 'Unsolvable problems' " \
-               "for more informations.", 500
+        return (
+            error_format(e, "Internal server error on file opening. Please checks the README file, section "
+                            "'Unsolvable problems' for more informations."),
+            500
+        )
     except err.TemplateVariableNotInLastRow as e:
         os.remove(f"uploads/{name}")
-        return f"The variable {repr(e.variable)} (table {repr(e.table)}) isn't in the last row (got: row " \
-               f"{repr(e.row)}, expected: row {repr(e.expected_row)})", 415
+        return (
+            error_format(e, f"The variable {repr(e.variable)} (table {repr(e.table)}) isn't in the last row (got: row "
+                            f"{repr(e.row)}, expected: row {repr(e.expected_row)})"),
+            415
+        )
     return {'file': name, 'variables': values}
 
 
