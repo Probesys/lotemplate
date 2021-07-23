@@ -21,13 +21,20 @@ class Errors:
         pass
 
     class TemplateException(Exception):
-        pass
+        def __init__(self, message, file):
+            Exception.__init__(self, message)
+            self.file = file
 
     class ExportException(Exception):
         pass
 
     class TemplateVariableNotInLastRow(TemplateException):
-        pass
+        def __init__(self, message, file, table, row, expected_row, variable):
+            super().__init__(message, file)
+            self.table = table
+            self.row = row
+            self.expected_row = expected_row
+            self.variable = variable
 
     class TemplateInvalidFormat(TemplateException):
         pass
@@ -123,52 +130,6 @@ class Template:
     def __getitem__(self, item):
         return self.variables[item] if self.variables else None
 
-    def scan(self) -> dict[str: dict, str]:
-        """
-        scans the variables contained in the template. Supports text, tables and images
-
-        :return: list containing all the variables founded in the template
-        """
-
-        search = self.doc.createSearchDescriptor()
-        search.SearchRegularExpression = True
-        search.SearchString = '\\$[:alnum:]*'
-        founded = self.doc.findAll(search)
-
-        var_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
-
-        text_vars = {var.String[1:]: "" for var in var_generator if
-                     not var.TextTable or var.TextTable.Name[0] != "$"}
-
-        if "" in text_vars.keys():
-            text_vars.pop("")
-
-        tab_generator = set(var for var in var_generator if var.TextTable and var.TextTable.Name[0] == "$")
-
-        tab_vars_pos = {var.TextTable.Name[1:]:
-                            ({text_var.String[1:]: int("".join(filter(str.isdigit, text_var.Cell.CellName)))
-                              for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name},
-                             len(var.TextTable.getRows())) for var in tab_generator}
-
-        for tab_name, tab_infos in tab_vars_pos.items():
-            tab_cells = tab_infos[0]
-            last_row = tab_infos[1]
-
-            for var_name, var_row in tab_cells.items():
-                if var_row != last_row:
-                    raise err.TemplateVariableNotInLastRow(
-                        f"The variable {repr(var_name)} (table {repr(tab_name)}, file {repr(self.file_url)}) isn't in "
-                        f"the last row (got: row {repr(var_row)}, expected: row {repr(last_row)})")
-
-        tab_vars = {var.TextTable.Name[1:]:
-                        [{text_var.String[1:]: "" for text_var in tab_generator
-                          if text_var.TextTable.Name == var.TextTable.Name}] for var in tab_generator}
-
-        img_vars = {elem[1:]: {"path": ""} for elem in self.doc.getGraphicObjects().getElementNames()
-                    if elem[0] == '$'}
-
-        return tab_vars | text_vars | img_vars
-
     def __init__(self, file_path: str, cnx: Connexion, should_scan: bool):
         """
         An object representing a LibreOffice/OpenOffice template that you can fill, scan, export and more
@@ -194,9 +155,58 @@ class Template:
                 f"the given file does not exist or has not been found (file {repr(self.file_url)})"
             ) from None
         if not self.doc:
-            raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_url)})")
+            raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_url)})", self.file_url)
         self.variables = self.scan() if should_scan else None
         self.new = None
+
+    def scan(self) -> dict[str: dict, str]:
+        """
+        scans the variables contained in the template. Supports text, tables and images
+
+        :return: list containing all the variables founded in the template
+        """
+
+        search = self.doc.createSearchDescriptor()
+        search.SearchRegularExpression = True
+        search.SearchString = '\\$[:alnum:]*'
+        founded = self.doc.findAll(search)
+
+        var_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
+
+        text_vars = {var.String[1:]: "" for var in var_generator if
+                     not var.TextTable or var.TextTable.Name[0] != "$"}
+
+        if "" in text_vars.keys():
+            text_vars.pop("")
+
+        tab_generator = set(var for var in var_generator if var.TextTable and var.TextTable.Name[0] == "$")
+
+        tab_vars_pos = {var.TextTable.Name[1:]: (
+            {text_var.String[1:]: int("".join(filter(str.isdigit, text_var.Cell.CellName)))
+             for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name},
+            len(var.TextTable.getRows())
+        ) for var in tab_generator}
+
+        for tab_name, tab_infos in tab_vars_pos.items():
+            tab_cells = tab_infos[0]
+            last_row = tab_infos[1]
+
+            for var_name, var_row in tab_cells.items():
+                if var_row != last_row:
+                    raise err.TemplateVariableNotInLastRow(
+                        f"The variable {repr(var_name)} (table {repr(tab_name)}, file {repr(self.file_url)}) isn't in "
+                        f"the last row (got: row {repr(var_row)}, expected: row {repr(last_row)})",
+                        self.file_url, tab_name, var_row, last_row, var_name
+                    )
+
+        tab_vars = {var.TextTable.Name[1:]: [
+            {text_var.String[1:]: "" for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name}
+        ] for var in tab_generator}
+
+        img_vars = {elem[1:]: {"path": ""} for elem in self.doc.getGraphicObjects().getElementNames()
+                    if elem[0] == '$'}
+
+        return tab_vars | text_vars | img_vars
 
     def search_error(self, json_vars: dict[str: str, dict[str: str], list[dict[str: str]]], json_name: str) -> None:
         """
