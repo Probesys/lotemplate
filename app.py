@@ -115,6 +115,8 @@ def main():
 
 @app.route("/<file>", methods=['GET', 'PUT', 'DELETE', 'POST'])
 def document(file):
+    if not os.path.isfile(f"uploads/{file}"):
+        error_sim("FileNotFound", "The specified file doesn't exist")
     if request.method == 'GET':
         pass  # TODO: re-scan the template
     elif request.method == 'PUT':
