@@ -104,7 +104,7 @@ to fill it.
 | image variables support | ✅        | ✅         | ✅    | ❌   | ❌   | ❌     |
 | dynamic tables support  | ✅        | ❌         | ❌    | ❌   | ❌   | ❌     |
 ### Export
-odt, pdf, html, docx, png.
+odt, pdf, html, docx.
 
 Other formats can be easily added by adding the format information in the dictionary `formats` in 
 [ootemplate/\_\_init__.py](ootemplate/__init__.py) > Template > export().
