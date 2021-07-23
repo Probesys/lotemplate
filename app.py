@@ -39,9 +39,11 @@ def main():
         os.remove(f"uploads/{name}")
         return "The given format is invalid. You can upload ODT, OTT, DOC, DOCX, HTML, RTF or TXT.", 415
     except err.UnoBridgeException:
+        os.remove(f"uploads/{name}")
         return "Internal server error on file opening. Please checks the README file, section 'Unsolvable problems' " \
                "for more informations.", 500
     except err.TemplateVariableNotInLastRow as e:
+        os.remove(f"uploads/{name}")
         return f"The variable {repr(e.variable)} (table {repr(e.table)}) isn't in the last row (got: row " \
                f"{repr(e.row)}, expected: row {repr(e.expected_row)})", 415
     return {'file': name, 'variables': values}
