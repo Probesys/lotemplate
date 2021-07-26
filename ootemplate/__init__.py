@@ -13,6 +13,7 @@ from com.sun.star.io import IOException
 from com.sun.star.lang import IllegalArgumentException
 from com.sun.star.lang import DisposedException
 from com.sun.star.connection import NoConnectException
+from com.sun.star.uno import RuntimeException
 from com.sun.star.awt import Size
 
 
@@ -80,6 +81,9 @@ class Errors:
     class UnoConnectionError(UnoException):
         pass
 
+    class UnoConnectionClosed(UnoConnectionError):
+        pass
+
 
 err = Errors()
 
@@ -94,6 +98,8 @@ class Connexion:
         :param port: the host port to connect to
         """
 
+        self.host = host
+        self.port = port
         self.local_ctx = uno.getComponentContext()
         try:
             self.ctx = self.local_ctx.ServiceManager.createInstanceWithContext(
@@ -154,6 +160,11 @@ class Template:
             raise FileNotFoundError(
                 f"the given file does not exist or has not been found (file {repr(self.file_url)})"
             ) from None
+        except RuntimeException as e:
+            raise err.UnoConnectionClosed(
+                f"The previously etablished connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
+                f"has been closed, or ran into an unknown error. Please restart the soffice process, and retry."
+            ) from e
         if not self.doc:
             raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_url)})", self.file_url)
         self.variables = self.scan() if should_scan else None
@@ -401,6 +412,11 @@ class Template:
                 f"The connection bridge crashed on file opening (file {repr(self.file_url)})."
                 f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
                 f"it, please read the README file, section 'Unsolvable Problems'."
+            ) from e
+        except RuntimeException as e:
+            raise err.UnoConnectionClosed(
+                f"The previously etablished connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
+                f"has been closed, or ran into an unknown error. Please restart the soffice process, and retry."
             ) from e
 
         for variable, value in variables.items():
