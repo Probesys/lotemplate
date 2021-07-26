@@ -66,7 +66,7 @@ def error_sim(exception: str, message: str) -> dict:
     return {'error': exception, 'message': message, 'variables': []}
 
 
-def save_file(f):
+def save_file(f, name):
     """
     upload a template file, and scan it.
 
@@ -76,7 +76,6 @@ def save_file(f):
 
     if not f:
         return error_sim("MissingFileError", "You must provide a valid file in the body, key 'file'"), 400
-    name = secure_filename(f.filename)
     file_type = name.split(".")[-1]
     name_without_num = name
     if not os.path.isdir("uploads"):
@@ -115,7 +114,7 @@ def save_file(f):
 @app.route("/", methods=['POST'])
 def main():
     f = request.files.get('file')
-    return save_file(f)
+    return save_file(f, secure_filename(f.filename))
 
 
 @app.route("/<file>", methods=['GET', 'PUT', 'DELETE', 'POST'])
@@ -136,7 +135,7 @@ def document(file):
     elif request.method == 'PUT':
         os.remove(f"uploads/{file}")
         f = request.files.get('file')
-        return save_file(f)
+        return save_file(f, file)
     elif request.method == 'POST':
         if 'format' not in request.headers:
             return error_sim("MissingFileError", "You must provide a valid format in the headers, key 'format'"), 400
