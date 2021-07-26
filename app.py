@@ -138,7 +138,30 @@ def document(file):
         f = request.files.get('file')
         return save_file(f)
     elif request.method == 'POST':
-        pass  # TODO: send json and return the filled template
+        if 'format' not in request.headers:
+            return error_sim("MissingFileError", "You must provide a valid format in the headers, key 'format'"), 400
+        if not os.path.isdir("exports"):
+            os.mkdir("exports")
+        try:
+            json_variables = ot.convert_to_datas_template(file, request.json)
+        except Exception as e:
+            return error_format(e), 400
+        try:
+            with ot.Template(f"uploads/{file}", cnx, True) as temp:
+                try:
+                    temp.search_error(json_variables, file)
+                    temp.fill(request.json)
+                    temp.export("exports/export." + request.headers['format'])
+                    return send_file("exports/export." + request.headers['format'],
+                                     attachment_filename='export.' + request.headers['format'])
+                except Exception as e:
+                    return error_format(e), 400
+        except err.UnoBridgeException as e:
+            return (
+                error_format(e, "Internal server error on file opening. Please checks the README file, section "
+                                "'Unsolvable problems' for more informations."),
+                500
+            )
     elif request.method == 'DELETE':
         os.remove(f"uploads/{file}")
         return {'file': file, 'message': "File successfully deleted"}, 200
