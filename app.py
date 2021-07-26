@@ -66,15 +66,14 @@ def error_sim(exception: str, message: str) -> dict:
     return {'error': exception, 'message': message, 'variables': []}
 
 
-@app.route("/", methods=['POST'])
-def main():
+def save_file(f):
     """
     upload a template file, and scan it.
 
     :return: a json, with the filename under which it was saved (key 'file'),
     and the scanned variables present in the template (key 'variables')
     """
-    f = request.files.get('file')
+
     if not f:
         return error_sim("MissingFileError", "You must provide a valid file in the body, key 'file'"), 400
     name = secure_filename(f.filename)
@@ -110,7 +109,13 @@ def main():
                             f"{repr(e.row)}, expected: row {repr(e.expected_row)})"),
             415
         )
-    return {'file': name, 'variables': values}
+    return {'file': name, 'message': "Successfully uploaded", 'variables': values}
+
+
+@app.route("/", methods=['POST'])
+def main():
+    f = request.files.get('file')
+    return save_file(f)
 
 
 @app.route("/<file>", methods=['GET', 'PUT', 'DELETE', 'POST'])
@@ -127,9 +132,11 @@ def document(file):
                                 "'Unsolvable problems' for more informations."),
                 500
             )
-        return {'file': file, 'variables': variables}
+        return {'file': file, 'message': "Successfully scanned", 'variables': variables}
     elif request.method == 'PUT':
-        pass  # TODO: edit the template
+        os.remove(f"uploads/{file}")
+        f = request.files.get('file')
+        return save_file(f)
     elif request.method == 'POST':
         pass  # TODO: send json and return the filled template
     elif request.method == 'DELETE':
