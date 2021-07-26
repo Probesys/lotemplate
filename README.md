@@ -31,7 +31,16 @@ soffice "--accept=socket,host=[HOST],port=[PORT];urp;StarOffice.ServiceManager"
 with the host and port you wish (recommended = localhost:2002). Be sure that they correspond to the ones provided in the
 [config.ini](config.ini) file 
 
-Then run the following command on the same server, or another one
+Then run the following command on the same server, or another one, and use the following routes :
+- POST / : take a document in the body, key, 'file'. Upload the given document.
+  Returns a json containing the filename, and the scanned variables of the template
+- GET /\<file> : take nothing, except the uploaded filename in the url. Returns the filename and scanned variables
+- DELETE /\<file> : take nothing, except the uploaded filename in the url. Deletes the uploaded file
+- PUT /\<file> : overwrite the file specified in the url, with a new document, given in the body, key 'file'. returns 
+  the filename, and the scanned variables. Please note that if there is an error during upload, the old document
+  will still be deleted
+- POST /\<file> : take some json in the raw body, the export format in the headers, key 'format', and return the 
+  template specified in the url filled with the variables specified in the json, at the specified format
 
 ```shell
 python3 -m flask run
