@@ -133,4 +133,5 @@ def document(file):
     elif request.method == 'POST':
         pass  # TODO: send json and return the filled template
     elif request.method == 'DELETE':
-        pass  # TODO: remove the template file
+        os.remove(f"uploads/{file}")
+        return {'file': file, 'message': "File successfully deleted"}, 200
