@@ -114,11 +114,12 @@ Format information can be found on the
 
 ## Unsolvable problems
 
-The error `UnoBridgeException`happens frequently and 
+The error `UnoBridgeException` happens frequently and 
 unpredictably, and this error stops the soffice processus. This error, particularly annoying, is unfortunately 
 impossible to fix, since it's a pyUNO - or soffice - bug, unresolved since 2015. It is therefore very unlikely that 
 this bug will ever be fixed.
 Here is a non-exhaustive list of cases that can cause this bug :
+- The soffice process was simply closed after the connection is established. That's the normal behavior of the error
 - The `.~lock.[FILENAME].odt#` file is present in the folder where the document is open.  This file is created when the 
   file is currently edited via libreoffice or openoffice, and deleted when the programs in which it is edited are 
   closed.

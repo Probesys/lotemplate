@@ -42,12 +42,12 @@ def error_format(exception: Exception, message: str = None) -> dict:
             "The variable 'message' is reserved for formatting, and so the exception cannot be formatted"
         )
     formatted = (
-        {
-           'error': type(exception).__name__,
-           'message': str(exception),
-           'variables': [elem for elem in variables.keys()]
-        }
-        | variables
+            {
+                'error': type(exception).__name__,
+                'message': str(exception),
+                'variables': [elem for elem in variables.keys()]
+            }
+            | variables
     )
     if message:
         formatted['message'] = message
@@ -116,9 +116,18 @@ def main():
 @app.route("/<file>", methods=['GET', 'PUT', 'DELETE', 'POST'])
 def document(file):
     if not os.path.isfile(f"uploads/{file}"):
-        error_sim("FileNotFound", "The specified file doesn't exist")
+        return error_sim("FileNotFound", "The specified file doesn't exist")
     if request.method == 'GET':
-        pass  # TODO: re-scan the template
+        try:
+            with ot.Template(f"uploads/{file}", cnx, True) as temp:
+                variables = temp.variables
+        except err.UnoBridgeException as e:
+            return (
+                error_format(e, "Internal server error on file opening. Please checks the README file, section "
+                                "'Unsolvable problems' for more informations."),
+                500
+            )
+        return {'file': file, 'variables': variables}
     elif request.method == 'PUT':
         pass  # TODO: edit the template
     elif request.method == 'POST':
