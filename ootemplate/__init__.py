@@ -18,58 +18,146 @@ from com.sun.star.awt import Size
 
 class Errors:
     class JsonException(Exception):
+        def __init__(self, message, file):
+            self.json_file = file
+            super().__init__(message)
+
+    class JsonInvalidBaseValueType(JsonException):
+        def __init__(self, message, file, type):
+            super().__init__(message, file)
+            self.type = type
+
+    class JsonVariableError(JsonException):
+        def __init__(self, message, variable: str, _json: str):
+            super().__init__(message, _json)
+            self.variable = variable
+
+    class JsonImageError(JsonException):
+        def __init__(self, message, image: str, _json: str):
+            super().__init__(message, _json)
+            self.image = image
+
+    class JsonImageEmpty(JsonImageError):
         pass
+
+    class JsonImageInvalidArgument(JsonImageError):
+        def __init__(self, message, image: str, _json: str, argument):
+            super().__init__(message, image, _json)
+            self.argument = argument
+
+    class JsonImageInvalidArgumentType(JsonImageInvalidArgument):
+        def __init__(self, message, image: str, _json: str, argument, type):
+            super().__init__(message, image, _json, argument)
+            self.type = type
+
+    class JsonImageInvalidPath(JsonImageError):
+        def __init__(self, message, image, _json, path):
+            super().__init__(message, image, _json)
+            self.path = path
+
+    class JsonTableError(JsonException):
+        def __init__(self, message, table: str, _json: str):
+            super().__init__(message, _json)
+            self.table = table
+
+    class JsonInvalidTableValueType(JsonTableError):
+        def __init__(self, message, table: str, _json: str, type):
+            super().__init__(message, table, _json)
+            self.type = type
+
+    class JsonInvalidRowValueType(JsonInvalidTableValueType):
+        def __init__(self, message, variable: str, _json: str, type, row):
+            super().__init__(message, variable, _json, type)
+            self.row = row
+
+    class JsonInvalidValueType(JsonVariableError):
+        def __init__(self, message, variable: str, _json: str, type):
+            super().__init__(message, variable, _json)
+            self.type = type
+
+    class JsonEmptyTable(JsonTableError):
+        pass
+
+    class JsonEmptyRow(JsonEmptyTable):
+        def __init__(self, message, table, json, row):
+            super().__init__(message, table, json)
+            self.row = row
+
+    class JsonInvalidRowVariable(JsonTableError):
+        def __init__(self, message, table, _json, row_present, variable, row_missing):
+            super().__init__(message, table, _json)
+            self.present_in_row = row_present
+            self.missing_in_row = row_missing
+            self.variable = variable
 
     class TemplateException(Exception):
         def __init__(self, message, file):
-            Exception.__init__(self, message)
+            super().__init__(message)
             self.file = file
-
-    class ExportException(Exception):
-        pass
 
     class TemplateVariableNotInLastRow(TemplateException):
         def __init__(self, message, file, table, row, expected_row, variable):
             super().__init__(message, file)
             self.table = table
-            self.row = row
+            self.actual_row = row
             self.expected_row = expected_row
             self.variable = variable
 
     class TemplateInvalidFormat(TemplateException):
         pass
 
-    class JsonGenericVariableError(JsonException):
-        def __init__(self, diff, _json: dict[str: str, dict[str: str]], _template: dict[str: str, dict[str: str]],
-                     message):
-            Exception.__init__(self, message)
-            self.json = _json
-            self.diff = diff
-            self.template = _template
+    class JsonComparaisonException(Exception):
+        def __init__(self, message, json, template):
+            self.template_file = template
+            self.json_file = json
+            super().__init__(message)
 
-    class JsonMissingRequiredVariable(JsonGenericVariableError):
+    class JsonComparaisonVariableError(JsonComparaisonException):
+        def __init__(self, message, variable: str, _json: str, _template: str):
+            super().__init__(message, _json, _template)
+            self.variable = variable
+
+    class JsonMissingRequiredVariable(JsonComparaisonVariableError):
         pass
 
-    class JsonUnknownVariable(JsonGenericVariableError):
+    class JsonMissingTableRequiredVariable(JsonMissingRequiredVariable):
+        def __init__(self, message, variable: str, _json: str, _template: str, table):
+            super().__init__(message, variable, _json, _template)
+            self.table = table
+
+    class JsonUnknownVariable(JsonComparaisonVariableError):
         pass
 
-    class JsonIncorrectTabVariables(JsonException):
-        pass
+    class JsonIncorrectValueType(JsonComparaisonVariableError):
+        def __init__(self, message, variable, json, template, expected_type, actual_type):
+            super().__init__(message, variable, json, template)
+            self.actual_type = actual_type
+            self.expected_type = expected_type
 
-    class JsonIncorrectValueType(JsonException):
-        pass
+    class JsonUnknownTableVariable(JsonUnknownVariable):
+        def __init__(self, message, variable: str, _json: str, _template: str, table):
+            super().__init__(message, variable, _json, _template)
+            self.table = table
 
-    class JsonEmptyValue(JsonException):
-        pass
-
-    class JsonUnknownArgument(JsonException):
-        pass
-
-    class JsonInvalidArgument(JsonException):
-        pass
+    class ExportException(Exception):
+        def __init__(self, message, file):
+            super().__init__(message)
+            self.file = file
 
     class ExportInvalidFormat(ExportException):
-        pass
+        def __init__(self, message, file, format):
+            super().__init__(message, file)
+            self.format = format
+
+    class ExportUnknownError(ExportException):
+        def __init__(self, message, file, exception):
+            super().__init__(message, file)
+            self.exception = exception
+
+    class FileNotFoundError(Exception):
+        def __init__(self, message, file):
+            super().__init__(message)
+            self.file = file
 
     class UnoException(Exception):
         def __init__(self, message, host, port):
@@ -149,26 +237,29 @@ class Template:
         """
 
         self.cnx = cnx
-        self.file_name = file_path
+        self.file_name = file_path.split("/")[-1]
+        self.file_path = file_path
         self.file_url = get_file_url(file_path)
         try:
             self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
         except DisposedException as e:
             raise err.UnoBridgeException(
                 f"The connection bridge on '{self.cnx.host}:{self.cnx.port}' crashed on file opening "
-                f"(file {repr(self.file_url)}), or the soffice process has been stopped."
+                f"(file {repr(self.file_name)}), or the soffice process has been stopped."
                 f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
                 f"it, please read the README file, section 'Unsolvable Problems'.",
                 cnx.host,
                 cnx.port,
-                self.file_url
+                self.file_name
             ) from e
         except IllegalArgumentException:
-            raise FileNotFoundError(
-                f"the given file does not exist or has not been found (file {repr(self.file_url)})"
+            raise err.FileNotFoundError(
+                f"the given file does not exist or has not been found (file {repr(file_path)})",
+                file_path
             ) from None
         if not self.doc:
-            raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_url)})", self.file_url)
+            raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_name)})",
+                                            self.file_name)
         self.variables = self.scan() if should_scan else None
         self.new = None
 
@@ -207,9 +298,9 @@ class Template:
             for var_name, var_row in tab_cells.items():
                 if var_row != last_row:
                     raise err.TemplateVariableNotInLastRow(
-                        f"The variable {repr(var_name)} (table {repr(tab_name)}, file {repr(self.file_url)}) isn't in "
+                        f"The variable {repr(var_name)} (table {repr(tab_name)}, file {repr(self.file_name)}) isn't in "
                         f"the last row (got: row {repr(var_row)}, expected: row {repr(last_row)})",
-                        self.file_url, tab_name, var_row, last_row, var_name
+                        self.file_name, tab_name, var_row, last_row, var_name
                     )
 
         tab_vars = {var.TextTable.Name[1:]: [
@@ -253,17 +344,17 @@ class Template:
         json_missing = [key for key in set(self.variables) - set(json_vars)]
         if json_missing:
             raise err.JsonMissingRequiredVariable(
-                json_missing[0], json_vars, self.variables,
                 f"The value {repr(json_missing[0])}, present in the template {repr(self.file_name)}, isn't present in "
-                f"the file {repr(json_name)}"
+                f"the file {repr(json_name)}",
+                json_name, json_missing[0], self.file_name
             )
 
         template_missing = [key for key in set(json_vars) - set(self.variables)]
         if template_missing:
             raise err.JsonUnknownVariable(
-                template_missing[0], json_vars, self.variables,
                 f"The variable {repr(template_missing[0])} (file {repr(json_name)}) isn't present in the template "
-                f"{repr(self.file_name)}"
+                f"{repr(self.file_name)}",
+                json_name, template_missing[0], self.file_name
             )
 
         json_incorrect = {key: json_vars[key] for key in json_vars if json_vars[key] != self.variables[key]}
@@ -276,36 +367,38 @@ class Template:
                 f"The variable {repr(bad_key)} (file {repr(json_name)}) should be of type "
                 f"{repr(get_printable_value_type(self.variables[bad_key]))}, but is of type "
                 f"{repr(get_printable_value_type(json_incorrect[bad_key]))}, like in the template "
-                f"{repr(self.file_name)}"
+                f"{repr(self.file_name)}", bad_key, json_name, self.file_name,
+                get_printable_value_type(self.variables[bad_key]),
+                get_printable_value_type(json_incorrect[bad_key])
             )
 
         json_missing = [key for key in set(self.variables[bad_key][0]) - set(json_vars[bad_key][0])]
         if json_missing:
-            raise err.JsonMissingRequiredVariable(
-                json_missing[0], json_vars, self.variables,
+            raise err.JsonMissingTableRequiredVariable(
                 f"The value {repr(json_missing[0])}, present in the template {repr(self.file_name)}, isn't present in "
-                f"the table {repr(bad_key)}, file {repr(json_name)}"
+                f"the table {repr(bad_key)}, file {repr(json_name)}",
+                json_missing[0], json_name, self.file_name, bad_key
             )
 
         template_missing = [key for key in set(json_vars[bad_key][0]) - set(self.variables[bad_key][0])]
         if template_missing:
-            raise err.JsonUnknownVariable(
-                template_missing[0], json_vars, self.variables,
+            raise err.JsonUnknownTableVariable(
                 f"The variable {repr(template_missing[0])} (table {repr(bad_key)}, file {repr(json_name)}) "
-                f"isn't present in the template {repr(self.file_name)}"
+                f"isn't present in the template {repr(self.file_name)}",
+                template_missing[0], json_name, self.file_name, bad_key
             )
 
-        raise err.JsonGenericVariableError(
-            None, json_vars, self.variables,
+        raise err.JsonComparaisonException(
             f"Variables given in the file {repr(json_name)} don't match with the given "
-            f"template {repr(self.file_name)}, but no reason was found"
+            f"template {repr(self.file_name)}, but no reason was found",
+            json_name, self.file_name
         )
 
     def compare_variables(self, given_variables: dict[str: dict[str: str, dict[str: str], list[dict[str: str]]]]) \
             -> dict[str: dict[str: str, list[dict[str: str]]]]:
         """
-        Compare all the *args* dictionaries to *self*,
-        to verify if all the variables presents in *self* are presents in the given dictionaries, or inversely.
+        Compare all the variables in the given dict to *self*,
+        to verify if all the variables presents in *self* are presents in the given dictionary, or inversely.
         If not, raise an error
 
         :param given_variables: format {file_name: values_dict,...} the dicts to compare to the founded
@@ -462,9 +555,15 @@ class Template:
             self.new.storeToURL(url, (PropertyValue("FilterName", 0, formats[file_type], 0),))
 
         except KeyError:
-            raise err.ExportInvalidFormat(f"Invalid export format {repr(file_type)}")
+            raise err.ExportInvalidFormat(
+                f"Invalid export format {repr(file_type)} for file {repr(self.file_name)}",
+                self.file_name, file_type
+            )
         except IOException as e:
-            raise err.ExportException(f"Unable to save document to {repr(path)} : error {e.value}")
+            raise err.ExportUnknownError(
+                f"Unable to save document to {repr(path)} : error {e.value}",
+                self.file_name, e
+            )
 
         return path
 
@@ -505,74 +604,97 @@ def convert_to_datas_template(json_name: str, json_var: dict) -> dict[str: str, 
 
         for i in range(len(value)):
             if type(value[i]) != dict:
-                raise err.JsonIncorrectValueType(
+                raise err.JsonInvalidTableValueType(
                     f"The value type {repr(type(value[i]).__name__)} isn't accepted in a table "
-                    f"(table {repr(variable)}, file {repr(json_name)}")
+                    f"(table {repr(variable)}, file {repr(json_name)}",
+                    variable, json_name, type(value[i]).__name__
+                )
 
             row_cleaned = {}
 
             for row_key, row_value in value[i].items():
                 if type(row_value) != str:
-                    raise err.JsonIncorrectValueType(
+                    raise err.JsonInvalidRowValueType(
                         f"The value type {repr(type(row_value).__name__)} isn't accepted in a row "
-                        f"(row {repr(i)}, table {repr(variable)}, file {repr(json_name)})")
+                        f"(row {repr(i)}, table {repr(variable)}, file {repr(json_name)})",
+                        variable, json_name, type(row_value).__name__, i
+                    )
                 row_cleaned[row_key] = ""
             if not row_cleaned:
-                raise err.JsonEmptyValue(
-                    f"The row n°{repr(i)} is empty (table {repr(variable)}, file {repr(json_name)})")
+                raise err.JsonEmptyRow(
+                    f"The row n°{repr(i)} is empty (table {repr(variable)}, file {repr(json_name)})",
+                    variable, json_name, i
+                )
             cleaned.append(row_cleaned)
 
         if not cleaned:
-            raise err.JsonEmptyValue(f"Table {repr(variable)} is empty (file {repr(json_name)})")
+            raise err.JsonEmptyTable(f"Table {repr(variable)} is empty (file {repr(json_name)})",
+                                     variable, json_name)
 
         for i in range(len(cleaned)):
             if cleaned[i] != cleaned[i - 1]:
 
                 missing = [elem for elem in set(cleaned[i - 1]) - set(cleaned[i])]
                 if missing:
-                    raise err.JsonIncorrectTabVariables(
+                    raise err.JsonInvalidRowVariable(
                         f"The variable {repr(missing[0])}, (row {repr(i if i > 0 else len(cleaned))}, table "
                         f"{repr(variable)}, file {repr(json_name)}), "
-                        f"isn't present in the row {repr(i + 1)}"
+                        f"isn't present in the row {repr(i + 1)}",
+                        variable, json_name, i, missing[0], i + 1
                     )
                 missing = [elem for elem in set(cleaned[i]) - set(cleaned[i - 1])]
                 if missing:
-                    raise err.JsonIncorrectTabVariables(
+                    raise err.JsonInvalidRowVariable(
                         f"The variable {repr(missing[0])}, (row {repr(i + 1)}, table {repr(variable)}, "
                         f"file {repr(json_name)}), "
-                        f"isn't present in the row {repr(i if i > 0 else len(cleaned))}"
+                        f"isn't present in the row {repr(i if i > 0 else len(cleaned))}",
+                        variable, json_name, i + 1, missing[0], i
                     )
 
         return [cleaned[0]]
 
     def get_cleaned_image(json_name: str, variable: str, value: dict) -> dict[str: str]:
         if not value:
-            raise err.JsonEmptyValue(f"Image {repr(variable)} is empty (file {repr(json_name)})")
+            raise err.JsonImageEmpty(
+                f"Image {repr(variable)} is empty (file {repr(json_name)})",
+                variable, json_name
+            )
         for image_key, image_value in value.items():
             if image_key != "path":
-                raise err.JsonUnknownArgument(
+                raise err.JsonImageInvalidArgument(
                     f"The argument {repr(image_key)} is not supported in an image (image {repr(variable)}, "
-                    f"file {repr(json_name)}")
+                    f"file {repr(json_name)}",
+                    variable, json_name, image_key
+                )
             if type(image_value) != str:
-                raise err.JsonInvalidArgument(
+                raise err.JsonImageInvalidArgumentType(
                     f"The argument type {repr(type(image_value).__name__)} is not supported in an image "
-                    f"(image {repr(variable)}, file {repr(json_name)})")
+                    f"(variable 'path', image {repr(variable)}, file {repr(json_name)})",
+                    variable, json_name, image_key, type(image_value).__name__
+                )
 
         if not is_network_based(value["path"]) and not os.path.isfile(value["path"]):
-            raise FileNotFoundError("The file " + value["path"] +
-                                    f" don't exist (image {repr(variable)}, file {repr(json_name)})")
+            raise err.JsonImageInvalidPath(
+                "The file " + value["path"] + f" don't exist (image {repr(variable)}, file {repr(json_name)})",
+                variable, json_name, value["path"]
+            )
         elif is_network_based(value["path"]):
             try:
                 urllib.request.urlopen(value["path"])
             except urllib.error.URLError as error:
-                raise FileNotFoundError("The file " + value["path"] +
-                                        f" don't exist (image {repr(variable)}, file {repr(json_name)})") from error
+                raise err.JsonImageInvalidPath(
+                    "The file " + value["path"] + f" don't exist (image {repr(variable)}, file {repr(json_name)})",
+                    variable, json_name, value["path"]
+                ) from error
 
         return {"path": ""}
 
     if type(json_var) is not dict:
-        raise err.JsonIncorrectValueType(f"The value type {repr(type(json_var).__name__)} isn't accepted in "
-                                         f"json files (file {repr(json_name)})")
+        raise err.JsonInvalidBaseValueType(
+            f"The value type {repr(type(json_var).__name__)} isn't accepted in json files (file {repr(json_name)}), "
+            f"only dictionaries",
+            json_name, type(json_var).__name__
+        )
 
     template = {}
     for key, value in json_var.items():
@@ -583,7 +705,11 @@ def convert_to_datas_template(json_name: str, json_var: dict) -> dict[str: str, 
         elif type(value) == dict:
             value = get_cleaned_image(json_name, key, value)
         else:
-            raise err.JsonIncorrectValueType(f"The value type {repr(type(value).__name__)} isn't accepted")
+            raise err.JsonInvalidValueType(
+                f"The value type {repr(type(value).__name__)} isn't accepted (variable {repr(key)}, "
+                f"file {repr(json_name)})",
+                key, json_name, type(value).__name__
+            )
         template[key] = value
 
     return template

@@ -28,11 +28,11 @@ class Generic(unittest.TestCase):
             ootemplate.convert_to_datas_template("syntax_invalid.json", file_to_dict("files/jsons/syntax_invalid.json"))
 
     def test_invalid_not_dict(self):
-        with self.assertRaises(ootemplate.err.JsonIncorrectValueType):
+        with self.assertRaises(ootemplate.err.JsonInvalidBaseValueType):
             ootemplate.convert_to_datas_template("not_dict.json", file_to_dict("files/jsons/not_dict.json"))
 
     def test_invalid_null(self):
-        with self.assertRaises(ootemplate.err.JsonIncorrectValueType):
+        with self.assertRaises(ootemplate.err.JsonInvalidValueType):
             ootemplate.convert_to_datas_template(
                 "text_vars_invalid_null.json", file_to_dict("files/jsons/text_vars_invalid_null.json"))
 
@@ -69,37 +69,37 @@ class Images(unittest.TestCase):
         )
 
     def test_invalid_empty_value(self):
-        with self.assertRaises(ootemplate.err.JsonEmptyValue):
+        with self.assertRaises(ootemplate.err.JsonImageEmpty):
             ootemplate.convert_to_datas_template(
                 "img_vars_invalid_empty_value.json", file_to_dict("files/jsons/img_vars_invalid_empty_value.json")
             )
 
     def test_invalid_null_path(self):
-        with self.assertRaises(ootemplate.err.JsonInvalidArgument):
+        with self.assertRaises(ootemplate.err.JsonImageInvalidArgumentType):
             ootemplate.convert_to_datas_template(
                 "img_vars_invalid_null_path_type", file_to_dict("files/jsons/img_vars_invalid_null_path_type.json")
             )
 
     def test_invalid_other_argument(self):
-        with self.assertRaises(ootemplate.err.JsonUnknownArgument):
+        with self.assertRaises(ootemplate.err.JsonImageInvalidArgument):
             ootemplate.convert_to_datas_template(
                 "img_vars_invalid_other_argument", file_to_dict("files/jsons/img_vars_invalid_other_argument.json")
             )
 
     def test_invalid_path_type(self):
-        with self.assertRaises(ootemplate.err.JsonInvalidArgument):
+        with self.assertRaises(ootemplate.err.JsonImageInvalidArgumentType):
             ootemplate.convert_to_datas_template(
                 "img_vars_invalid_path_type", file_to_dict("files/jsons/img_vars_invalid_path_type.json")
             )
 
     def test_invalid_path(self):
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(ootemplate.err.JsonImageInvalidPath):
             ootemplate.convert_to_datas_template(
                 "img_vars_invalid_path", file_to_dict("files/jsons/img_vars_invalid_path.json")
             )
 
     def test_invalid_path_from_web(self):
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(ootemplate.err.JsonImageInvalidPath):
             ootemplate.convert_to_datas_template(
                 "img_vars_invalid_path_from_web", file_to_dict("files/jsons/img_vars_invalid_path_from_web.json")
             )
@@ -114,37 +114,37 @@ class Tables(unittest.TestCase):
         )
 
     def test_invalid_empty_table(self):
-        with self.assertRaises(ootemplate.err.JsonEmptyValue):
+        with self.assertRaises(ootemplate.err.JsonEmptyTable):
             ootemplate.convert_to_datas_template(
                 "tab_invalid_empty_table", file_to_dict("files/jsons/tab_invalid_empty_table.json")
             )
 
     def test_invalid_empty_row(self):
-        with self.assertRaises(ootemplate.err.JsonEmptyValue):
+        with self.assertRaises(ootemplate.err.JsonEmptyRow):
             ootemplate.convert_to_datas_template(
                 "tab_invalid_empty_row", file_to_dict("files/jsons/tab_invalid_empty_row.json")
             )
 
     def test_invalid_row_value(self):
-        with self.assertRaises(ootemplate.err.JsonIncorrectValueType):
+        with self.assertRaises(ootemplate.err.JsonInvalidTableValueType):
             ootemplate.convert_to_datas_template(
                 "tab_invalid_value_type_row", file_to_dict("files/jsons/tab_invalid_value_type_row.json")
             )
 
     def test_invalid_cell_value(self):
-        with self.assertRaises(ootemplate.err.JsonIncorrectValueType):
+        with self.assertRaises(ootemplate.err.JsonInvalidRowValueType):
             ootemplate.convert_to_datas_template(
                 "tab_invalid_value_type_cell", file_to_dict("files/jsons/tab_invalid_value_type_cell.json")
             )
 
     def test_invalid_missing_argument(self):
-        with self.assertRaises(ootemplate.err.JsonIncorrectTabVariables):
+        with self.assertRaises(ootemplate.err.JsonInvalidRowVariable):
             ootemplate.convert_to_datas_template(
                 "tab_invalid_missing_argument", file_to_dict("files/jsons/tab_invalid_missing_argument.json")
             )
 
     def test_invalid_missing_argument2(self):
-        with self.assertRaises(ootemplate.err.JsonIncorrectTabVariables):
+        with self.assertRaises(ootemplate.err.JsonInvalidRowVariable):
             ootemplate.convert_to_datas_template(
                 "tab_invalid_missing_argument2", file_to_dict("files/jsons/tab_invalid_missing_argument2.json")
             )
