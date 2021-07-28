@@ -277,7 +277,6 @@ class Template:
                 f"The given format ({repr(self.file_name.split('.'))}) is invalid. (file {repr(self.file_name)})",
                 self.file_name, self.file_name.split('.')
             )
-        print(self.file_url)
         self.variables = self.scan() if should_scan else None
         self.new = None
 
@@ -548,10 +547,11 @@ class Template:
             elif isinstance(value, dict):
                 image_fill(self.new, self.cnx.graphic_provider, variable, value)
 
-    def export(self, name: str) -> [str, None]:
+    def export(self, name: str, should_replace=False) -> [str, None]:
         """
         Exports the newly generated document, if any.
 
+        :param should_replace: precise if the exported file should replace the fils with the same name
         :param name: the path/name with file extension of the file to export.
         file type is automatically deducted from it.
         :return: the full path of the exported document, or None if there is no document to export
@@ -563,10 +563,11 @@ class Template:
         file_type = name.split(".")[-1]
         path = os.getcwd() + "/" + name if name[0] != '/' else name
         path_without_num = path
-        i = 1
-        while os.path.isfile(path):
-            path = path_without_num[:-(len(file_type) + 1)] + f"_{i}." + file_type
-            i += 1
+        if not should_replace:
+            i = 1
+            while os.path.isfile(path):
+                path = path_without_num[:-(len(file_type) + 1)] + f"_{i}." + file_type
+                i += 1
 
         url = unohelper.systemPathToFileUrl(path)
         formats = {

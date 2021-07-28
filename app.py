@@ -142,7 +142,6 @@ def save_file(f, name: str, error_catched=False):
 
 
 def scan_file(file: str, error_catched=False):
-    print("test")
     try:
         with ot.Template(f"uploads/{file}", cnx, True) as temp:
             variables = temp.variables
@@ -171,7 +170,7 @@ def fill_file(file, format, json, error_catched=False):
             try:
                 temp.search_error(json_variables, "request_body")
                 temp.fill(json)
-                temp.export("exports/export." + format)
+                temp.export("exports/export." + format, True)
                 return send_file("exports/export." + format,
                                  attachment_filename='export.' + format)
             except Exception as e:
