@@ -1,16 +1,31 @@
-from copy import copy
-
 from flask import *
+
 import ootemplate as ot
 from ootemplate import err
 import configparser
 from werkzeug.utils import secure_filename
 import os
+from shutil import copyfile
+import subprocess
+from copy import copy
+from time import sleep
 
 app = Flask(__name__)
 config = configparser.ConfigParser()
 config.read("config.ini")
-cnx = ot.Connexion(config['Connect']['host'], config['Connect']['port'])
+host = config['Connect']['host']
+port = config['Connect']['port']
+subprocess.call(f'soffice "--accept=socket,host={host},port={port};urp;StarOffice.ServiceManager" &', shell=True)
+sleep(0.2)
+cnx = ot.Connexion(host, port)
+
+
+def restart_soffice():
+    global cnx
+    subprocess.call(f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
+                    shell=True)
+    sleep(0.2)
+    cnx = ot.Connexion(cnx.host, cnx.port)
 
 
 def error_format(exception: Exception, message: str = None) -> dict:
@@ -66,7 +81,7 @@ def error_sim(exception: str, message: str) -> dict:
     return {'error': exception, 'message': message, 'variables': []}
 
 
-def save_file(f, name):
+def save_file(f, name: str, error_catched=False):
     """
     upload a template file, and scan it.
 
@@ -84,6 +99,7 @@ def save_file(f, name):
     while os.path.isfile(f"uploads/{name}"):
         name = name_without_num[:-(len(file_type) + 1)] + f"_{i}." + file_type
         i += 1
+    f.stream.seek(0)
     f.save(f"uploads/{name}")
     try:
         with ot.Template(f"uploads/{name}", cnx, True) as temp:
@@ -96,24 +112,97 @@ def save_file(f, name):
         )
     except err.UnoBridgeException as e:
         os.remove(f"uploads/{name}")
-        return (
-            error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                            "'Unsolvable problems' for more informations."),
-            500
-        )
+        restart_soffice()
+        if error_catched:
+            return (
+                error_format(e, "Internal server error on file opening. Please checks the README file, section "
+                                "'Unsolvable problems' for more informations."),
+                500
+            )
+        else:
+            return save_file(f, name, True)
+    except err.UnoConnectionClosed as e:
+        os.remove(f"uploads/{name}")
+        restart_soffice()
+        if error_catched:
+            return (
+                error_format(e, "Internal server error : the soffice process keeps closing. Please check the error "
+                                "for more help"),
+                500
+            )
+        else:
+            return save_file(f, name, True)
     except err.TemplateVariableNotInLastRow as e:
         os.remove(f"uploads/{name}")
-        return (
-            error_format(e, f"The variable {repr(e.variable)} (table {repr(e.table)}) isn't in the last row (got: row "
-                            f"{repr(e.row)}, expected: row {repr(e.expected_row)})"),
-            415
-        )
+        return error_format(e), 415
+    except Exception as e:
+        os.remove(f"uploads/{name}")
+        return error_format(e), 500
     return {'file': name, 'message': "Successfully uploaded", 'variables': values}
+
+
+def scan_file(file: str, error_catched=False):
+    print("test")
+    try:
+        with ot.Template(f"uploads/{file}", cnx, True) as temp:
+            variables = temp.variables
+    except err.UnoBridgeException as e:
+        restart_soffice()
+        if error_catched:
+            return (
+                error_format(e, "Internal server error on file opening. Please checks the README file, section "
+                                "'Unsolvable problems' for more informations."),
+                500
+            )
+        else:
+            return scan_file(file, True)
+    return {'file': file, 'message': "Successfully scanned", 'variables': variables}
+
+
+def fill_file(file, format, json, error_catched=False):
+    if not os.path.isdir("exports"):
+        os.mkdir("exports")
+    try:
+        json_variables = ot.convert_to_datas_template(file, json)
+    except Exception as e:
+        return error_format(e), 415
+    try:
+        with ot.Template(f"uploads/{file}", cnx, True) as temp:
+            try:
+                temp.search_error(json_variables, "request_body")
+                temp.fill(json)
+                temp.export("exports/export." + format)
+                return send_file("exports/export." + format,
+                                 attachment_filename='export.' + format)
+            except Exception as e:
+                return error_format(e), 415
+    except err.UnoBridgeException as e:
+        restart_soffice()
+        if error_catched:
+            return (
+                error_format(e, "Internal server error on file opening. Please checks the README file, section "
+                                "'Unsolvable problems' for more informations."),
+                500
+            )
+        else:
+            return fill_file(file, format, json, True)
+    except err.UnoConnectionClosed as e:
+        restart_soffice()
+        if error_catched:
+            return (
+                error_format(e, "Internal server error : the soffice process keeps closing. Please check the error "
+                                "for more help"),
+                500
+            )
+        else:
+            return fill_file(file, format, json, True)
 
 
 @app.route("/", methods=['POST'])
 def main():
     f = request.files.get('file')
+    if not f:
+        return error_sim("MissingFileError", "You must provide a valid file in the body, key 'file'"), 400
     return save_file(f, secure_filename(f.filename))
 
 
@@ -122,45 +211,22 @@ def document(file):
     if not os.path.isfile(f"uploads/{file}"):
         return error_sim("FileNotFound", "The specified file doesn't exist")
     if request.method == 'GET':
-        try:
-            with ot.Template(f"uploads/{file}", cnx, True) as temp:
-                variables = temp.variables
-        except err.UnoBridgeException as e:
-            return (
-                error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                                "'Unsolvable problems' for more informations."),
-                500
-            )
-        return {'file': file, 'message': "Successfully scanned", 'variables': variables}
+        return scan_file(file)
     elif request.method == 'PUT':
+        copyfile(f"uploads/{file}", f"uploads/temp_{file}")
         os.remove(f"uploads/{file}")
         f = request.files.get('file')
-        return save_file(f, file)
+        datas = save_file(f, file)
+        if isinstance(datas, tuple):
+            copyfile(f"uploads/temp_{file}", f"uploads/{file}")
+        os.remove(f"uploads/temp_{file}")
+        return datas
     elif request.method == 'POST':
         if 'format' not in request.headers:
-            return error_sim("MissingFileError", "You must provide a valid format in the headers, key 'format'"), 400
-        if not os.path.isdir("exports"):
-            os.mkdir("exports")
-        try:
-            json_variables = ot.convert_to_datas_template(file, request.json)
-        except Exception as e:
-            return error_format(e), 400
-        try:
-            with ot.Template(f"uploads/{file}", cnx, True) as temp:
-                try:
-                    temp.search_error(json_variables, file)
-                    temp.fill(request.json)
-                    temp.export("exports/export." + request.headers['format'])
-                    return send_file("exports/export." + request.headers['format'],
-                                     attachment_filename='export.' + request.headers['format'])
-                except Exception as e:
-                    return error_format(e), 400
-        except err.UnoBridgeException as e:
-            return (
-                error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                                "'Unsolvable problems' for more informations."),
-                500
-            )
+            return error_sim("BadRequest", "You must provide a valid format in the headers, key 'format'"), 400
+        if not request.json:
+            return error_sim("BadRequest", "You must provide a json in the body"), 400
+        return fill_file(file, request.headers['format'], request.json)
     elif request.method == 'DELETE':
         os.remove(f"uploads/{file}")
-        return {'file': file, 'message': "File successfully deleted"}, 200
+        return {'file': file, 'message': "File successfully deleted"}

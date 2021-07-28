@@ -13,6 +13,7 @@ from com.sun.star.io import IOException
 from com.sun.star.lang import IllegalArgumentException
 from com.sun.star.lang import DisposedException
 from com.sun.star.connection import NoConnectException
+from com.sun.star.uno import RuntimeException
 from com.sun.star.awt import Size
 
 
@@ -104,7 +105,9 @@ class Errors:
             self.variable = variable
 
     class TemplateInvalidFormat(TemplateException):
-        pass
+        def __init__(self, message, template, format):
+            super().__init__(message, template)
+            self.format = format
 
     class JsonComparaisonException(Exception):
         def __init__(self, message, json, template):
@@ -172,6 +175,10 @@ class Errors:
 
     class UnoConnectionError(UnoException):
         pass
+
+    class UnoConnectionClosed(UnoConnectionError):
+        pass
+
 
 
 err = Errors()
@@ -245,7 +252,7 @@ class Template:
         except DisposedException as e:
             raise err.UnoBridgeException(
                 f"The connection bridge on '{self.cnx.host}:{self.cnx.port}' crashed on file opening "
-                f"(file {repr(self.file_name)}), or the soffice process has been stopped."
+                f"(file {repr(self.file_name)})."
                 f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
                 f"it, please read the README file, section 'Unsolvable Problems'.",
                 cnx.host,
@@ -257,9 +264,20 @@ class Template:
                 f"the given file does not exist or has not been found (file {repr(file_path)})",
                 file_path
             ) from None
+        except RuntimeException as e:
+            raise err.UnoConnectionClosed(
+                f"The previously etablished connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
+                f"has been closed, or ran into an unknown error. Please restart the soffice process, and retry.",
+                cnx.host,
+                cnx.port
+            ) from e
+
         if not self.doc:
-            raise err.TemplateInvalidFormat(f"The given format is invalid. (file {repr(self.file_name)})",
-                                            self.file_name)
+            raise err.TemplateInvalidFormat(
+                f"The given format ({repr(self.file_name.split('.'))}) is invalid. (file {repr(self.file_name)})",
+                self.file_name, self.file_name.split('.')
+            )
+        print(self.file_url)
         self.variables = self.scan() if should_scan else None
         self.new = None
 
@@ -346,7 +364,7 @@ class Template:
             raise err.JsonMissingRequiredVariable(
                 f"The value {repr(json_missing[0])}, present in the template {repr(self.file_name)}, isn't present in "
                 f"the file {repr(json_name)}",
-                json_name, json_missing[0], self.file_name
+                json_missing[0], json_name, self.file_name
             )
 
         template_missing = [key for key in set(json_vars) - set(self.variables)]
@@ -354,7 +372,7 @@ class Template:
             raise err.JsonUnknownVariable(
                 f"The variable {repr(template_missing[0])} (file {repr(json_name)}) isn't present in the template "
                 f"{repr(self.file_name)}",
-                json_name, template_missing[0], self.file_name
+                template_missing[0], json_name, self.file_name
             )
 
         json_incorrect = {key: json_vars[key] for key in json_vars if json_vars[key] != self.variables[key]}
@@ -505,12 +523,20 @@ class Template:
         except DisposedException as e:
             raise err.UnoBridgeException(
                 f"The connection bridge on '{self.cnx.host}:{self.cnx.port}' crashed on file opening "
-                f"(file {repr(self.file_url)}), or the soffice process has been stopped."
+                f"(file {repr(self.file_url)})."
                 f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
                 f"it, please read the README file, section 'Unsolvable Problems'.",
                 self.cnx.host,
                 self.cnx.port,
                 self.file_url
+            ) from e
+        except RuntimeException as e:
+            raise err.UnoConnectionClosed(
+                f"The previously etablished connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
+                f"has been closed, or ran into an unknown error. Please restart the soffice process, and retry."
+                f"it, please read the README file, section 'Unsolvable Problems'.",
+                self.cnx.host,
+                self.cnx.port
             ) from e
 
         for variable, value in variables.items():

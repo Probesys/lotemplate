@@ -37,8 +37,7 @@ Then run the following command on the same server, or another one, and use the f
 - GET /\<file> : take nothing, except the uploaded filename in the url. Returns the filename and scanned variables
 - DELETE /\<file> : take nothing, except the uploaded filename in the url. Deletes the uploaded file
 - PUT /\<file> : overwrite the file specified in the url, with a new document, given in the body, key 'file'. returns 
-  the filename, and the scanned variables. Please note that if there is an error during upload, the old document
-  will still be deleted
+  the filename, and the scanned variables.
 - POST /\<file> : take some json in the raw body, the export format in the headers, key 'format', and return the 
   template specified in the url filled with the variables specified in the json, at the specified format
 
@@ -124,11 +123,13 @@ Format information can be found on the
 ## Unsolvable problems
 
 The error `UnoBridgeException` happens frequently and 
-unpredictably, and this error stops the soffice processus. This error, particularly annoying, is unfortunately 
+unpredictably, and this error stops the soffice processus 
+(please note that the API try to re-launch the process by itself). This error, particularly annoying, is unfortunately 
 impossible to fix, since it's a pyUNO - or soffice - bug, unresolved since 2015. It is therefore very unlikely that 
 this bug will ever be fixed.
 Here is a non-exhaustive list of cases that can cause this bug :
-- The soffice process was simply closed after the connection is established. That's the normal behavior of the error
+- The soffice process was simply closed after the connection is established, but instead of raising the 
+  `UnoConnectionClosed` exception, the bridge crashes.
 - The `.~lock.[FILENAME].odt#` file is present in the folder where the document is open.  This file is created when the 
   file is currently edited via libreoffice or openoffice, and deleted when the programs in which it is edited are 
   closed.
@@ -151,8 +152,6 @@ For trying to fix these problems, you can try:
 - [Old OOTemplate code](https://gitlab.probesys.com/troizaire/ootemplate/-/blob/c8f1e759db9494823fa4dded8c70a31d4e047c05/old.py)
 
 ## To do
-1. faire du CLI une API REST basée sur le même noyau avec flask
-   - relancer automatiquement le processus soffice si le bridge est coupé
 2. implémenter l'API sur nemoweb
    - [se renseigner sur Ruby on Rails](https://www.eduonix.com/new_dashboard/Learn-Ruby-on-Rails-By-Building-Projects)
     
