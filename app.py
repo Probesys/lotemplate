@@ -16,7 +16,7 @@ config.read("config.ini")
 host = config['Connect']['host']
 port = config['Connect']['port']
 subprocess.call(f'soffice "--accept=socket,host={host},port={port};urp;StarOffice.ServiceManager" &', shell=True)
-sleep(0.2)
+sleep(0.3)
 cnx = ot.Connexion(host, port)
 
 
@@ -24,7 +24,7 @@ def restart_soffice():
     global cnx
     subprocess.call(f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
                     shell=True)
-    sleep(0.2)
+    sleep(0.3)
     cnx = ot.Connexion(cnx.host, cnx.port)
 
 
