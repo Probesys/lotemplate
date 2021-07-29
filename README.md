@@ -23,15 +23,14 @@ more informations on [the github page of unotools](https://github.com/t2y/unotoo
 
 ## Execute and use the API
 
-Run the following command on your terminal or a server
+Run the following command on your server :
+
 ```shell
-soffice "--accept=socket,host=[HOST],port=[PORT];urp;StarOffice.ServiceManager"
+python3 -m flask run
 ```
 
-with the host and port you wish (recommended = localhost:2002). Be sure that they correspond to the ones provided in the
-[config.ini](config.ini) file 
+Then use the following routes :
 
-Then run the following command on the same server, or another one, and use the following routes :
 - POST / : take a document in the body, key, 'file'. Upload the given document.
   Returns a json containing the filename, and the scanned variables of the template
 - GET /\<file> : take nothing, except the uploaded filename in the url. Returns the filename and scanned variables
@@ -40,10 +39,6 @@ Then run the following command on the same server, or another one, and use the f
   the filename, and the scanned variables.
 - POST /\<file> : take some json in the raw body, the export format in the headers, key 'format', and return the 
   template specified in the url filled with the variables specified in the json, at the specified format
-
-```shell
-python3 -m flask run
-```
 
 ## Execute and use the CLI
 
@@ -152,8 +147,22 @@ For trying to fix these problems, you can try:
 - [Old OOTemplate code](https://gitlab.probesys.com/troizaire/ootemplate/-/blob/c8f1e759db9494823fa4dded8c70a31d4e047c05/old.py)
 
 ## To do
+1. Faire l'API
+   - retravailler toutes les routes pour ranger les documents par sous-dossier, celui-ci étant précisé dans l'url ou 
+     la requête
+   - ajouter une route pour crééer un sous-dossier
+   - ajouter une route pour supprimer, éditer un sous dossier
+   - ajouter une route pour récupérer le template upload
+   - ajouter une route pour récupérer la liste des template d'un sous-dossier, ainsi que leur variables
+   - ajouter une route pour récupérer la liste des sous-dossiers
 2. implémenter l'API sur nemoweb
    - [se renseigner sur Ruby on Rails](https://www.eduonix.com/new_dashboard/Learn-Ruby-on-Rails-By-Building-Projects)
+   - Créer vue controller model
+   - Créer une table "nom du doc" "descriptions" "json"
+   - Upload doc et sauvegarde du retour dans la table.
+   - Afficher un drop down avec la liste des noms de documents
+   - Selection d'un document et display des variables et de leur descriptions
+   - Bouton get document remplis
     
 ## To consider
 
