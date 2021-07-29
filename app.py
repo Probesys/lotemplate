@@ -5,10 +5,11 @@ from ootemplate import err
 import configparser
 from werkzeug.utils import secure_filename
 import os
-from shutil import copyfile
+from shutil import copyfile, rmtree
 import subprocess
 from copy import copy
 from time import sleep
+from typing import Union
 
 app = Flask(__name__)
 config = configparser.ConfigParser()
@@ -18,9 +19,18 @@ port = config['Connect']['port']
 subprocess.call(f'soffice "--accept=socket,host={host},port={port};urp;StarOffice.ServiceManager" &', shell=True)
 sleep(0.3)
 cnx = ot.Connexion(host, port)
+if not os.path.isdir("uploads"):
+    os.mkdir("uploads")
+if not os.path.isdir("exports"):
+    os.mkdir("exports")
 
 
-def restart_soffice():
+def restart_soffice() -> None:
+    """
+    simply restart the soffice process
+
+    :return: None
+    """
     global cnx
     subprocess.call(f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
                     shell=True)
@@ -69,49 +79,50 @@ def error_format(exception: Exception, message: str = None) -> dict:
     return formatted
 
 
-def error_sim(exception: str, message: str) -> dict:
+def error_sim(exception: str, message: str, variables=dict({})) -> dict:
     """
     Simulate an error catch, ans return a error-formatted dict in the same way as error_format does
 
     :param exception: the exception name
     :param message: the message of the exception
+    :param variables: the list of variables to join
     :return: the formatted dict
     """
 
-    return {'error': exception, 'message': message, 'variables': []}
+    return {'error': exception, 'message': message, 'variables': [key for key in variables.keys()]} | variables
 
 
-def save_file(f, name: str, error_catched=False):
+def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[dict, int], dict]:
     """
     upload a template file, and scan it.
 
+    :param f: the file to save
+    :param directory: the directory of the file
+    :param name: the name of the file
+    :param error_catched: specify if an error has been catched
     :return: a json, with the filename under which it was saved (key 'file'),
     and the scanned variables present in the template (key 'variables')
     """
 
-    if not f:
-        return error_sim("MissingFileError", "You must provide a valid file in the body, key 'file'"), 400
     file_type = name.split(".")[-1]
     name_without_num = name
-    if not os.path.isdir("uploads"):
-        os.mkdir("uploads")
     i = 1
-    while os.path.isfile(f"uploads/{name}"):
+    while os.path.isfile(f"uploads/{directory}/{name}"):
         name = name_without_num[:-(len(file_type) + 1)] + f"_{i}." + file_type
         i += 1
     f.stream.seek(0)
-    f.save(f"uploads/{name}")
+    f.save(f"uploads/{directory}/{name}")
     try:
-        with ot.Template(f"uploads/{name}", cnx, True) as temp:
+        with ot.Template(f"uploads/{directory}/{name}", cnx, True) as temp:
             values = temp.variables
     except err.TemplateInvalidFormat as e:
-        os.remove(f"uploads/{name}")
+        os.remove(f"uploads/{directory}/{name}")
         return (
             error_format(e, "The given format is invalid. You can upload ODT, OTT, DOC, DOCX, HTML, RTF or TXT."),
             415
         )
     except err.UnoBridgeException as e:
-        os.remove(f"uploads/{name}")
+        os.remove(f"uploads/{directory}/{name}")
         restart_soffice()
         if error_catched:
             return (
@@ -120,9 +131,9 @@ def save_file(f, name: str, error_catched=False):
                 500
             )
         else:
-            return save_file(f, name, True)
+            return save_file(directory, f, name, True)
     except err.UnoConnectionClosed as e:
-        os.remove(f"uploads/{name}")
+        os.remove(f"uploads/{directory}/{name}")
         restart_soffice()
         if error_catched:
             return (
@@ -131,19 +142,28 @@ def save_file(f, name: str, error_catched=False):
                 500
             )
         else:
-            return save_file(f, name, True)
+            return save_file(directory, f, name, True)
     except err.TemplateVariableNotInLastRow as e:
-        os.remove(f"uploads/{name}")
+        os.remove(f"uploads/{directory}/{name}")
         return error_format(e), 415
     except Exception as e:
-        os.remove(f"uploads/{name}")
+        os.remove(f"uploads/{directory}/{name}")
         return error_format(e), 500
     return {'file': name, 'message': "Successfully uploaded", 'variables': values}
 
 
-def scan_file(file: str, error_catched=False):
+def scan_file(directory: str, file: str, error_catched=False) -> Union[tuple[dict, int], dict]:
+    """
+    scans the specified file
+
+    :param directory: the directory where the file is
+    :param file: the file to scan
+    :param error_catched: specify if an error was already catched
+    :return: a json and optionaly an int which represent the status code to return
+    """
+
     try:
-        with ot.Template(f"uploads/{file}", cnx, True) as temp:
+        with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
             variables = temp.variables
     except err.UnoBridgeException as e:
         restart_soffice()
@@ -154,19 +174,28 @@ def scan_file(file: str, error_catched=False):
                 500
             )
         else:
-            return scan_file(file, True)
+            return scan_file(directory, file, True)
     return {'file': file, 'message': "Successfully scanned", 'variables': variables}
 
 
-def fill_file(file, format, json, error_catched=False):
-    if not os.path.isdir("exports"):
-        os.mkdir("exports")
+def fill_file(directory: str, file: str, format: str, json: dict, error_catched=False) -> Union[tuple[dict, int], dict]:
+    """
+    fill the specified file
+
+    :param directory: the directory where the file is
+    :param file: the file to fill
+    :param format: the specified export format
+    :param json: the json to fill the document with
+    :param error_catched: specify if an error was already catched
+    :return: a json and optionaly an int which represent the status code to return
+    """
+
     try:
         json_variables = ot.convert_to_datas_template(file, json)
     except Exception as e:
         return error_format(e), 415
     try:
-        with ot.Template(f"uploads/{file}", cnx, True) as temp:
+        with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
             try:
                 temp.search_error(json_variables, "request_body")
                 temp.fill(json)
@@ -184,7 +213,7 @@ def fill_file(file, format, json, error_catched=False):
                 500
             )
         else:
-            return fill_file(file, format, json, True)
+            return fill_file(directory, file, format, json, True)
     except err.UnoConnectionClosed as e:
         restart_soffice()
         if error_catched:
@@ -194,38 +223,78 @@ def fill_file(file, format, json, error_catched=False):
                 500
             )
         else:
-            return fill_file(file, format, json, True)
+            return fill_file(directory, file, format, json, True)
 
 
-@app.route("/", methods=['POST'])
+@app.route("/", methods=['PUT'])
 def main():
-    f = request.files.get('file')
-    if not f:
-        return error_sim("MissingFileError", "You must provide a valid file in the body, key 'file'"), 400
-    return save_file(f, secure_filename(f.filename))
+    if 'directory' not in request.headers:
+        return error_sim("BadRequest", "You must provide a valid format in the headers, key 'directory'",
+                         {'key': 'directory'}), 400
+    directory = request.headers['directory'].replace('/', '')
+    if os.path.isdir(f"uploads/{directory}"):
+        return error_sim("DirAlreadyExists", f"the specified directory {repr(directory)} already exists",
+                         {'directory': directory}), 415
+    os.mkdir(f"uploads/{directory}")
+    return {'directory': directory, "message": "Successfully created"}
 
 
-@app.route("/<file>", methods=['GET', 'PUT', 'DELETE', 'POST'])
-def document(file):
-    if not os.path.isfile(f"uploads/{file}"):
-        return error_sim("FileNotFound", "The specified file doesn't exist")
+@app.route("/<directory>", methods=['GET', 'PUT', 'DELETE', 'PATCH'])
+def directory(directory):
+    if not os.path.isdir(f"uploads/{directory}"):
+        return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
+                         {'directory': directory}), 415
     if request.method == 'GET':
-        return scan_file(file)
+        return None  # TODO: récup la liste des fichiers et leur scan
     elif request.method == 'PUT':
-        copyfile(f"uploads/{file}", f"uploads/temp_{file}")
-        os.remove(f"uploads/{file}")
         f = request.files.get('file')
-        datas = save_file(f, file)
+        if not f:
+            return error_sim("MissingFileError", "You must provide a valid file in the body, key 'file'",
+                             {'key': 'file'}), 400
+        return save_file(directory, f, secure_filename(f.filename))
+    elif request.method == 'DELETE':
+        rmtree(f"uploads/{directory}")
+        return {'directory': directory, 'message': 'The directory and all his content has been deleted'}
+    elif request.method == 'PATCH':
+        if 'name' not in request.headers:
+            return error_sim("BadRequest", "You must provide a valid name in the headers, key 'name'",
+                             {'key': 'name'}), 400
+        new_name = request.headers['name'].replace('/', '')
+        os.rename(f"uploads/{directory}", f"uploads/{new_name}")
+        return {'directory': new_name,
+                'old_directory': directory,
+                "message": f"directory {directory} sucessfully renamed in {new_name}"}
+
+
+@app.route("/<directory>/<file>", methods=['GET', 'PATCH', 'DELETE', 'POST'])
+def file(directory, file):
+    if not os.path.isdir(f"uploads/{directory}"):
+        return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
+                         {'directory': directory}), 415
+    if not os.path.isfile(f"uploads/{directory}/{file}"):
+        return error_sim("FileNotFoundError", f"the specified file {repr(file)} doesn't exist in {repr(directory)}",
+                         {'file': file, 'directory': directory}), 415
+    if request.method == 'GET':
+        return scan_file(directory, file)
+    elif request.method == 'PATCH':
+        copyfile(f"uploads/{directory}/{file}", f"uploads/temp_{file}")
+        os.remove(f"uploads/{directory}/{file}")
+        f = request.files.get('file')
+        if not f:
+            return error_sim("MissingFileError", "You must provide a valid file in the body, key 'file'",
+                             {'key': 'file'}), 400
+        datas = save_file(directory, f, file)
         if isinstance(datas, tuple):
-            copyfile(f"uploads/temp_{file}", f"uploads/{file}")
+            copyfile(f"uploads/temp_{file}", f"uploads/{directory}/{file}")
         os.remove(f"uploads/temp_{file}")
         return datas
     elif request.method == 'POST':
         if 'format' not in request.headers:
-            return error_sim("BadRequest", "You must provide a valid format in the headers, key 'format'"), 400
+            return error_sim("BadRequest", "You must provide a valid format in the headers, key 'format'",
+                             {'key': 'format'}), 400
         if not request.json:
             return error_sim("BadRequest", "You must provide a json in the body"), 400
-        return fill_file(file, request.headers['format'], request.json)
+        return fill_file(directory, file, request.headers['format'], request.json)
     elif request.method == 'DELETE':
-        os.remove(f"uploads/{file}")
-        return {'file': file, 'message': "File successfully deleted"}
+        os.remove(f"uploads/{directory}/{file}")
+        return {'directory': directory, 'file': file, 'message': "File successfully deleted"}
