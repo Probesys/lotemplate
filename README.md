@@ -40,6 +40,10 @@ Then use the following routes :
 - POST /\<file> : take some json in the raw body, the export format in the headers, key 'format', and return the 
   template specified in the url filled with the variables specified in the json, at the specified format
 
+you may wish to deploy the API on your server. 
+[Here's how to do it](https://flask.palletsprojects.com/en/2.0.x/deploying/) - 
+*but don't forget that you should have soffice installed on the server*
+
 ## Execute and use the CLI
 
 Run the following command on your terminal or a server
@@ -145,6 +149,9 @@ For trying to fix these problems, you can try:
 - [OpenOffice Python Bridge informations and code exemples](http://www.openoffice.org/udk/python/python-bridge.html)
 - [com.sun.star Java API docs (On which pyuno is based - but is not identical)](https://www.openoffice.org/api/docs/common/ref/com/sun/star/module-ix.html)
 - [Old OOTemplate code](https://gitlab.probesys.com/troizaire/ootemplate/-/blob/c8f1e759db9494823fa4dded8c70a31d4e047c05/old.py)
+- [Deploying Flask](https://flask.palletsprojects.com/en/2.0.x/deploying/)
+- [Flask documentation - quickstart](https://flask.palletsprojects.com/en/2.0.x/quickstart/)
+- [Flask documentation - upload](https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/)
 
 ## To do
 1. Faire l'API
