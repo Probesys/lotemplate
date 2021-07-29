@@ -155,10 +155,7 @@ For trying to fix these problems, you can try:
 
 ## To do
 1. Faire l'API
-   - retravailler toutes les routes pour ranger les documents par sous-dossier, celui-ci étant précisé dans l'url ou 
-     la requête
-   - ajouter une route pour crééer un sous-dossier
-   - ajouter une route pour supprimer, éditer un sous dossier
+   - changer le readme pour mettre le nouvel usage
    - ajouter une route pour récupérer le template upload
    - ajouter une route pour récupérer la liste des template d'un sous-dossier, ainsi que leur variables
    - ajouter une route pour récupérer la liste des sous-dossiers
