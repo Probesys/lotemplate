@@ -156,7 +156,6 @@ For trying to fix these problems, you can try:
 ## To do
 1. Faire l'API
    - changer le readme pour mettre le nouvel usage
-   - ajouter une route pour récupérer le template upload
    - ajouter une route pour récupérer la liste des template d'un sous-dossier, ainsi que leur variables
    - ajouter une route pour récupérer la liste des sous-dossiers
 2. implémenter l'API sur nemoweb

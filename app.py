@@ -17,7 +17,7 @@ config.read("config.ini")
 host = config['Connect']['host']
 port = config['Connect']['port']
 subprocess.call(f'soffice "--accept=socket,host={host},port={port};urp;StarOffice.ServiceManager" &', shell=True)
-sleep(0.3)
+sleep(0.5)
 cnx = ot.Connexion(host, port)
 if not os.path.isdir("uploads"):
     os.mkdir("uploads")
@@ -266,7 +266,7 @@ def directory(directory):
                 "message": f"directory {directory} sucessfully renamed in {new_name}"}
 
 
-@app.route("/<directory>/<file>", methods=['GET', 'PATCH', 'DELETE', 'POST'])
+@app.route("/<directory>/<file>", methods=['HEAD', 'GET', 'PATCH', 'DELETE', 'POST'])
 def file(directory, file):
     if not os.path.isdir(f"uploads/{directory}"):
         return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
@@ -274,8 +274,10 @@ def file(directory, file):
     if not os.path.isfile(f"uploads/{directory}/{file}"):
         return error_sim("FileNotFoundError", f"the specified file {repr(file)} doesn't exist in {repr(directory)}",
                          {'file': file, 'directory': directory}), 415
-    if request.method == 'GET':
+    if request.method == 'HEAD':
         return scan_file(directory, file)
+    if request.method == 'GET':
+        return send_file(f"uploads/{directory}/{file}")
     elif request.method == 'PATCH':
         copyfile(f"uploads/{directory}/{file}", f"uploads/temp_{file}")
         os.remove(f"uploads/{directory}/{file}")
