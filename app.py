@@ -14,8 +14,8 @@ from typing import Union
 app = Flask(__name__)
 config = configparser.ConfigParser()
 config.read("config.ini")
-host = config['Connect']['host']
-port = config['Connect']['port']
+host = config['Soffice']['host']
+port = config['Soffice']['port']
 subprocess.call(f'soffice "--accept=socket,host={host},port={port};urp;StarOffice.ServiceManager" &', shell=True)
 sleep(1)
 cnx = ot.Connexion(host, port)
