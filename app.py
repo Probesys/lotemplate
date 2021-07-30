@@ -249,7 +249,14 @@ def directory(directory):
         return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
                          {'directory': directory}), 415
     elif request.method == 'GET':
-        return {}  # TODO: récup la liste des fichiers et leur scan
+        datas = []
+        for file in os.listdir(f"uploads/{directory}"):
+            file_info = scan_file(directory, file)
+            if isinstance(file_info, tuple):
+                return file_info
+            file_info.pop('message')
+            datas.append(file_info)
+        return jsonify(datas)
     elif request.method == 'PUT':
         f = request.files.get('file')
         if not f:
