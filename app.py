@@ -264,6 +264,9 @@ def directory(directory):
             return error_sim("BadRequest", "You must provide a valid name in the headers, key 'name'",
                              {'key': 'name'}), 400
         new_name = request.headers['name'].replace('/', '')
+        if os.path.isdir(f"uploads/{new_name}"):
+            return error_sim("DirAlreadyExists", f"the specified directory {repr(new_name)} already exists",
+                             {'directory': new_name, 'original_directory': directory}), 415
         os.rename(f"uploads/{directory}", f"uploads/{new_name}")
         return {'directory': new_name,
                 'old_directory': directory,
