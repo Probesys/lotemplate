@@ -17,7 +17,7 @@ config.read("config.ini")
 host = config['Connect']['host']
 port = config['Connect']['port']
 subprocess.call(f'soffice "--accept=socket,host={host},port={port};urp;StarOffice.ServiceManager" &', shell=True)
-sleep(0.5)
+sleep(1)
 cnx = ot.Connexion(host, port)
 if not os.path.isdir("uploads"):
     os.mkdir("uploads")
@@ -226,26 +226,30 @@ def fill_file(directory: str, file: str, format: str, json: dict, error_catched=
             return fill_file(directory, file, format, json, True)
 
 
-@app.route("/", methods=['PUT'])
+@app.route("/", methods=['PUT', 'GET'])
 def main():
-    if 'directory' not in request.headers:
-        return error_sim("BadRequest", "You must provide a valid format in the headers, key 'directory'",
-                         {'key': 'directory'}), 400
-    directory = request.headers['directory'].replace('/', '')
-    if os.path.isdir(f"uploads/{directory}"):
-        return error_sim("DirAlreadyExists", f"the specified directory {repr(directory)} already exists",
-                         {'directory': directory}), 415
-    os.mkdir(f"uploads/{directory}")
-    return {'directory': directory, "message": "Successfully created"}
+    if request.method == 'PUT':
+        if 'directory' not in request.headers:
+            return error_sim("BadRequest", "You must provide a valid format in the headers, key 'directory'",
+                             {'key': 'directory'}), 400
+        directory = request.headers['directory'].replace('/', '')
+        if os.path.isdir(f"uploads/{directory}"):
+            return error_sim("DirAlreadyExists", f"the specified directory {repr(directory)} already exists",
+                             {'directory': directory}), 415
+        os.mkdir(f"uploads/{directory}")
+        return {'directory': directory, "message": "Successfully created"}
+    elif request.method == 'GET':
+        print(list(os.listdir("uploads")))
+        return jsonify(os.listdir("uploads"))
 
 
-@app.route("/<directory>", methods=['GET', 'PUT', 'DELETE', 'PATCH'])
+@app.route("/<directory>", methods=['PUT', 'DELETE', 'PATCH', 'GET'])
 def directory(directory):
     if not os.path.isdir(f"uploads/{directory}"):
         return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
                          {'directory': directory}), 415
-    if request.method == 'GET':
-        return None  # TODO: récup la liste des fichiers et leur scan
+    elif request.method == 'GET':
+        return {}  # TODO: récup la liste des fichiers et leur scan
     elif request.method == 'PUT':
         f = request.files.get('file')
         if not f:
@@ -266,7 +270,7 @@ def directory(directory):
                 "message": f"directory {directory} sucessfully renamed in {new_name}"}
 
 
-@app.route("/<directory>/<file>", methods=['HEAD', 'GET', 'PATCH', 'DELETE', 'POST'])
+@app.route("/<directory>/<file>", methods=['GET', 'PATCH', 'DELETE', 'POST'])
 def file(directory, file):
     if not os.path.isdir(f"uploads/{directory}"):
         return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
@@ -274,10 +278,8 @@ def file(directory, file):
     if not os.path.isfile(f"uploads/{directory}/{file}"):
         return error_sim("FileNotFoundError", f"the specified file {repr(file)} doesn't exist in {repr(directory)}",
                          {'file': file, 'directory': directory}), 415
-    if request.method == 'HEAD':
-        return scan_file(directory, file)
     if request.method == 'GET':
-        return send_file(f"uploads/{directory}/{file}")
+        return scan_file(directory, file)
     elif request.method == 'PATCH':
         copyfile(f"uploads/{directory}/{file}", f"uploads/temp_{file}")
         os.remove(f"uploads/{directory}/{file}")
@@ -300,3 +302,14 @@ def file(directory, file):
     elif request.method == 'DELETE':
         os.remove(f"uploads/{directory}/{file}")
         return {'directory': directory, 'file': file, 'message': "File successfully deleted"}
+
+
+@app.route("/<directory>/<file>/download")
+def download(directory, file):
+    if not os.path.isdir(f"uploads/{directory}"):
+        return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
+                         {'directory': directory}), 415
+    if not os.path.isfile(f"uploads/{directory}/{file}"):
+        return error_sim("FileNotFoundError", f"the specified file {repr(file)} doesn't exist in {repr(directory)}",
+                         {'file': file, 'directory': directory}), 415
+    return send_file(f"uploads/{directory}/{file}")
