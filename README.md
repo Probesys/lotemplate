@@ -170,9 +170,7 @@ For trying to fix these problems, you can try:
 - [Flask documentation - upload](https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/)
 
 ## To do
-1. Faire l'API
-   - ajouter une route pour récupérer la liste des template d'un sous-dossier, ainsi que leur variables
-2. implémenter l'API sur nemoweb
+1. implémenter l'API sur nemoweb
    - [se renseigner sur Ruby on Rails](https://www.eduonix.com/new_dashboard/Learn-Ruby-on-Rails-By-Building-Projects)
    - Créer vue controller model
    - Créer une table "nom du doc" "descriptions" "json"
