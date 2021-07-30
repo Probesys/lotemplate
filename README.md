@@ -31,22 +31,34 @@ python3 -m flask run
 
 Then use the following routes :
 
-- POST / : take a document in the body, key, 'file'. Upload the given document.
-  Returns a json containing the filename, and the scanned variables of the template
-- GET /\<file> : take nothing, except the uploaded filename in the url. Returns the filename and scanned variables
-- DELETE /\<file> : take nothing, except the uploaded filename in the url. Deletes the uploaded file
-- PUT /\<file> : overwrite the file specified in the url, with a new document, given in the body, key 'file'. returns 
-  the filename, and the scanned variables.
-- POST /\<file> : take some json in the raw body, the export format in the headers, key 'format', and return the 
-  template specified in the url filled with the variables specified in the json, at the specified format
+- /
+  - PUT : take a directory name in the headers, key 'directory'. Creates a directory with the specified name
+  - GET : returns the list of existing directories
+
+- /\<directory> : directory correspond to an existing directory
+  - GET : returns a list of existing templates within the directory, with their scanned variables
+  - PUT : take a file in the body, key 'file'. Uploads the given file in the directory, and returns the saved file 
+    name and its scanned variables
+  - DELETE : deletes the specified directory, and all its contents
+  - PATCH : take a name in the headers, key 'name'. Rename the directory with the specified name.
+
+- /\<directory>/\<file> : directory correspond to an existing directory, and file to an existing file within the 
+  directory
+  - GET : returns the file and the scanned variables of the file
+  - DELETE : deletes the specified file
+  - PATCH : take a file in the body, key 'file'. replace the existing file with the given file. 
+    returns the file and the scanned variables of the file
+  - POST : take a json in the raw body, and a format in the headers, key 'format'. 
+    fills the template with the values given in the json. returns the filled document in the specified format.
+- /\<directory>/\<file>/download : directory correspond to an existing directory, and file to an existing file within 
+  the directory
+  - GET : returns the original template file, as it was sent
 
 you may wish to deploy the API on your server. 
 [Here's how to do it](https://flask.palletsprojects.com/en/2.0.x/deploying/) - 
 *but don't forget that you should have soffice installed on the server*
 
-You can also change the deployment options - like port and ip - in the [.flaskenv](.flaskenv) file.
-Simply put 0.0.0.0 for the ip to make the app visible on all the network.
-Don't forget to disable the debug flag and to change the flask environment
+You can also change the flask options - like port and ip - in the [.flaskenv](.flaskenv) file, or the soffice options in the [config.ini](config.ini) file.
 
 ## Execute and use the CLI
 
@@ -159,7 +171,6 @@ For trying to fix these problems, you can try:
 
 ## To do
 1. Faire l'API
-   - changer le readme pour mettre le nouvel usage
    - ajouter une route pour récupérer la liste des template d'un sous-dossier, ainsi que leur variables
 2. implémenter l'API sur nemoweb
    - [se renseigner sur Ruby on Rails](https://www.eduonix.com/new_dashboard/Learn-Ruby-on-Rails-By-Building-Projects)
