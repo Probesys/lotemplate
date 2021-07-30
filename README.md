@@ -44,6 +44,10 @@ you may wish to deploy the API on your server.
 [Here's how to do it](https://flask.palletsprojects.com/en/2.0.x/deploying/) - 
 *but don't forget that you should have soffice installed on the server*
 
+You can also change the deployment options - like port and ip - in the [.flaskenv](.flaskenv) file.
+Simply put 0.0.0.0 for the ip to make the app visible on all the network.
+Don't forget to disable the debug flag and to change the flask environment
+
 ## Execute and use the CLI
 
 Run the following command on your terminal or a server
@@ -169,5 +173,5 @@ For trying to fix these problems, you can try:
 ## To consider
 
 - la possibilitée de noter les variables de tableaux d'une autre manière (ex : '&') pour pouvoir placer
-des variables statiques et des variables de tableau dynamiques, demander son avis à cyril dès son retour
+des variables statiques et des variables de tableau dynamiques
 - la possibilitée d'avoir des images dans les tableaux dynamiques
