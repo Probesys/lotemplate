@@ -149,7 +149,7 @@ Here is a non-exhaustive list of cases that can cause this bug :
 - The `.~lock.[FILENAME].odt#` file is present in the folder where the document is open.  This file is created when the 
   file is currently edited via libreoffice or openoffice, and deleted when the programs in which it is edited are 
   closed.
-- The first line of the document is occupied by a table (juste jump a line, it will solve the problem)
+- The first line of the document is occupied by a table (just jump a line, it will solve the problem)
 - The background of document is an image, and is overlayed by many textfields
 
 The amount of memory used by soffice can increase with its use, even when open files are properly closed (which is the 
