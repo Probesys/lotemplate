@@ -9,7 +9,7 @@ For more information on a specific usage, read, the `Execute and use the API` or
 - scans the template to extract the variables sheet
 - search for all possible errors before filling
 - filling the template
-- export the template
+- export the filled template
 
 ## Requirements
 - LibreOffice (the console-line version will be enough)
@@ -115,8 +115,8 @@ to fill it.
 - image variables : add any image in the document, and put in the name of the image (properties) '$' followed by
   the desired name ('$image' for example to add the image 'image')
 - dynamic arrays : allows you to add an unknown number of rows to the array.
-  the array, but only on the last line. in the same way as for images, name your array variable
-  with a '$' in front of it.
+  the array, but only on the last line. Add the dynamic variables in the last row of the table, 
+  exactly like text variables, but with a '&'
 
 ## Supported formats
 
@@ -125,7 +125,8 @@ to fill it.
 |-------------------------|----------|-----------|------|-----|-----|-------|
 | text variables support  | ✅        | ✅         | ✅    | ✅   | ✅   | ❌     |
 | image variables support | ✅        | ✅         | ✅    | ❌   | ❌   | ❌     |
-| dynamic tables support  | ✅        | ❌         | ❌    | ❌   | ❌   | ❌     |
+| dynamic tables support  | ✅        | ✅         | ✅    | ❌   | ❌   | ❌     |
+
 ### Export
 odt, pdf, html, docx.
 
@@ -181,6 +182,4 @@ For trying to fix these problems, you can try:
     
 ## To consider
 
-- la possibilitée de noter les variables de tableaux d'une autre manière (ex : '&') pour pouvoir placer
-des variables statiques et des variables de tableau dynamiques
 - la possibilitée d'avoir des images dans les tableaux dynamiques

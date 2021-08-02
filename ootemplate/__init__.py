@@ -280,54 +280,87 @@ class Template:
         self.variables = self.scan() if should_scan else None
         self.new = None
 
-    def scan(self) -> dict[str: dict, str]:
+    def scan(self) -> dict[str: dict[str: str], str, list[dict[str: str]]]:
         """
         scans the variables contained in the template. Supports text, tables and images
 
         :return: list containing all the variables founded in the template
         """
 
-        search = self.doc.createSearchDescriptor()
-        search.SearchRegularExpression = True
-        search.SearchString = '\\$[:alnum:]*'
-        founded = self.doc.findAll(search)
+        def scan_text(doc, prefix: str) -> dict[str: str]:
+            """
+            scan for text in the given doc
 
-        var_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
+            :param doc: the document to scan
+            :param prefix: the variables prefix
+            :return: the scanned variables
+            """
 
-        text_vars = {var.String[1:]: "" for var in var_generator if
-                     not var.TextTable or var.TextTable.Name[0] != "$"}
+            search = doc.createSearchDescriptor()
+            search.SearchRegularExpression = True
+            search.SearchString = f'\\{prefix}[:alnum:]+'
+            founded = doc.findAll(search)
 
-        if "" in text_vars.keys():
-            text_vars.pop("")
+            var_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
 
-        tab_generator = set(var for var in var_generator if var.TextTable and var.TextTable.Name[0] == "$")
+            return {var.String[len(prefix):]: "" for var in var_generator}
 
-        tab_vars_pos = {var.TextTable.Name[1:]: (
-            {text_var.String[1:]: int("".join(filter(str.isdigit, text_var.Cell.CellName)))
-             for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name},
-            len(var.TextTable.getRows())
-        ) for var in tab_generator}
+        def scan_table(doc, doc_name: str, prefix: str) -> dict[str: list[str: dict[str: str]]]:
+            """
+            scan for tables in the given doc
 
-        for tab_name, tab_infos in tab_vars_pos.items():
-            tab_cells = tab_infos[0]
-            last_row = tab_infos[1]
+            :param doc: the document to scan
+            :param doc_name: the name of the document
+            :param prefix: the variables prefix
+            :return: the scanned variables
+            """
 
-            for var_name, var_row in tab_cells.items():
-                if var_row != last_row:
-                    raise err.TemplateVariableNotInLastRow(
-                        f"The variable {repr(var_name)} (table {repr(tab_name)}, file {repr(self.file_name)}) isn't in "
-                        f"the last row (got: row {repr(var_row)}, expected: row {repr(last_row)})",
-                        self.file_name, tab_name, var_row, last_row, var_name
-                    )
+            search = doc.createSearchDescriptor()
+            search.SearchRegularExpression = True
+            search.SearchString = f'\\{prefix}[:alnum:]+'
+            founded = doc.findAll(search)
 
-        tab_vars = {var.TextTable.Name[1:]: [
-            {text_var.String[1:]: "" for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name}
-        ] for var in tab_generator}
+            tab_generator = set(founded.getByIndex(i) for i in range(founded.getCount())
+                                if founded.getByIndex(i).TextTable)
 
-        img_vars = {elem[1:]: {"path": ""} for elem in self.doc.getGraphicObjects().getElementNames()
-                    if elem[0] == '$'}
+            tab_vars_pos = {var.TextTable.Name: (
+                {text_var.String[len(prefix):]: int("".join(filter(str.isdigit, text_var.Cell.CellName)))
+                 for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name},
+                len(var.TextTable.getRows())
+            ) for var in tab_generator}
 
-        return tab_vars | text_vars | img_vars
+            for tab_name, tab_infos in tab_vars_pos.items():
+                tab_cells = tab_infos[0]
+                last_row = tab_infos[1]
+
+                for var_name, var_row in tab_cells.items():
+                    if var_row != last_row:
+                        raise err.TemplateVariableNotInLastRow(
+                            f"The variable {repr(var_name)} (table {repr(tab_name)}, file {repr(doc_name)}) "
+                            f"isn't in the last row (got: row {repr(var_row)}, expected: row {repr(last_row)})",
+                            doc_name, tab_name, var_row, last_row, var_name
+                        )
+
+            return {
+                var.TextTable.Name: [{
+                    text_var.String[1:]:
+                        "" for text_var in tab_generator if text_var.TextTable.Name == var.TextTable.Name
+                }] for var in tab_generator
+            }
+
+        def scan_image(doc, prefix: str) -> dict[str: dict[str: str]]:
+            """
+            scan for images in the given doc
+
+            :param doc: the document to scan
+            :param prefix: the variables prefix
+            :return: the scanned variables
+            """
+
+            return {elem[len(prefix):]: {"path": ""} for elem in doc.getGraphicObjects().getElementNames()
+                    if elem[:len(prefix)] == prefix}
+
+        return scan_text(self.doc, "$") | scan_table(self.doc, self.file_name, "&") | scan_image(self.doc, "$")
 
     def search_error(self, json_vars: dict[str: str, dict[str: str], list[dict[str: str]]], json_name: str) -> None:
         """
@@ -450,6 +483,7 @@ class Template:
             """
             Fills all the text-related content
 
+            :param prefix: the variable prefix
             :param doc: the document to fill
             :param variable: the variable to search
             :param value: the value to replace with
@@ -457,12 +491,12 @@ class Template:
             """
 
             search = doc.createSearchDescriptor()
-            search.SearchString = '$' + variable
+            search.SearchString = variable
             founded = doc.findAll(search)
             instances = [founded.getByIndex(i) for i in range(founded.getCount())]
 
             for string in instances:
-                string.String = string.String.replace('$' + variable, value)
+                string.String = string.String.replace(variable, value)
 
         def image_fill(doc, graphic_provider, variable: str, value: dict[str: str], should_resize=True) -> None:
             """
@@ -476,7 +510,7 @@ class Template:
             :return: None
             """
 
-            graphic_object = doc.getGraphicObjects().getByName('$' + variable)
+            graphic_object = doc.getGraphicObjects().getByName(variable)
             path = value['path']
             new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0),))
 
@@ -490,17 +524,18 @@ class Template:
 
             graphic_object.Graphic = new_image
 
-        def table_fill(doc, variable: str, value: list[dict[str: str]]) -> None:
+        def table_fill(doc, prefix: str, variable: str, value: list[dict[str: str]]) -> None:
             """
             Fills all the table-related content
 
+            :param prefix: the variables prefix
             :param doc: the document to fill
             :param variable: the variable to search
             :param value: the value to replace with
             :return: None
             """
 
-            table = doc.getTextTables().getByName("$" + variable)
+            table = doc.getTextTables().getByName(variable)
             var_row_pos = len(table.getRows()) - 1
             table.getRows().insertByIndex(len(table.getRows()), len(value) - 1)
             tab_values = table.getDataArray()
@@ -509,7 +544,7 @@ class Template:
             for row_datas in value:
                 new_row = var_row
                 for row_variable, row_value in row_datas.items():
-                    new_row = tuple(elem.replace('$' + row_variable, row_value) for elem in new_row)
+                    new_row = tuple(elem.replace(prefix + row_variable, row_value) for elem in new_row)
                 static_rows += (new_row,)
             table.setDataArray(static_rows)
 
@@ -541,11 +576,11 @@ class Template:
         for variable, value in variables.items():
 
             if isinstance(value, str):
-                text_fill(self.new, variable, value)
+                text_fill(self.new, "$" + variable, value)
             elif isinstance(value, list):
-                table_fill(self.new, variable, value)
+                table_fill(self.new, "&", variable, value)
             elif isinstance(value, dict):
-                image_fill(self.new, self.cnx.graphic_provider, variable, value)
+                image_fill(self.new, self.cnx.graphic_provider, "$" + variable, value)
 
     def export(self, name: str, should_replace=False) -> [str, None]:
         """
@@ -575,7 +610,6 @@ class Template:
             "pdf": "writer_pdf_Export",
             "html": "HTML (StarWriter)",
             "docx": "Office Open XML Text",
-            "png": "writer_png_Export",
         }
 
         try:
@@ -585,12 +619,12 @@ class Template:
             raise err.ExportInvalidFormat(
                 f"Invalid export format {repr(file_type)} for file {repr(self.file_name)}",
                 self.file_name, file_type
-            )
+            ) from None
         except IOException as e:
             raise err.ExportUnknownError(
                 f"Unable to save document to {repr(path)} : error {e.value}",
                 self.file_name, e
-            )
+            ) from e
 
         return path
 
