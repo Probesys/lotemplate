@@ -239,7 +239,6 @@ def main():
         os.mkdir(f"uploads/{directory}")
         return {'directory': directory, "message": "Successfully created"}
     elif request.method == 'GET':
-        print(list(os.listdir("uploads")))
         return jsonify(os.listdir("uploads"))
 
 
