@@ -169,17 +169,7 @@ For trying to fix these problems, you can try:
 - [Deploying Flask](https://flask.palletsprojects.com/en/2.0.x/deploying/)
 - [Flask documentation - quickstart](https://flask.palletsprojects.com/en/2.0.x/quickstart/)
 - [Flask documentation - upload](https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/)
-
-## To do
-1. implémenter l'API sur nemoweb
-   - [se renseigner sur Ruby on Rails](https://www.eduonix.com/new_dashboard/Learn-Ruby-on-Rails-By-Building-Projects)
-   - Créer vue controller model
-   - Créer une table "nom du doc" "descriptions" "json"
-   - Upload doc et sauvegarde du retour dans la table.
-   - Afficher un drop down avec la liste des noms de documents
-   - Selection d'un document et display des variables et de leur descriptions
-   - Bouton get document remplis
     
 ## To consider
 
-- la possibilitée d'avoir des images dans les tableaux dynamiques
+- Possibly to add dynamic images in tables
