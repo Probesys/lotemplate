@@ -31,11 +31,13 @@ def restart_soffice() -> None:
 
     :return: None
     """
-    global cnx
-    subprocess.call(f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
-                    shell=True)
-    sleep(0.3)
-    cnx = ot.Connexion(cnx.host, cnx.port)
+
+    subprocess.call(
+        f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
+        shell=True
+    )
+    sleep(1)
+    cnx.restart()
 
 
 def error_format(exception: Exception, message: str = None) -> dict:

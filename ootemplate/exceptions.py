@@ -1,0 +1,173 @@
+"""
+A class containing all necessaries exceptions with
+custom attributes, useful for the API
+"""
+
+
+__all__ = ('err',)
+
+
+class Errors:
+    class JsonException(Exception):
+        def __init__(self, message, file):
+            self.json_file = file
+            super().__init__(message)
+
+    class JsonInvalidBaseValueType(JsonException):
+        def __init__(self, message, file, variable_type):
+            super().__init__(message, file)
+            self.variable_type = variable_type
+
+    class JsonVariableError(JsonException):
+        def __init__(self, message, variable: str, _json: str):
+            super().__init__(message, _json)
+            self.variable = variable
+
+    class JsonImageError(JsonException):
+        def __init__(self, message, image: str, _json: str):
+            super().__init__(message, _json)
+            self.image = image
+
+    class JsonImageEmpty(JsonImageError):
+        pass
+
+    class JsonImageInvalidArgument(JsonImageError):
+        def __init__(self, message, image: str, _json: str, argument):
+            super().__init__(message, image, _json)
+            self.argument = argument
+
+    class JsonImageInvalidArgumentType(JsonImageInvalidArgument):
+        def __init__(self, message, image: str, _json: str, argument, variable_type):
+            super().__init__(message, image, _json, argument)
+            self.variable_type = variable_type
+
+    class JsonImageInvalidPath(JsonImageError):
+        def __init__(self, message, image, _json, path):
+            super().__init__(message, image, _json)
+            self.path = path
+
+    class JsonTableError(JsonException):
+        def __init__(self, message, table: str, _json: str):
+            super().__init__(message, _json)
+            self.table = table
+
+    class JsonInvalidTableValueType(JsonTableError):
+        def __init__(self, message, table: str, _json: str, variable_type):
+            super().__init__(message, table, _json)
+            self.variable_type = variable_type
+
+    class JsonInvalidRowValueType(JsonInvalidTableValueType):
+        def __init__(self, message, variable: str, _json: str, variable_type, row):
+            super().__init__(message, variable, _json, variable_type)
+            self.row = row
+
+    class JsonInvalidValueType(JsonVariableError):
+        def __init__(self, message, variable: str, _json: str, variable_type):
+            super().__init__(message, variable, _json)
+            self.variable_type = variable_type
+
+    class JsonEmptyTable(JsonTableError):
+        pass
+
+    class JsonEmptyRow(JsonEmptyTable):
+        def __init__(self, message, table, json, row):
+            super().__init__(message, table, json)
+            self.row = row
+
+    class JsonInvalidRowVariable(JsonTableError):
+        def __init__(self, message, table, _json, row_present, variable, row_missing):
+            super().__init__(message, table, _json)
+            self.present_in_row = row_present
+            self.missing_in_row = row_missing
+            self.variable = variable
+
+    class TemplateException(Exception):
+        def __init__(self, message, file):
+            super().__init__(message)
+            self.file = file
+
+    class TemplateVariableNotInLastRow(TemplateException):
+        def __init__(self, message, file, table, row, expected_row, variable):
+            super().__init__(message, file)
+            self.table = table
+            self.actual_row = row
+            self.expected_row = expected_row
+            self.variable = variable
+
+    class TemplateInvalidFormat(TemplateException):
+        def __init__(self, message, template, document_format):
+            super().__init__(message, template)
+            self.document_format = document_format
+
+    class JsonComparaisonException(Exception):
+        def __init__(self, message, json, template):
+            self.template_file = template
+            self.json_file = json
+            super().__init__(message)
+
+    class JsonComparaisonVariableError(JsonComparaisonException):
+        def __init__(self, message, variable: str, _json: str, _template: str):
+            super().__init__(message, _json, _template)
+            self.variable = variable
+
+    class JsonMissingRequiredVariable(JsonComparaisonVariableError):
+        pass
+
+    class JsonMissingTableRequiredVariable(JsonMissingRequiredVariable):
+        def __init__(self, message, variable: str, _json: str, _template: str, table):
+            super().__init__(message, variable, _json, _template)
+            self.table = table
+
+    class JsonUnknownVariable(JsonComparaisonVariableError):
+        pass
+
+    class JsonIncorrectValueType(JsonComparaisonVariableError):
+        def __init__(self, message, variable, json, template, expected_variable_type, actual_variable_type):
+            super().__init__(message, variable, json, template)
+            self.actual_variable_type = actual_variable_type
+            self.expected_variable_type = expected_variable_type
+
+    class JsonUnknownTableVariable(JsonUnknownVariable):
+        def __init__(self, message, variable: str, _json: str, _template: str, table):
+            super().__init__(message, variable, _json, _template)
+            self.table = table
+
+    class ExportException(Exception):
+        def __init__(self, message, file):
+            super().__init__(message)
+            self.file = file
+
+    class ExportInvalidFormat(ExportException):
+        def __init__(self, message, file, document_format):
+            super().__init__(message, file)
+            self.document_format = document_format
+
+    class ExportUnknownError(ExportException):
+        def __init__(self, message, file, exception):
+            super().__init__(message, file)
+            self.exception = exception
+
+    class FileNotFoundError(Exception):
+        def __init__(self, message, file):
+            super().__init__(message)
+            self.file = file
+
+    class UnoException(Exception):
+        def __init__(self, message, host, port):
+            super().__init__(message)
+            self.host = host
+            self.port = port
+
+    class UnoBridgeException(UnoException):
+        def __init__(self, message, host, port, file):
+            super().__init__(message, host, port)
+            self.file = file
+
+    class UnoConnectionError(UnoException):
+        pass
+
+    class UnoConnectionClosed(UnoConnectionError):
+        pass
+
+
+err = Errors()
