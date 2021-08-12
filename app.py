@@ -106,6 +106,10 @@ def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[
     and the scanned variables present in the template (key 'variables')
     """
 
+    try:
+        os.mkdir(f"uploads/{directory}")
+    except:
+        pass
     file_type = name.split(".")[-1]
     name_without_num = name
     i = 1
@@ -246,10 +250,10 @@ def main():
 
 @app.route("/<directory>", methods=['PUT', 'DELETE', 'PATCH', 'GET'])
 def directory(directory):
-    if not os.path.isdir(f"uploads/{directory}"):
-        return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
-                         {'directory': directory}), 415
-    elif request.method == 'GET':
+    if request.method == 'GET':
+        if not os.path.isdir(f"uploads/{directory}"):
+            return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
+                             {'directory': directory}), 415
         datas = []
         for file in os.listdir(f"uploads/{directory}"):
             file_info = scan_file(directory, file)
@@ -265,9 +269,15 @@ def directory(directory):
                              {'key': 'file'}), 400
         return save_file(directory, f, secure_filename(f.filename))
     elif request.method == 'DELETE':
+        if not os.path.isdir(f"uploads/{directory}"):
+            return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
+                             {'directory': directory}), 415
         rmtree(f"uploads/{directory}")
         return {'directory': directory, 'message': 'The directory and all his content has been deleted'}
     elif request.method == 'PATCH':
+        if not os.path.isdir(f"uploads/{directory}"):
+            return error_sim("DirNotFoundError", f"the specified directory {repr(directory)} doesn't exist",
+                             {'directory': directory}), 415
         if 'name' not in request.headers:
             return error_sim("BadRequest", "You must provide a valid name in the headers, key 'name'",
                              {'key': 'name'}), 400
