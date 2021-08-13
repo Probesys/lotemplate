@@ -173,3 +173,4 @@ For trying to fix these problems, you can try:
 ## To consider
 
 - Possibly to add dynamic images in tables
+- another way to make image variables that would be compatible with Microsoft Word (example : set the variable name in the 'alternative text' field)
