@@ -121,11 +121,11 @@ to fill it.
 ## Supported formats
 
 ### Import
-| Format                  | ODT, OTT | DOC, DOCX | HTML | RTF | TXT | OTHER |
-|-------------------------|----------|-----------|------|-----|-----|-------|
-| text variables support  | ✅        | ✅         | ✅    | ✅   | ✅   | ❌     |
-| image variables support | ✅        | ✅         | ✅    | ❌   | ❌   | ❌     |
-| dynamic tables support  | ✅        | ✅         | ✅    | ❌   | ❌   | ❌     |
+| Format                  | ODT, OTT | HTML | DOC, DOCX | RTF | TXT | OTHER |
+|-------------------------|----------|------|-----------|-----|-----|-------|
+| text variables support  | ✅        | ✅    | ✅         | ✅   | ✅   | ❌     |
+| dynamic tables support  | ✅        | ✅    | ✅         | ✅   | ❌   | ❌     |
+| image variables support | ✅        | ✅    | ❌         | ❌   | ❌   | ❌     |
 
 ### Export
 odt, pdf, html, docx.
@@ -173,4 +173,4 @@ For trying to fix these problems, you can try:
 ## To consider
 
 - Possibly to add dynamic images in tables
-- another way to make image variables that would be compatible with Microsoft Word (example : set the variable name in the 'alternative text' field)
+- another way to make image variables that would be compatible with Microsoft Word and maybe other formats (example : set the variable name in the 'alternative text' field)
