@@ -174,3 +174,4 @@ For trying to fix these problems, you can try:
 
 - Possibly to add dynamic images in tables
 - another way to make image variables that would be compatible with Microsoft Word and maybe other formats (example : set the variable name in the 'alternative text' field)
+- système de clées par institutions
