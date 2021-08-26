@@ -1,8 +1,4 @@
 {
-  "image": {
-	"path": "files/jsons/Yami_Yugi.png"
-  },
-  "img2": {
-    "path": "files/jsons/Yami_Yugi.png"
-  }
+  "image": ["files/jsons/Yami_Yugi.png"],
+  "img2": ["files/jsons/Yami_Yugi.png"]
 }

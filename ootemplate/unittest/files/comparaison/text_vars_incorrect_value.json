@@ -4,5 +4,5 @@
 "rh": "trh",
 "gjerg": "atehaeth",
 "aet": "2",
-"jean": {"path": "files/jsons/Yami_Yugi.png"}
+"jean": ["files/jsons/Yami_Yugi.png"]
 }

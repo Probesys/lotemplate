@@ -72,9 +72,8 @@ def error_format(exception: Exception, message: str = None) -> dict:
             {
                 'error': type(exception).__name__,
                 'message': str(exception),
-                'variables': [elem for elem in variables.keys()]
+                'variables': variables
             }
-            | variables
     )
     if message:
         formatted['message'] = message
@@ -91,7 +90,7 @@ def error_sim(exception: str, message: str, variables=dict({})) -> dict:
     :return: the formatted dict
     """
 
-    return {'error': exception, 'message': message, 'variables': [key for key in variables.keys()]} | variables
+    return {'error': exception, 'message': message, 'variables': variables}
 
 
 def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[dict, int], dict]:
@@ -149,7 +148,7 @@ def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[
             )
         else:
             return save_file(directory, f, name, True)
-    except err.TemplateVariableNotInLastRow as e:
+    except err.TemplateException as e:
         os.remove(f"uploads/{directory}/{name}")
         return error_format(e), 415
     except Exception as e:

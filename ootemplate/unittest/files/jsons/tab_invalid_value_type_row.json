@@ -1,6 +1,6 @@
 {
-"tab": [
-	"jambon de bayonne",
-	{"var": "test2"}
-]
+	"tab": {
+		"var":  ["test"],
+		"var2": "jean pierre"
+	}
 }

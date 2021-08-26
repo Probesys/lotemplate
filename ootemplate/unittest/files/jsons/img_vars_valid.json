@@ -1,5 +1,3 @@
 {
-"image": {
-	"path": "files/jsons/Yami_Yugi.png"
-}
+	"image": ["files/jsons/Yami_Yugi.png"]
 }

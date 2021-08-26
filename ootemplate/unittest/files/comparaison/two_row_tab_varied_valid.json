@@ -1,6 +1,6 @@
 {
-"tab": [
-	{"var1": "test", "var2":  "jean"},
-	{"var1": "test2", "var2":  "pierre"}
-]
+	"tab": {
+		"var1": ["test", "test2"],
+		"var2": ["jean", "pierre", "troisième"]
+	}
 }

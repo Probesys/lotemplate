@@ -50,7 +50,7 @@ class Images(unittest.TestCase):
 
     def test_valid(self):
         self.assertEqual(
-            {"image": {"path": ""}}, ot.convert_to_datas_template(
+            {"image": [""]}, ot.convert_to_datas_template(
                 "img_vars_valid",
                 file_to_dict("files/jsons/img_vars_valid.json")
             )
@@ -58,13 +58,13 @@ class Images(unittest.TestCase):
 
     def test_two_valid(self):
         self.assertEqual(
-            {"image": {"path": ""}, "image2": {"path": ""}},
+            {"image": [""], "image2": [""]},
             ot.convert_to_datas_template("img_two_vars_valid", file_to_dict("files/jsons/img_two_vars_valid.json"))
         )
 
     def test_web_valid(self):
         self.assertEqual(
-            {"image": {"path": ""}},
+            {"image": [""]},
             ot.convert_to_datas_template(
                 "img_vars_valid_from_web",
                 file_to_dict("files/jsons/img_vars_valid_from_web.json")
@@ -112,7 +112,7 @@ class Tables(unittest.TestCase):
 
     def test_valid(self):
         self.assertEqual(
-            {"tab": [{"var": ""}], "tab2": [{"var1": "", "var2": ""}]},
+            {"tab": {"var": [""]}, "tab2": {"var1": [""], "var2": [""]}},
             ot.convert_to_datas_template("tab_valid", file_to_dict("files/jsons/tab_valid.json"))
         )
 
@@ -123,7 +123,7 @@ class Tables(unittest.TestCase):
             )
 
     def test_invalid_empty_row(self):
-        with self.assertRaises(ot.err.JsonEmptyRow):
+        with self.assertRaises(ot.err.JsonEmptyTableVariable):
             ot.convert_to_datas_template(
                 "tab_invalid_empty_row", file_to_dict("files/jsons/tab_invalid_empty_row.json")
             )
@@ -138,18 +138,6 @@ class Tables(unittest.TestCase):
         with self.assertRaises(ot.err.JsonInvalidRowValueType):
             ot.convert_to_datas_template(
                 "tab_invalid_value_type_cell", file_to_dict("files/jsons/tab_invalid_value_type_cell.json")
-            )
-
-    def test_invalid_missing_argument(self):
-        with self.assertRaises(ot.err.JsonInvalidRowVariable):
-            ot.convert_to_datas_template(
-                "tab_invalid_missing_argument", file_to_dict("files/jsons/tab_invalid_missing_argument.json")
-            )
-
-    def test_invalid_missing_argument2(self):
-        with self.assertRaises(ot.err.JsonInvalidRowVariable):
-            ot.convert_to_datas_template(
-                "tab_invalid_missing_argument2", file_to_dict("files/jsons/tab_invalid_missing_argument2.json")
             )
 
 

@@ -29,13 +29,13 @@ class Images(unittest.TestCase):
 
     def test_one_image(self):
         self.assertEqual(
-            {"image": {"path": ""}},
+            {"image": [""]},
             ot.Template("files/templates/img_vars.odt", cnx, False).scan()
         )
 
     def test_multiple_images(self):
         self.assertEqual(
-            {"image1": {"path": ""}, "image2": {"path": ""}, "image3": {"path": ""}},
+            {"image1": [""], "image2": [""], "image3": [""]},
             ot.Template("files/templates/multiple_img_vars.odt", cnx, False).scan()
         )
 
@@ -44,19 +44,19 @@ class Tables(unittest.TestCase):
 
     def test_multiple_row(self):
         self.assertEqual(
-            {"tab": [{"var1": "", "var2": ""}]},
+            {"tab": {"var1": [""], "var2": [""]}},
             ot.Template("files/templates/multiple_row_tab.odt", cnx, False).scan()
         )
 
     def test_one_row_varied(self):
         self.assertEqual(
-            {"tab": [{"var": ""}]},
+            {"tab": {"var": [""]}},
             ot.Template("files/templates/one_row_tab_varied.odt", cnx, False).scan()
         )
 
     def test_two_row_varied(self):
         self.assertEqual(
-            {"tab": [{"var1": ""}]},
+            {"tab": {"var1": [""]}},
             ot.Template("files/templates/two_row_tab_varied.odt", cnx, False).scan()
         )
 
@@ -70,7 +70,7 @@ class Tables(unittest.TestCase):
 
     def test_two_tabs_varied(self):
         self.assertEqual(
-            {"tab": [{"var1": ""}], "tab2": [{"1": "", "2": "", "3": "", "4": "", "5": ""}]},
+            {"tab": {"var1": [""]}, "tab2": {"1": [""], "2": [""], "3": [""], "4": [""], "5": [""]}},
             ot.Template("files/templates/two_tabs_varied.odt", cnx, False).scan()
         )
 
@@ -80,12 +80,12 @@ class Generic(unittest.TestCase):
     def test_multiple_variables(self):
         self.assertEqual(
             {
-                "tab3": [{"var1": "", "var2": ""}],
-                "tab1": [{"cell1": "", "cell2": ""}],
+                "tab3": {"var1": [""], "var2": [""]},
+                "tab1": {"cell1": [""], "cell2": [""]},
                 "Nom": "",
                 "prenon": "",
                 "signature": "",
-                "photo": {"path": ""},
+                "photo": [""],
                 "static1": "",
                 "static2": "",
                 "static3": ""
@@ -95,12 +95,12 @@ class Generic(unittest.TestCase):
     def test_multiple_pages(self):
         self.assertEqual(
             {
-                "tab3": [{"var1": "", "var2": ""}],
-                "tab1": [{"cell1": "", "cell2": ""}],
+                "tab3": {"var1": [""], "var2": [""]},
+                "tab1": {"cell1": [""], "cell2": [""]},
                 "Nom": "",
                 "prenon": "",
                 "signature": "",
-                "photo": {"path": ""},
+                "photo": [""],
                 "static1": "",
                 "static2": "",
                 "static3": "",
@@ -117,21 +117,25 @@ class Generic(unittest.TestCase):
         )
 
     def test_invalid_path(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ot.err.FileNotFoundError):
             ot.Template("bfevg", cnx, True)
+
+    def test_duplicated_variable(self):
+        with self.assertRaises(ot.err.TemplateDuplicatedVariable):
+            ot.Template("files/templates/duplicated_variables.odt", cnx, False).scan()
 
 
 class OtherFormats(unittest.TestCase):
 
     def test_ott(self):
         self.assertEqual(
-            {"tab1": [{"cell1": "", "cell2": ""}], "Nom": "", "prenon": "", "signature": "", "photo": {"path": ""}},
+            {"tab1": {"cell1": [""], "cell2": [""]}, "Nom": "", "prenon": "", "signature": "", "photo": [""]},
             ot.Template("files/templates/format.ott", cnx, False).scan()
         )
 
     def test_docx(self):
         self.assertEqual(
-            {"cell1": "", "cell2": "", "Nom": "", "prenon": "", "signature": "", "photo": {"path": ""}},
+            {"cell1": "", "cell2": "", "Nom": "", "prenon": "", "signature": "", "photo": [""]},
             ot.Template("files/templates/format.docx", cnx, False).scan()
         )
 
@@ -143,7 +147,7 @@ class OtherFormats(unittest.TestCase):
 
     def test_html(self):
         self.assertEqual(
-            {"cell1": "", "cell2": "", "Nom": "", "prenon": "", "signature": "", "photo": {"path": ""}},
+            {"cell1": "", "cell2": "", "Nom": "", "prenon": "", "signature": "", "photo": [""]},
             ot.Template("files/templates/format.html", cnx, False).scan()
         )
 

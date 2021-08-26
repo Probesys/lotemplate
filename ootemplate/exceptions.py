@@ -19,72 +19,73 @@ class Errors:
             self.variable_type = variable_type
 
     class JsonVariableError(JsonException):
-        def __init__(self, message, variable: str, _json: str):
-            super().__init__(message, _json)
+        def __init__(self, message, variable: str, json: str):
+            super().__init__(message, json)
             self.variable = variable
 
+    class JsonInvalidValueType(JsonVariableError):
+        def __init__(self, message, variable: str, json: str, variable_type):
+            super().__init__(message, variable, json)
+            self.variable_type = variable_type
+
     class JsonImageError(JsonException):
-        def __init__(self, message, image: str, _json: str):
-            super().__init__(message, _json)
+        def __init__(self, message, image: str, json: str):
+            super().__init__(message, json)
             self.image = image
 
     class JsonImageEmpty(JsonImageError):
         pass
 
     class JsonImageInvalidArgument(JsonImageError):
-        def __init__(self, message, image: str, _json: str, argument):
-            super().__init__(message, image, _json)
+        def __init__(self, message, image: str, json: str, argument):
+            super().__init__(message, image, json)
             self.argument = argument
 
     class JsonImageInvalidArgumentType(JsonImageInvalidArgument):
-        def __init__(self, message, image: str, _json: str, argument, variable_type):
-            super().__init__(message, image, _json, argument)
+        def __init__(self, message, image: str, json: str, argument, variable_type):
+            super().__init__(message, image, json, argument)
             self.variable_type = variable_type
 
     class JsonImageInvalidPath(JsonImageError):
-        def __init__(self, message, image, _json, path):
-            super().__init__(message, image, _json)
+        def __init__(self, message, image, json, path):
+            super().__init__(message, image, json)
             self.path = path
 
     class JsonTableError(JsonException):
-        def __init__(self, message, table: str, _json: str):
-            super().__init__(message, _json)
+        def __init__(self, message, table: str, json: str):
+            super().__init__(message, json)
             self.table = table
 
     class JsonInvalidTableValueType(JsonTableError):
-        def __init__(self, message, table: str, _json: str, variable_type):
-            super().__init__(message, table, _json)
+        def __init__(self, message, table: str, json: str, variable: str, variable_type: str):
+            super().__init__(message, table, json)
+            self.variable = variable
             self.variable_type = variable_type
 
     class JsonInvalidRowValueType(JsonInvalidTableValueType):
-        def __init__(self, message, variable: str, _json: str, variable_type, row):
-            super().__init__(message, variable, _json, variable_type)
+        def __init__(self, message, table: str, json: str, variable: str, variable_type: str, row):
+            super().__init__(message, table, json, variable, variable_type)
             self.row = row
-
-    class JsonInvalidValueType(JsonVariableError):
-        def __init__(self, message, variable: str, _json: str, variable_type):
-            super().__init__(message, variable, _json)
-            self.variable_type = variable_type
 
     class JsonEmptyTable(JsonTableError):
         pass
 
-    class JsonEmptyRow(JsonEmptyTable):
-        def __init__(self, message, table, json, row):
+    class JsonEmptyTableVariable(JsonEmptyTable):
+        def __init__(self, message, table, json, variable):
             super().__init__(message, table, json)
-            self.row = row
-
-    class JsonInvalidRowVariable(JsonTableError):
-        def __init__(self, message, table, _json, row_present, variable, row_missing):
-            super().__init__(message, table, _json)
-            self.present_in_row = row_present
-            self.missing_in_row = row_missing
             self.variable = variable
 
     class TemplateException(Exception):
         def __init__(self, message, file):
             super().__init__(message)
             self.file = file
+
+    class TemplateDuplicatedVariable(TemplateException):
+        def __init__(self, message, file, variable, first_type, second_type):
+            super().__init__(message, file)
+            self.variable = variable
+            self.first_type = first_type
+            self.second_type = second_type
 
     class TemplateVariableNotInLastRow(TemplateException):
         def __init__(self, message, file, table, row, expected_row, variable):
@@ -106,16 +107,16 @@ class Errors:
             super().__init__(message)
 
     class JsonComparaisonVariableError(JsonComparaisonException):
-        def __init__(self, message, variable: str, _json: str, _template: str):
-            super().__init__(message, _json, _template)
+        def __init__(self, message, variable: str, json: str, _template: str):
+            super().__init__(message, json, _template)
             self.variable = variable
 
     class JsonMissingRequiredVariable(JsonComparaisonVariableError):
         pass
 
     class JsonMissingTableRequiredVariable(JsonMissingRequiredVariable):
-        def __init__(self, message, variable: str, _json: str, _template: str, table):
-            super().__init__(message, variable, _json, _template)
+        def __init__(self, message, variable: str, json: str, _template: str, table):
+            super().__init__(message, variable, json, _template)
             self.table = table
 
     class JsonUnknownVariable(JsonComparaisonVariableError):
@@ -128,8 +129,8 @@ class Errors:
             self.expected_variable_type = expected_variable_type
 
     class JsonUnknownTableVariable(JsonUnknownVariable):
-        def __init__(self, message, variable: str, _json: str, _template: str, table):
-            super().__init__(message, variable, _json, _template)
+        def __init__(self, message, variable: str, json: str, _template: str, table):
+            super().__init__(message, variable, json, _template)
             self.table = table
 
     class ExportException(Exception):
