@@ -160,7 +160,7 @@ class Template:
 
             search = doc.createSearchDescriptor()
             search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}[:alnum:]+'
+            search.SearchString = f'\\{prefix}[[:alnum:]_]+'
             founded = doc.findAll(search)
 
             var_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
@@ -179,7 +179,7 @@ class Template:
 
             search = doc.createSearchDescriptor()
             search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}[:alnum:]+'
+            search.SearchString = f'\\{prefix}[[:alnum:]_]+'
             founded = doc.findAll(search)
 
             tab_vars = [{
