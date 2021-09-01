@@ -19,7 +19,7 @@ For more information on a specific usage, read, the `Execute and use the API` or
   `pip install -r requirements.txt`. `Flask` and `Werkzeug` are optional, as they are used only for the API, as well
   as `configargparse`, used only for the CLI.
 
-more informations on [the github page of unotools](https://github.com/t2y/unotools)
+more information on [the GitHub page of unotools](https://github.com/t2y/unotools)
 
 ## Execute and use the API
 
@@ -98,7 +98,7 @@ optional arguments:
   --force_replacement, -f
                         Specify if the program should ignore the scan's result
 ```
-Args that start with '--' (eg. --json) can also be set in a config file
+Args that start with '--' (e.g. --json) can also be set in a config file
 (config.ini or specified via --config). Config file syntax allows: key=value,
 flag=true, stuff=[a,b,c] (for details, [see syntax](https://goo.gl/R74nmi)).
 If an arg is specified in more than one place, then commandline values
@@ -150,7 +150,7 @@ Here is a non-exhaustive list of cases that can cause this bug :
   file is currently edited via libreoffice or openoffice, and deleted when the programs in which it is edited are 
   closed.
 - The first line of the document is occupied by a table (just jump a line, it will solve the problem)
-- The background of document is an image, and is overlayed by many textfields
+- The background of document is an image, and is overlaid by many text fields
 
 The amount of memory used by soffice can increase with its use, even when open files are properly closed (which is the 
 case). Again, this is a bug in OpenOffice/soffice that has existed for years.
@@ -163,7 +163,7 @@ For trying to fix these problems, you can try:
 - [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
 - [The unoconv source code, written in python with PyUNO](https://github.com/unoconv/unoconv/blob/master/unoconv)
 - [Unoconv source code for list formats - and properties - compatible with LibreOffice for export](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391)
-- [OpenOffice Python Bridge informations and code exemples](http://www.openoffice.org/udk/python/python-bridge.html)
+- [OpenOffice Python Bridge information and code exemples](http://www.openoffice.org/udk/python/python-bridge.html)
 - [com.sun.star Java API docs (On which pyuno is based - but is not identical)](https://www.openoffice.org/api/docs/common/ref/com/sun/star/module-ix.html)
 - [Old OOTemplate code](https://gitlab.probesys.com/troizaire/ootemplate/-/blob/c8f1e759db9494823fa4dded8c70a31d4e047c05/old.py)
 - [Deploying Flask](https://flask.palletsprojects.com/en/2.0.x/deploying/)
@@ -174,4 +174,5 @@ For trying to fix these problems, you can try:
 
 - Possibly to add dynamic images in tables
 - another way to make image variables that would be compatible with Microsoft Word and maybe other formats (example : set the variable name in the 'alternative text' field)
-- système de clées par institutions
+- key system for each institution for security
+- handle bulleted lists using table variables
