@@ -1,9 +1,11 @@
 from flask import *
+from werkzeug.utils import secure_filename
 
 import ootemplate as ot
 from ootemplate import err
+
 import configparser
-from werkzeug.utils import secure_filename
+import glob
 import os
 from shutil import copyfile, rmtree
 import subprocess
@@ -12,6 +14,15 @@ from time import sleep
 from typing import Union
 
 app = Flask(__name__)
+
+if not os.path.isdir("uploads"):
+    os.mkdir("uploads")
+if not os.path.isdir("exports"):
+    os.mkdir("exports")
+for d in os.listdir("uploads"):
+    for f in glob.glob(f"uploads/{d}/.~lock.*#"):
+        os.remove(f)
+
 config = configparser.ConfigParser()
 config.read("config.ini")
 host = config['Soffice']['host']
@@ -19,10 +30,6 @@ port = config['Soffice']['port']
 subprocess.call(f'soffice "--accept=socket,host={host},port={port};urp;StarOffice.ServiceManager" &', shell=True)
 sleep(1)
 cnx = ot.Connexion(host, port)
-if not os.path.isdir("uploads"):
-    os.mkdir("uploads")
-if not os.path.isdir("exports"):
-    os.mkdir("exports")
 
 
 def restart_soffice() -> None:
@@ -32,12 +39,31 @@ def restart_soffice() -> None:
     :return: None
     """
 
+    for d in os.listdir("uploads"):
+        for f in glob.glob(f"uploads/{d}/.~lock.*#"):
+            os.remove(f)
+
     subprocess.call(
         f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
         shell=True
     )
     sleep(1)
     cnx.restart()
+
+
+def delete_file(directory: str, name: str) -> None:
+    """
+    Deletes the given file and the temp files created by soffice
+    :param directory: the directory containing the file to delete
+    :param name: the file to delete
+    :return: None
+    """
+
+    os.remove(f"uploads/{directory}/{name}")
+    try:
+        os.remove(f"uploads/{directory}/.~lock.{name}#")
+    except:
+        pass
 
 
 def error_format(exception: Exception, message: str = None) -> dict:
@@ -121,13 +147,13 @@ def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[
         with ot.Template(f"uploads/{directory}/{name}", cnx, True) as temp:
             values = temp.variables
     except err.TemplateInvalidFormat as e:
-        os.remove(f"uploads/{directory}/{name}")
+        delete_file(directory, name)
         return (
             error_format(e, "The given format is invalid. You can upload ODT, OTT, DOC, DOCX, HTML, RTF or TXT."),
             415
         )
     except err.UnoBridgeException as e:
-        os.remove(f"uploads/{directory}/{name}")
+        delete_file(directory, name)
         restart_soffice()
         if error_catched:
             return (
@@ -138,7 +164,7 @@ def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[
         else:
             return save_file(directory, f, name, True)
     except err.UnoConnectionClosed as e:
-        os.remove(f"uploads/{directory}/{name}")
+        delete_file(directory, name)
         restart_soffice()
         if error_catched:
             return (
@@ -149,10 +175,10 @@ def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[
         else:
             return save_file(directory, f, name, True)
     except err.TemplateException as e:
-        os.remove(f"uploads/{directory}/{name}")
+        delete_file(directory, name)
         return error_format(e), 415
     except Exception as e:
-        os.remove(f"uploads/{directory}/{name}")
+        delete_file(directory, name)
         return error_format(e), 500
     return {'file': name, 'message': "Successfully uploaded", 'variables': values}
 
