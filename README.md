@@ -29,6 +29,12 @@ Run the following command on your server :
 python3 -m flask run
 ```
 
+or simply
+
+```shell
+flask run
+```
+
 Then use the following routes :
 
 - /
