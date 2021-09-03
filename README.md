@@ -131,7 +131,7 @@ to fill it.
 odt, pdf, html, docx.
 
 Other formats can be easily added by adding the format information in the dictionary `formats` in 
-[ootemplate/\_\_init__.py](ootemplate/__init__.py) > Template > export().
+[ootemplate/classes.py](ootemplate/classes.py) > Template > export().
 
 Format information can be found on the 
 [unoconv repo](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391).
