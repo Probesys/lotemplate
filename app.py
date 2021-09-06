@@ -14,11 +14,8 @@ from time import sleep
 from typing import Union
 
 app = Flask(__name__)
-
-if not os.path.isdir("uploads"):
-    os.mkdir("uploads")
-if not os.path.isdir("exports"):
-    os.mkdir("exports")
+os.makedirs("uploads", exist_ok=True)
+os.makedirs("exports", exist_ok=True)
 for d in os.listdir("uploads"):
     for f in glob.glob(f"uploads/{d}/.~lock.*#"):
         os.remove(f)
