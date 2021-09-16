@@ -17,8 +17,7 @@ import uno
 import unohelper
 from com.sun.star.beans import PropertyValue
 from com.sun.star.io import IOException
-from com.sun.star.lang import IllegalArgumentException
-from com.sun.star.lang import DisposedException
+from com.sun.star.lang import IllegalArgumentException, DisposedException
 from com.sun.star.connection import NoConnectException
 from com.sun.star.uno import RuntimeException
 from com.sun.star.awt import Size
@@ -438,7 +437,7 @@ class Template:
 
             for i in range(nb_rows_to_add):
                 new_row = var_row
-                for variable_name, variable_values in table_vars.items():
+                for variable_name, variable_values in sorted(table_vars.items(), key=lambda s: -len(s[0])):
                     new_row = tuple(
                         elem.replace(
                             prefix + variable_name, variable_values[i] if i < len(variable_values) else ""
@@ -472,7 +471,7 @@ class Template:
                 self.cnx.port
             ) from e
 
-        for key, val in variables.items():
+        for key, val in sorted(variables.items(), key=lambda s: -len(s[0])):
 
             if isinstance(val, str):
                 text_fill(self.new, "$" + key, val)
