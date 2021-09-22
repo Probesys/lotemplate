@@ -12,6 +12,7 @@ import sys
 import traceback
 from urllib import request
 from PIL import Image
+from re import findall
 
 import uno
 import unohelper
@@ -159,12 +160,22 @@ class Template:
 
             search = doc.createSearchDescriptor()
             search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}[[:alnum:]_]+'
+            search.SearchString = f'\\{prefix}\\w+'
             founded = doc.findAll(search)
 
-            var_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
+            plain_vars_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
+            plain_vars = {var.String[len(prefix):]: "" for var in plain_vars_generator}
 
-            return {var.String[len(prefix):]: "" for var in var_generator}
+            text_fields_vars_list = []
+
+            for page in doc.getDrawPages():
+                for shape in page:
+                    if shape.getShapeType() == "com.sun.star.drawing.TextShape":
+                        text_fields_vars_list += findall(f"\\{prefix}\\w+", shape.String)
+
+            text_fields_vars = {elem[len(prefix):]: '' for elem in text_fields_vars_list}
+
+            return plain_vars | text_fields_vars
 
         def scan_table(doc, doc_name: str, prefix: str) -> dict[str: dict[str: list[str]]]:
             """
@@ -178,7 +189,7 @@ class Template:
 
             search = doc.createSearchDescriptor()
             search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}[[:alnum:]_]+'
+            search.SearchString = f'\\{prefix}\\w+'
             founded = doc.findAll(search)
 
             tab_vars = [{
@@ -389,6 +400,11 @@ class Template:
 
             for string in instances:
                 string.String = string.String.replace(variable, value)
+
+            for page in doc.getDrawPages():
+                for shape in page:
+                    if shape.getShapeType() == "com.sun.star.drawing.TextShape":
+                        shape.String = shape.String.replace(variable, value)
 
         def image_fill(doc, graphic_provider, variable: str, value: list[str], should_resize=True) -> None:
             """
