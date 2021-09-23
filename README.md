@@ -182,3 +182,5 @@ For trying to fix these problems, you can try:
 - another way to make image variables that would be compatible with Microsoft Word and maybe other formats (example : set the variable name in the 'alternative text' field)
 - key system for each institution for security
 - handle bulleted lists using table variables
+- use variable formatting instead of the one of the character before
+- handle iteration system through a list of dict of variables, generating duplicates pages with different values 
