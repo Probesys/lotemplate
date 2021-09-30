@@ -63,10 +63,6 @@ class Images(unittest.TestCase):
         with self.assertRaises(ot.err.JsonUnknownVariable):
             self.temp.search_error(*to_data_list("files/comparaison/img_vars_invalid_other_image.json"))
 
-    def test_invalid_missing_variable(self):
-        with self.assertRaises(ot.err.JsonMissingRequiredVariable):
-            self.temp.search_error(*to_data_list("files/comparaison/img_vars_invalid_missing_img.json"))
-
 
 if __name__ == '__main__':
     unittest.main()

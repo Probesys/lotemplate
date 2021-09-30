@@ -16,8 +16,6 @@ __all__ = (
     'convert_to_datas_template',
     'is_network_based',
     'get_file_url',
-    'get_files_json',
-    'get_normized_json',
 )
 
 from .exceptions import *

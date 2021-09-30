@@ -8,8 +8,6 @@ __all__ = (
 )
 
 import os
-import sys
-import traceback
 from urllib import request
 from PIL import Image
 from re import findall
@@ -22,7 +20,6 @@ from com.sun.star.lang import IllegalArgumentException, DisposedException
 from com.sun.star.connection import NoConnectException
 from com.sun.star.uno import RuntimeException
 from com.sun.star.awt import Size
-
 from .exceptions import *
 from .utils import *
 
@@ -140,9 +137,9 @@ class Template:
                 self.file_name, self.file_name.split('.')
             )
         self.variables = self.scan() if should_scan else None
-        self.new = None
+        self.new = []
 
-    def scan(self) -> dict[str: str, dict[str: list[str]], list[str]]:
+    def scan(self) -> list[dict[str: str, dict[str: list[str]], list[str]]]:
         """
         scans the variables contained in the template. Supports text, tables and images
 
@@ -241,9 +238,9 @@ class Template:
                 self.file_name, duplicates[0], first, second
             )
 
-        return texts | tables | images
+        return [texts | tables | images]
 
-    def search_error(self, json_vars: dict[str: str, dict[str: list[str]], list[str]], json_name: str) -> None:
+    def search_error(self, json_vars: list[dict[str: str, dict[str: list[str]], list[str]]], json_name: str) -> None:
         """
         find out which variable is a problem, and raise the required error
 
@@ -252,7 +249,11 @@ class Template:
         :return: None
         """
 
-        if json_vars == self.variables:
+        is_equal = True
+        for elem in json_vars:
+            if elem != self.variables[0]:
+                is_equal = False
+        if is_equal:
             return
 
         def get_printable_value_type(var) -> str:
@@ -278,20 +279,20 @@ class Template:
             :return: None
             """
 
-            json_missing = [key for key in set(self.variables) - set(json_vars)]
+            json_missing = [key for key in set(self.variables[0]) - set(json_vars_instance)]
             if json_missing:
                 raise err.JsonMissingRequiredVariable(
                     f"The value {repr(json_missing[0])}, present in the template {repr(self.file_name)}, "
-                    f"isn't present in the file {repr(json_name)}",
-                    json_missing[0], json_name, self.file_name
+                    f"isn't present in the file {repr(json_name)}, instance {repr(index_instance)}",
+                    json_missing[0], json_name, index_instance, self.file_name
                 )
 
-            template_missing = [key for key in set(json_vars) - set(self.variables)]
+            template_missing = [key for key in set(json_vars_instance) - set(self.variables[0])]
             if template_missing:
                 raise err.JsonUnknownVariable(
-                    f"The variable {repr(template_missing[0])} (file {repr(json_name)}) isn't present in the template "
-                    f"{repr(self.file_name)}",
-                    template_missing[0], json_name, self.file_name
+                    f"The variable {repr(template_missing[0])} (file {repr(json_name)}, instance "
+                    f"{repr(index_instance)}) isn't present in the template {repr(self.file_name)}",
+                    template_missing[0], json_name, index_instance, self.file_name
                 )
 
         def check_values_type(invalid_var: str) -> None:
@@ -301,13 +302,14 @@ class Template:
             :return: None
             """
 
-            if type(json_incorrect[invalid_var]) is not type(self.variables[invalid_var]):
+            if type(json_incorrect[invalid_var]) is not type(self.variables[0][invalid_var]):
                 raise err.JsonIncorrectValueType(
-                    f"The variable {repr(invalid_var)} (file {repr(json_name)}) should be of type "
-                    f"{repr(get_printable_value_type(self.variables[invalid_var]))}, but is of type "
-                    f"{repr(get_printable_value_type(json_incorrect[invalid_var]))}, like in the template "
-                    f"{repr(self.file_name)}", invalid_var, json_name, self.file_name,
-                    get_printable_value_type(self.variables[invalid_var]),
+                    f"The variable {repr(invalid_var)} (file {repr(json_name)}, instance {repr(index_instance)}) "
+                    f"should be of type {repr(get_printable_value_type(self.variables[0][invalid_var]))}, but is of "
+                    f"type {repr(get_printable_value_type(json_incorrect[invalid_var]))}, like in the template "
+                    f"{repr(self.file_name)}",
+                    invalid_var, json_name, index_instance, self.file_name,
+                    get_printable_value_type(self.variables[0][invalid_var]),
                     get_printable_value_type(json_incorrect[invalid_var])
                 )
 
@@ -318,64 +320,42 @@ class Template:
             :return: None
             """
 
-            json_missing = list(set(self.variables[invalid_var].keys()) - set(json_vars[invalid_var].keys()))
+            json_missing = list(set(self.variables[0][invalid_var].keys()) - set(json_vars_instance[invalid_var].keys()))
             if json_missing:
                 raise err.JsonMissingTableRequiredVariable(
                     f"The value {repr(json_missing[0])}, present in the template {repr(self.file_name)}, "
-                    f"isn't present in the table {repr(invalid_var)}, file {repr(json_name)}",
-                    json_missing[0], json_name, self.file_name, invalid_var
+                    f"isn't present in the table {repr(invalid_var)} "
+                    f"(file {repr(json_name)}, instance {repr(index_instance)})",
+                    json_missing[0], json_name, index_instance, self.file_name, invalid_var
                 )
 
-            template_missing = list(set(json_vars[invalid_var].keys()) - set(self.variables[invalid_var].keys()))
+            template_missing = list(set(json_vars_instance[invalid_var].keys()) - set(self.variables[0][invalid_var].keys()))
             if template_missing:
                 raise err.JsonUnknownTableVariable(
-                    f"The variable {repr(template_missing[0])} (table {repr(invalid_var)}, file {repr(json_name)}) "
-                    f"isn't present in the template {repr(self.file_name)}",
-                    template_missing[0], json_name, self.file_name, invalid_var
+                    f"The variable {repr(template_missing[0])} (table {repr(invalid_var)}, file {repr(json_name)}, "
+                    f"instance {repr(index_instance)}) isn't present in the template {repr(self.file_name)}",
+                    template_missing[0], json_name, index_instance, self.file_name, invalid_var
                 )
 
-        check_variables()
+        for index_instance, json_vars_instance in enumerate(json_vars):
+            check_variables()
 
-        json_incorrect = {key: json_vars[key] for key in json_vars if json_vars[key] != self.variables[key]}
-        bad_key = list(json_incorrect.keys())[0]
+            json_incorrect = {
+                key: json_vars_instance[key] for key in json_vars_instance
+                if json_vars_instance[key] != self.variables[0][key]
+            }
+            bad_key = list(json_incorrect.keys())[0]
 
-        check_values_type(bad_key)
-        check_tables(bad_key)
+            check_values_type(bad_key)
+            check_tables(bad_key)
 
         raise err.JsonComparaisonException(
             f"Variables given in the file {repr(json_name)} don't match with the given "
             f"template {repr(self.file_name)}, but no reason was found",
-            json_name, self.file_name
+            json_name, 'all', self.file_name
         )
 
-    def compare_variables(self, given_variables: dict[str: dict[str: str, dict[str: list[str]], list[str]]]) \
-            -> dict[str: dict[str: str, dict[str: list[str]], list[str]]]:
-        """
-        Compare all the variables in the given dict to *self*,
-        to verify if all the variables presents in *self* are presents in the given dictionary, or inversely.
-        If not, raise an error
-
-        :param given_variables: format {file_name: values_dict,...} the dicts to compare to the founded
-        template-variables
-        :return: None
-        """
-
-        valid_variables = {}
-
-        for file, json_dict in given_variables.items():
-            try:
-                json_variables = convert_to_datas_template(file, json_dict)
-
-                self.search_error(json_variables, file)
-                valid_variables[file] = json_dict
-            except Exception as exception:
-                print(f'Ignoring exception on file {file}', file=sys.stderr)
-                traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
-                continue
-
-        return valid_variables
-
-    def fill(self, variables: dict[str: str, dict[str: list[str]], list[str]]) -> None:
+    def fill(self, variables: list[dict[str: str, dict[str: list[str]], list[str]]]) -> None:
         """
         Fills a template copy with the given values
 
@@ -462,85 +442,94 @@ class Template:
                 static_rows += (new_row,)
             table.setDataArray(static_rows)
 
-        if self.new:
-            self.new.dispose()
-            self.new.close(True)
+        for elem in self.new:
+            elem.dispose()
+            elem.close(True)
 
-        try:
-            self.new = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
-        except DisposedException as e:
-            raise err.UnoBridgeException(
-                f"The connection bridge on '{self.cnx.host}:{self.cnx.port}' crashed on file opening "
-                f"(file {repr(self.file_url)})."
-                f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
-                f"it, please read the README file, section 'Unsolvable Problems'.",
-                self.cnx.host,
-                self.cnx.port,
-                self.file_url
-            ) from e
-        except RuntimeException as e:
-            raise err.UnoConnectionClosed(
-                f"The previously etablished connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
-                f"has been closed, or ran into an unknown error. Please restart the soffice process, and retry."
-                f"it, please read the README file, section 'Unsolvable Problems'.",
-                self.cnx.host,
-                self.cnx.port
-            ) from e
+        self.new = []
 
-        for key, val in sorted(variables.items(), key=lambda s: -len(s[0])):
+        for index, instance in enumerate(variables):
 
-            if isinstance(val, str):
-                text_fill(self.new, "$" + key, val)
-            elif isinstance(val, dict):
-                table_fill(self.new, "&", key, val)
-            elif isinstance(val, list):
-                image_fill(self.new, self.cnx.graphic_provider, "$" + key, val)
+            try:
+                self.new.append(self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ()))
+            except DisposedException as e:
+                raise err.UnoBridgeException(
+                    f"The connection bridge on '{self.cnx.host}:{self.cnx.port}' crashed on file opening "
+                    f"(file {repr(self.file_url)})."
+                    f"Please restart the soffice process. For more informations on what caused this bug and how to "
+                    f"avoid it, please read the README file, section 'Unsolvable Problems'.",
+                    self.cnx.host,
+                    self.cnx.port,
+                    self.file_url
+                ) from e
+            except RuntimeException as e:
+                raise err.UnoConnectionClosed(
+                    f"The previously etablished connection with the soffice process on "
+                    f"'{self.cnx.host}:{self.cnx.port}' has been closed, or ran into an unknown error. "
+                    f"Please restart the soffice process, and retry.",
+                    self.cnx.host,
+                    self.cnx.port
+                ) from e
 
-    def export(self, name: str, should_replace=False) -> [str, None]:
+            for key, val in sorted(instance.items(), key=lambda s: -len(s[0])):
+
+                if isinstance(val, str):
+                    text_fill(self.new[index], "$" + key, val)
+                elif isinstance(val, dict):
+                    table_fill(self.new[index], "&", key, val)
+                elif isinstance(val, list):
+                    image_fill(self.new[index], self.cnx.graphic_provider, "$" + key, val)
+
+    def export(self, names: list[str], should_replace=False) -> [list[str], None]:
         """
         Exports the newly generated document, if any.
 
         :param should_replace: precise if the exported file should replace the fils with the same name
-        :param name: the path/name with file extension of the file to export.
+        :param names: the paths/names with file extension of the files to export.
         file type is automatically deducted from it.
         :return: the full path of the exported document, or None if there is no document to export
         """
 
-        if not self.new:
+        paths = []
+
+        if not self.new or not self.new[0]:
             return
 
-        file_type = name.split(".")[-1]
-        path = os.getcwd() + "/" + name if name[0] != '/' else name
-        path_without_num = path
-        if not should_replace:
-            i = 1
-            while os.path.isfile(path):
-                path = path_without_num[:-(len(file_type) + 1)] + f"_{i}." + file_type
-                i += 1
+        for index, elem in enumerate(self.new):
 
-        url = unohelper.systemPathToFileUrl(path)
-        formats = {
-            "odt": "writer8",
-            "pdf": "writer_pdf_Export",
-            "html": "HTML (StarWriter)",
-            "docx": "Office Open XML Text",
-        }
+            file_type = names[index].split(".")[-1]
+            path = os.getcwd() + "/" + names[index] if names[index] != '/' else names[index]
+            path_without_num = path
+            if not should_replace:
+                i = 1
+                while os.path.isfile(path):
+                    path = path_without_num[:-(len(file_type) + 1)] + f"_{i}." + file_type
+                    i += 1
 
-        try:
-            self.new.storeToURL(url, (PropertyValue("FilterName", 0, formats[file_type], 0),))
+            url = unohelper.systemPathToFileUrl(path)
+            formats = {
+                "odt": "writer8",
+                "pdf": "writer_pdf_Export",
+                "html": "HTML (StarWriter)",
+                "docx": "Office Open XML Text",
+            }
 
-        except KeyError:
-            raise err.ExportInvalidFormat(
-                f"Invalid export format {repr(file_type)} for file {repr(self.file_name)}",
-                self.file_name, file_type
-            ) from None
-        except IOException as e:
-            raise err.ExportUnknownError(
-                f"Unable to save document to {repr(path)} : error {e.value}",
-                self.file_name, e
-            ) from e
+            try:
+                elem.storeToURL(url, (PropertyValue("FilterName", 0, formats[file_type], 0),))
+                paths.append(path)
 
-        return path
+            except KeyError:
+                raise err.ExportInvalidFormat(
+                    f"Invalid export format {repr(file_type)} for file {repr(self.file_name)}",
+                    self.file_name, file_type
+                ) from None
+            except IOException as e:
+                raise err.ExportUnknownError(
+                    f"Unable to save document to {repr(path)} : error {e.value}",
+                    self.file_name, e
+                ) from e
+
+        return paths
 
     def close(self) -> None:
         """
@@ -548,8 +537,8 @@ class Template:
 
         :return: None
         """
-        if self.new:
-            self.new.dispose()
-            self.new.close(True)
+        for elem in self.new:
+            elem.dispose()
+            elem.close(True)
         self.doc.dispose()
         self.doc.close(True)

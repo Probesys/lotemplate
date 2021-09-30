@@ -1,4 +1,4 @@
-{
+[{
 	"tab": {
 		"var": ["test", "test2"]
 	},
@@ -7,3 +7,4 @@
 		"var2": ["qergh", "pareil"]
 	}
 }
+]

@@ -18,61 +18,77 @@ class Errors:
             super().__init__(message, file)
             self.variable_type = variable_type
 
-    class JsonVariableError(JsonException):
-        def __init__(self, message, variable: str, json: str):
-            super().__init__(message, json)
+    class JsonEmptyBase(JsonException):
+        pass
+
+    class JsonInstanceException(JsonException):
+        def __init__(self, message, file, instance):
+            super().__init__(message, file)
+            self.instance = instance
+
+    class JsonInvalidInstanceValueType(JsonInstanceException):
+        def __init__(self, message, file, instance, variable_type):
+            super().__init__(message, file, instance)
+            self.variable_type = variable_type
+
+    class JsonEmptyInstance(JsonInstanceException):
+        pass
+
+    class JsonVariableError(JsonInstanceException):
+        def __init__(self, message, variable: str, json: str, instance):
+            super().__init__(message, json, instance)
             self.variable = variable
 
     class JsonInvalidValueType(JsonVariableError):
-        def __init__(self, message, variable: str, json: str, variable_type):
-            super().__init__(message, variable, json)
+        def __init__(self, message, variable: str, json: str, instance, variable_type):
+            super().__init__(message, variable, json, instance)
             self.variable_type = variable_type
 
-    class JsonImageError(JsonException):
-        def __init__(self, message, image: str, json: str):
-            super().__init__(message, json)
+    class JsonImageError(JsonInstanceException):
+        def __init__(self, message, image: str, json: str, instance):
+            super().__init__(message, json, instance)
             self.image = image
 
     class JsonImageEmpty(JsonImageError):
         pass
 
     class JsonImageInvalidArgument(JsonImageError):
-        def __init__(self, message, image: str, json: str, argument):
-            super().__init__(message, image, json)
+        def __init__(self, message, image: str, json: str, instance, argument):
+            super().__init__(message, image, json, instance)
             self.argument = argument
 
     class JsonImageInvalidArgumentType(JsonImageInvalidArgument):
-        def __init__(self, message, image: str, json: str, argument, variable_type):
-            super().__init__(message, image, json, argument)
+        def __init__(self, message, image: str, json: str, instance, argument, variable_type):
+            super().__init__(message, image, json, argument, instance)
             self.variable_type = variable_type
 
     class JsonImageInvalidPath(JsonImageError):
-        def __init__(self, message, image, json, path):
-            super().__init__(message, image, json)
+        def __init__(self, message, image, json, instance, path):
+            super().__init__(message, image, json, instance)
             self.path = path
 
-    class JsonTableError(JsonException):
-        def __init__(self, message, table: str, json: str):
-            super().__init__(message, json)
+    class JsonTableError(JsonInstanceException):
+        def __init__(self, message, table: str, json: str, instance):
+            super().__init__(message, json, instance)
             self.table = table
 
     class JsonInvalidTableValueType(JsonTableError):
-        def __init__(self, message, table: str, json: str, variable: str, variable_type: str):
-            super().__init__(message, table, json)
+        def __init__(self, message, table: str, json: str, instance, variable: str, variable_type: str):
+            super().__init__(message, table, json, instance)
             self.variable = variable
             self.variable_type = variable_type
 
     class JsonInvalidRowValueType(JsonInvalidTableValueType):
-        def __init__(self, message, table: str, json: str, variable: str, variable_type: str, row):
-            super().__init__(message, table, json, variable, variable_type)
+        def __init__(self, message, table: str, json: str, instance, variable: str, variable_type: str, row):
+            super().__init__(message, table, json, instance, variable, variable_type)
             self.row = row
 
     class JsonEmptyTable(JsonTableError):
         pass
 
     class JsonEmptyTableVariable(JsonEmptyTable):
-        def __init__(self, message, table, json, variable):
-            super().__init__(message, table, json)
+        def __init__(self, message, table, json, instance, variable):
+            super().__init__(message, table, json, instance)
             self.variable = variable
 
     class TemplateException(Exception):
@@ -101,36 +117,37 @@ class Errors:
             self.document_format = document_format
 
     class JsonComparaisonException(Exception):
-        def __init__(self, message, json, template):
+        def __init__(self, message, json, instance, template):
             self.template_file = template
             self.json_file = json
+            self.instance = instance
             super().__init__(message)
 
     class JsonComparaisonVariableError(JsonComparaisonException):
-        def __init__(self, message, variable: str, json: str, _template: str):
-            super().__init__(message, json, _template)
+        def __init__(self, message, variable: str, json: str, instance, _template: str):
+            super().__init__(message, json, _template, instance)
             self.variable = variable
 
     class JsonMissingRequiredVariable(JsonComparaisonVariableError):
         pass
 
     class JsonMissingTableRequiredVariable(JsonMissingRequiredVariable):
-        def __init__(self, message, variable: str, json: str, _template: str, table):
-            super().__init__(message, variable, json, _template)
+        def __init__(self, message, variable: str, json: str, instance, _template: str, table):
+            super().__init__(message, variable, json, instance, _template)
             self.table = table
 
     class JsonUnknownVariable(JsonComparaisonVariableError):
         pass
 
     class JsonIncorrectValueType(JsonComparaisonVariableError):
-        def __init__(self, message, variable, json, template, expected_variable_type, actual_variable_type):
-            super().__init__(message, variable, json, template)
+        def __init__(self, message, variable, json, instance, template, expected_variable_type, actual_variable_type):
+            super().__init__(message, variable, json, instance, template)
             self.actual_variable_type = actual_variable_type
             self.expected_variable_type = expected_variable_type
 
     class JsonUnknownTableVariable(JsonUnknownVariable):
-        def __init__(self, message, variable: str, json: str, _template: str, table):
-            super().__init__(message, variable, json, _template)
+        def __init__(self, message, variable: str, json: str, instance, _template: str, table):
+            super().__init__(message, variable, json, instance, _template)
             self.table = table
 
     class ExportException(Exception):

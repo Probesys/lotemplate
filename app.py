@@ -12,13 +12,11 @@ import subprocess
 from copy import copy
 from time import sleep
 from typing import Union
+from zipfile import ZipFile
 
 app = Flask(__name__)
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("exports", exist_ok=True)
-for d in os.listdir("uploads"):
-    for f in glob.glob(f"uploads/{d}/.~lock.*#"):
-        os.remove(f)
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -46,6 +44,19 @@ def restart_soffice() -> None:
     )
     sleep(1)
     cnx.restart()
+
+
+def clean_tempfiles():
+    """
+    Deletes all the temporary files created
+
+    :return: None
+    """
+    for d in os.listdir("uploads"):
+        for f in glob.glob(f"uploads/{d}/.~lock.*#"):
+            os.remove(f)
+    for f in os.scandir("exports"):
+        os.remove(f.path)
 
 
 def delete_file(directory: str, name: str) -> None:
@@ -206,10 +217,11 @@ def scan_file(directory: str, file: str, error_catched=False) -> Union[tuple[dic
     return {'file': file, 'message': "Successfully scanned", 'variables': variables}
 
 
-def fill_file(directory: str, file: str, format: str, json: dict, error_catched=False) -> Union[tuple[dict, int], dict]:
+def fill_file(directory: str, file: str, format: str, json, export_names, error_catched=False) -> Union[tuple[dict, int], dict]:
     """
     fill the specified file
 
+    :param export_names: the names of the files to export
     :param directory: the directory where the file is
     :param file: the file to fill
     :param format: the specified export format
@@ -219,17 +231,22 @@ def fill_file(directory: str, file: str, format: str, json: dict, error_catched=
     """
 
     try:
-        json_variables = ot.convert_to_datas_template(file, json)
+        json_variables = ot.convert_to_datas_template("request body", json)
     except Exception as e:
         return error_format(e), 415
     try:
         with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
             try:
-                temp.search_error(json_variables, "request_body")
+                temp.search_error(json_variables, "request body")
                 temp.fill(json)
-                temp.export("exports/export." + format, True)
-                return send_file("exports/export." + format,
-                                 attachment_filename='export.' + format)
+                exports = temp.export([f"exports/{name}.{format}" for name in export_names], True)
+                if len(exports) == 1:
+                    return send_file(exports[0], attachment_filename=exports[0].split("/")[-1])
+                else:
+                    with ZipFile('exports/export.zip', 'w') as zipped:
+                        for elem in exports:
+                            zipped.write(elem, elem.split("/")[-1])
+                    return send_file('exports/export.zip', 'export.zip')
             except Exception as e:
                 return error_format(e), 415
     except err.UnoBridgeException as e:
@@ -241,7 +258,7 @@ def fill_file(directory: str, file: str, format: str, json: dict, error_catched=
                 500
             )
         else:
-            return fill_file(directory, file, format, json, True)
+            return fill_file(directory, file, format, json, ["export"], True)
     except err.UnoConnectionClosed as e:
         restart_soffice()
         if error_catched:
@@ -251,7 +268,7 @@ def fill_file(directory: str, file: str, format: str, json: dict, error_catched=
                 500
             )
         else:
-            return fill_file(directory, file, format, json, True)
+            return fill_file(directory, file, format, json, ["export"], True)
 
 
 @app.route("/", methods=['PUT', 'GET'])
@@ -341,7 +358,18 @@ def file(directory, file):
                              {'key': 'format'}), 400
         if not request.json:
             return error_sim("BadRequest", "You must provide a json in the body"), 400
-        return fill_file(directory, file, request.headers['format'], request.json)
+        try:
+            if type(request.json['names']) != list:
+                raise TypeError
+            for elem in request.json['names']:
+                if type(elem) != str:
+                    raise TypeError
+            return fill_file(directory, file, request.headers['format'], request.json['values'], request.json['names'])
+        except:
+            return error_sim(
+                "BadRequest",
+                "The given json is invalid. Should {'names':[<array of names>], 'values':[<array of values>]}"
+            ), 400
     elif request.method == 'DELETE':
         os.remove(f"uploads/{directory}/{file}")
         return {'directory': directory, 'file': file, 'message': "File successfully deleted"}
@@ -356,3 +384,6 @@ def download(directory, file):
         return error_sim("FileNotFoundError", f"the specified file {repr(file)} doesn't exist in {repr(directory)}",
                          {'file': file, 'directory': directory}), 415
     return send_file(f"uploads/{directory}/{file}")
+
+
+clean_tempfiles()

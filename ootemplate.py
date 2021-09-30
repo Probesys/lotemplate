@@ -1,6 +1,8 @@
 import ootemplate as ot
 import configargparse as cparse
 import json
+import urllib.request
+import urllib.error
 
 
 def set_arguments() -> cparse.Namespace:
@@ -13,12 +15,12 @@ def set_arguments() -> cparse.Namespace:
     p = cparse.ArgumentParser(default_config_files=['config.ini'])
     p.add_argument('template_file',
                    help="Template file to scan or fill")
-    p.add_argument('--json_file', '-jf', nargs='+', default=[],
-                   help="Json file(s) that must fill the template, if any")
-    p.add_argument('--json', '-j', nargs='+', default=[],
-                   help="Json strings that must fill the template, if any")
-    p.add_argument('--output', '-o', default="output.pdf",
-                   help="Name of the filled file, if the template should be filled. supported formats: "
+    p.add_argument('--json_file', '-jf', default=None,
+                   help="Json file that must fill the template, if any")
+    p.add_argument('--json', '-j', default=None,
+                   help="Json string that must fill the template, if any")
+    p.add_argument('--output', '-o', nargs='+', default=["output.pdf"],
+                   help="Names of the filled files, if the template should be filled. supported formats: "
                         "pdf, html, docx, png, odt")
     p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
     p.add_argument('--host', required=True, help='Host address to use for the libreoffice connection')
@@ -54,19 +56,31 @@ if __name__ == '__main__':
 
     # fill and export the template if it should
     else:
-        vars_list = document.compare_variables(ot.get_files_json(args.json_file) | ot.get_normized_json(args.json))
-        for json_name, json_values in vars_list.items():
-            document.fill(json_values)
-            print(
-                "File " +
-                repr(json_name) +
-                " : Document saved as " +
-                repr(document.export(
-                    args.output if len(vars_list) == 1 else
-                    ".".join(args.output.split(".")[:-1]) + '_' + (
-                        json_name.split("/")[-1][:-5] if json_name.split("/")[-1][-5:] == ".json"
-                        else json_name.split("/")[-1]
-                    ) + "." + args.output.split(".")[-1]
-                ))
-            )
+
+        # get the json value
+        if args.json_file:
+            if ot.is_network_based(args.json_file):
+                values = json.loads(urllib.request.urlopen(args.json_file).read())
+            else:
+                with open(args.json_file) as f:
+                    values = json.loads(f.read())
+        elif args.json:
+            values = json.loads(args.json)
+        else:
+            values = []
+
+        # scan for errors
+        document.search_error(
+            ot.convert_to_datas_template(args.json_file if args.json_file else 'input', values),
+            args.json_file if args.json_file else 'input'
+        )
+
+        # fill and export the document
+        document.fill(values)
+        exported = document.export(
+            args.output + [args.output][-1] * (len(values) - len(args.output)
+                                               if len(values) - len(args.output) > 0 else 0)
+        )
+        print(*[f"Instance {repr(index)} : Document saved as {repr(name)}" for index, name in enumerate(exported)],
+              sep="\n")
     document.close()

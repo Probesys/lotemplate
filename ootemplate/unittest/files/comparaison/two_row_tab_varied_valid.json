@@ -1,6 +1,7 @@
-{
+[{
 	"tab": {
 		"var1": ["test", "test2"],
 		"var2": ["jean", "pierre", "troisième"]
 	}
 }
+]
