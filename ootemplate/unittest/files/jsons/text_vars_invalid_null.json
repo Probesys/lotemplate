@@ -1,9 +1,26 @@
-[{
-"aerhh": null,
-"h": null,
-"rh": null,
-"gjerg": null,
-"aet": null,
-"jean": null
+{
+  "aerhh": {
+    "type": "text",
+    "value": null
+  },
+  "h": {
+    "type": "text",
+    "value": null
+  },
+  "rh": {
+    "type": "text",
+    "value": null
+  },
+  "gjerg": {
+    "type": "text",
+    "value": null
+  },
+  "aet": {
+    "type": "text",
+    "value": null
+  },
+  "jean": {
+    "type": "text",
+    "value": null
+  }
 }
-]

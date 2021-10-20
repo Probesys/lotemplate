@@ -12,6 +12,8 @@ For more information on a specific usage, read, the `Execute and use the API` or
 - export the filled template
 
 ## Requirements
+For Docker use of the API, you can skip this step.
+
 - LibreOffice (the console-line version will be enough)
 - a Java JRE
 - the package `libreoffice-java-common`
@@ -35,6 +37,12 @@ or simply
 flask run
 ```
 
+or, for Docker deployment:
+```shell
+docker-compose up
+```
+
+
 Then use the following routes :
 
 - /
@@ -54,8 +62,8 @@ Then use the following routes :
   - DELETE : deletes the specified file
   - PATCH : take a file in the body, key 'file'. replace the existing file with the given file. 
     returns the file and the scanned variables of the file
-  - POST : take a json in the raw body, and a format in the headers, key 'format'. 
-    fills the template with the values given in the json. returns the filled document in the specified format.
+  - POST : take a json in the raw body.
+    fills the template with the values given in the json. returns the filled document(s).
 - /\<directory>/\<file>/download : directory correspond to an existing directory, and file to an existing file within 
   the directory
   - GET : returns the original template file, as it was sent
@@ -65,6 +73,7 @@ you may wish to deploy the API on your server.
 *but don't forget that you should have soffice installed on the server*
 
 You can also change the flask options - like port and ip - in the [.flaskenv](.flaskenv) file, or the soffice options in the [config.ini](config.ini) file.
+If you're deploying the app with Docker, port and ip are editable in the [Dockerfile](Dockerfile).
 
 ## Execute and use the CLI
 
@@ -79,21 +88,20 @@ with the host and port you wish (recommended = localhost:2002). Be sure that the
 Then run the script with the following arguments :
 ```
 usage: ootemplate.py [-h] [--json_file JSON_FILE [JSON_FILE ...]]
-                     [--json JSON [JSON ...]] [--output OUTPUT] [--config CONFIG]
-                     --host HOST --port PORT [--scan] [--force_replacement]
+                     [--json JSON [JSON ...]] [--output OUTPUT]
+                     [--config CONFIG] --host HOST --port PORT [--scan]
+                     [--force_replacement]
                      template_file
-
 positional arguments:
   template_file         Template file to scan or fill
-
 optional arguments:
   -h, --help            show this help message and exit
   --json_file JSON_FILE [JSON_FILE ...], -jf JSON_FILE [JSON_FILE ...]
-                        Json file(s) that must fill the template, if any
+                        Json files that must fill the template, if any
   --json JSON [JSON ...], -j JSON [JSON ...]
                         Json strings that must fill the template, if any
   --output OUTPUT, -o OUTPUT
-                        Name of the filled file, if the template should be
+                        Names of the filled files, if the template should be
                         filled. supported formats: pdf, html, docx, png, odt
   --config CONFIG, -c CONFIG
                         Configuration file path
@@ -144,26 +152,29 @@ Format information can be found on the
 
 ## Unsolvable problems
 
-The error `UnoBridgeException` happens frequently and 
+The error `UnoException` happens frequently and 
 unpredictably, and this error stops the soffice processus 
 (please note that the API try to re-launch the process by itself). This error, particularly annoying, is unfortunately 
-impossible to fix, since it's a pyUNO - or soffice - bug, unresolved since 2015. It is therefore very unlikely that 
-this bug will ever be fixed.
-Here is a non-exhaustive list of cases that can cause this bug :
-- The soffice process was simply closed after the connection is established, but instead of raising the 
-  `UnoConnectionClosed` exception, the bridge crashes.
-- The `.~lock.[FILENAME].odt#` file is present in the folder where the document is open.  This file is created when the 
+impossible to fix, since it can be caused by multiples soffice (so OpenOffice or LibreOffice) bugs.
+Here is a non-exhaustive list of cases that ***can*** cause this bug :
+- The soffice process was simply closed after the connection is established.
+- The `.~lock.[FILENAME].odt#` file is present in the folder where the document is open. This file is created when the 
   file is currently edited via libreoffice or openoffice, and deleted when the programs in which it is edited are 
-  closed.
-- The first line of the document is occupied by a table (just jump a line, it will solve the problem)
+  closed. The program try to avoid this error by deleting this file at document opening.
+- The first line of the document is occupied by a table or another dynamic element
+  (just jump a line, it will solve the problem)
 - The background of document is an image, and is overlaid by many text fields
+- The document is an invalid file (e.g: the file is an image), and the bridge crashes instead of return the proper 
+  error.
 
 The amount of memory used by soffice can increase with its use, even when open files are properly closed (which is the 
 case). Again, this is a bug in OpenOffice/soffice that has existed for years.
 
 For trying to fix these problems, you can try:
-- Use the most recent stable release of LibreOffice (less memory, more stable, fewer crashes)
-- Use the native LibreOffice python binary to run this script
+- Use the most recent stable release of LibreOffice/OpenOffice (less memory, more stable, fewer crashes)
+- Switching from OpenOffice to LibreOffice (more stable, more maintained)
+- Use another operating system, or another version/distribution
+- Use the native LibreOffice/OpenOffice python binary to run this script (if there is one)
 
 ## Useful links
 - [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
@@ -181,6 +192,5 @@ For trying to fix these problems, you can try:
 - Possibly to add dynamic images in tables
 - another way to make image variables that would be compatible with Microsoft Word and maybe other formats (example : set the variable name in the 'alternative text' field)
 - key system for each institution for security
-- handle bulleted lists using table variables
+- handle bulleted lists using table like variables
 - use variable formatting instead of the one of the character before
-- handle iteration system through a list of dict of variables, generating duplicates pages with different values 

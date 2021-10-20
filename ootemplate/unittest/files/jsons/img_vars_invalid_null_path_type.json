@@ -1,4 +1,6 @@
-[{
-"image" : [null]
+{
+  "image": {
+    "type": "image",
+    "value": null
+  }
 }
-]

@@ -1,4 +1,6 @@
-[{
-"image": ["jean"]
+{
+	"image": {
+		"type": "image",
+		"value": "JeaaAaAaaAaaaAAAn"
+	}
 }
-]

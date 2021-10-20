@@ -1,7 +1,14 @@
-[{
-	"tab": {
-		"var1": ["test", "test2"],
-		"var2": ["jean", "pierre"],
-		"var3": ["existe pas", "là non plus"]
+{
+	"var1": {
+		"type": "table",
+		"value": ["test", "test2"]
+	},
+	"var2": {
+		"type": "table",
+		"value": ["jean", "pierre", "troisième"]
+	},
+	"var3": {
+		"type": "table",
+		"value": ["jeasdfgn", "tnonroisième"]
 	}
-}]
+}

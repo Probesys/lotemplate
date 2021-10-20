@@ -1,6 +1,6 @@
-[{
-	"tab": {
-		"var1": ["test", "test2"]
+{
+	"var1": {
+		"type": "table",
+		"value": ["test", "test2"]
 	}
 }
-]

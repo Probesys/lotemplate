@@ -5,3 +5,4 @@ Pillow~=8.3.1
 python-dotenv~=0.19
 gunicorn
 Werkzeug~=2.0.1
+sorcery~=0.2.1

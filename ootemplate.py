@@ -1,8 +1,11 @@
 import ootemplate as ot
+
 import configargparse as cparse
 import json
 import urllib.request
 import urllib.error
+import sys
+import traceback
 
 
 def set_arguments() -> cparse.Namespace:
@@ -15,11 +18,11 @@ def set_arguments() -> cparse.Namespace:
     p = cparse.ArgumentParser(default_config_files=['config.ini'])
     p.add_argument('template_file',
                    help="Template file to scan or fill")
-    p.add_argument('--json_file', '-jf', default=None,
-                   help="Json file that must fill the template, if any")
-    p.add_argument('--json', '-j', default=None,
-                   help="Json string that must fill the template, if any")
-    p.add_argument('--output', '-o', nargs='+', default=["output.pdf"],
+    p.add_argument('--json_file', '-jf', nargs='+', default=[],
+                   help="Json files that must fill the template, if any")
+    p.add_argument('--json', '-j', nargs='+', default=[],
+                   help="Json strings that must fill the template, if any")
+    p.add_argument('--output', '-o', default="output.pdf",
                    help="Names of the filled files, if the template should be filled. supported formats: "
                         "pdf, html, docx, png, odt")
     p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
@@ -44,6 +47,12 @@ if __name__ == '__main__':
     # get the necessaries arguments
     args = set_arguments()
 
+    import subprocess
+    from time import sleep
+    subprocess.call(f'soffice "--accept=socket,host={args.host},port={args.port};urp;StarOffice.ServiceManager" &',
+                    shell=True)
+    sleep(2)
+
     # establish the connection to the server
     connexion = ot.Connexion(args.host, args.port)
 
@@ -57,30 +66,37 @@ if __name__ == '__main__':
     # fill and export the template if it should
     else:
 
-        # get the json value
-        if args.json_file:
-            if ot.is_network_based(args.json_file):
-                values = json.loads(urllib.request.urlopen(args.json_file).read())
+        # get the specified jsons
+        json_dict = {}
+        for elem in args.json_file:
+            if ot.is_network_based(elem):
+                json_dict[elem] = json.loads(urllib.request.urlopen(elem).read())
             else:
-                with open(args.json_file) as f:
-                    values = json.loads(f.read())
-        elif args.json:
-            values = json.loads(args.json)
-        else:
-            values = []
+                with open(elem) as f:
+                    json_dict[elem] = json.loads(f.read())
+        for index, elem in enumerate(args.json):
+            json_dict[f"json_{index}"] = json.loads(elem)
 
-        # scan for errors
-        document.search_error(
-            ot.convert_to_datas_template(args.json_file if args.json_file else 'input', values),
-            args.json_file if args.json_file else 'input'
-        )
+        for json_name, json_variables in json_dict.items():
 
-        # fill and export the document
-        document.fill(values)
-        exported = document.export(
-            args.output + [args.output][-1] * (len(values) - len(args.output)
-                                               if len(values) - len(args.output) > 0 else 0)
-        )
-        print(*[f"Instance {repr(index)} : Document saved as {repr(name)}" for index, name in enumerate(exported)],
-              sep="\n")
+            try:
+                # scan for errors
+                document.search_error(ot.convert_to_datas_template(json_variables))
+
+                # fill and export the document
+                document.fill(json_variables)
+                print(
+                    f"File {repr(json_name)}: Document saved as " +
+                    repr(document.export(
+                        args.output if len(json_dict) == 1 else
+                        ".".join(args.output.split(".")[:-1]) + '_' + (
+                            json_name.split("/")[-1][:-5] if json_name.split("/")[-1][-5:] == ".json"
+                            else json_name.split("/")[-1]
+                        ) + "." + args.output.split(".")[-1]
+                    ))
+                )
+            except Exception as exception:
+                print(f'Ignoring exception on json {repr(json_name)}:', file=sys.stderr)
+                traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+                continue
     document.close()

@@ -12,13 +12,13 @@ __version__ = '1.0'
 __all__ = (
     'Connexion',
     'Template',
-    'err',
+    'errors',
     'convert_to_datas_template',
     'is_network_based',
     'get_file_url',
 )
 
-from .exceptions import *
+from .errors import *
 from .utils import *
 from .classes import *
 

@@ -1,7 +1,10 @@
-[{
-	"tab": {
-		"var":  ["test"],
-		"var2": "jean pierre"
+{
+	"var": {
+		"type": "table",
+		"value": ["jean", "test"]
+	},
+	"var2": {
+		"type": "table",
+		"value": "jean"
 	}
 }
-]

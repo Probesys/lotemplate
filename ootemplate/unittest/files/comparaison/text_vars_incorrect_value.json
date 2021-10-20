@@ -1,9 +1,8 @@
-[{
-"aerhh": "1",
-"h": "fgerhh",
-"rh": "trh",
-"gjerg": "atehaeth",
-"aet": "2",
-"jean": ["files/jsons/Yami_Yugi.png"]
+{
+  "aerhh": {"type": "text", "value": "1"},
+  "h": {"type": "text", "value": "zhefh"},
+  "rh": {"type": "text", "value": "jean"},
+  "gjerg": {"type": "text", "value": "jhtr"},
+  "aet": {"type": "text", "value": "2"},
+  "jean": {"type": "image", "value": "files/jsons/Yami_Yugi.png"}
 }
-]

@@ -2,14 +2,12 @@ from flask import *
 from werkzeug.utils import secure_filename
 
 import ootemplate as ot
-from ootemplate import err
 
 import configparser
 import glob
 import os
 from shutil import copyfile, rmtree
 import subprocess
-from copy import copy
 from time import sleep
 from typing import Union
 from zipfile import ZipFile
@@ -34,10 +32,7 @@ def restart_soffice() -> None:
     :return: None
     """
 
-    for d in os.listdir("uploads"):
-        for f in glob.glob(f"uploads/{d}/.~lock.*#"):
-            os.remove(f)
-
+    clean_tempfiles()
     subprocess.call(
         f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
         shell=True
@@ -84,30 +79,12 @@ def error_format(exception: Exception, message: str = None) -> dict:
     :return: the formatted dictionary
     """
 
-    class ReservedVariable(Exception):
-        pass
-
-    variables = copy(exception.__dict__)
-    if 'file' in variables.keys():
-        variables['file'] = variables['file'].split("/")[-1]
-    if 'variables' in variables.keys():
-        raise ReservedVariable(
-            "The variable 'variables' is reserved for formatting, and so the exception cannot be formatted"
-        )
-    if 'error' in variables.keys():
-        raise ReservedVariable(
-            "The variable 'error' is reserved for formatting, and so the exception cannot be formatted"
-        )
-    if 'message' in variables.keys():
-        raise ReservedVariable(
-            "The variable 'message' is reserved for formatting, and so the exception cannot be formatted"
-        )
     formatted = (
-            {
-                'error': type(exception).__name__,
-                'message': str(exception),
-                'variables': variables
-            }
+        {
+            'error': type(exception).__name__,
+            'message': str(exception),
+            'variables': exception.infos if isinstance(exception, ot.errors.OotemplateError) else {}
+        }
     )
     if message:
         formatted['message'] = message
@@ -154,13 +131,10 @@ def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[
     try:
         with ot.Template(f"uploads/{directory}/{name}", cnx, True) as temp:
             values = temp.variables
-    except err.TemplateInvalidFormat as e:
+    except ot.errors.TemplateError as e:
         delete_file(directory, name)
-        return (
-            error_format(e, "The given format is invalid. You can upload ODT, OTT, DOC, DOCX, HTML, RTF or TXT."),
-            415
-        )
-    except err.UnoBridgeException as e:
+        return error_format(e), 415
+    except ot.errors.UnoException as e:
         delete_file(directory, name)
         restart_soffice()
         if error_catched:
@@ -171,20 +145,6 @@ def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[
             )
         else:
             return save_file(directory, f, name, True)
-    except err.UnoConnectionClosed as e:
-        delete_file(directory, name)
-        restart_soffice()
-        if error_catched:
-            return (
-                error_format(e, "Internal server error : the soffice process keeps closing. Please check the error "
-                                "for more help"),
-                500
-            )
-        else:
-            return save_file(directory, f, name, True)
-    except err.TemplateException as e:
-        delete_file(directory, name)
-        return error_format(e), 415
     except Exception as e:
         delete_file(directory, name)
         return error_format(e), 500
@@ -204,7 +164,7 @@ def scan_file(directory: str, file: str, error_catched=False) -> Union[tuple[dic
     try:
         with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
             variables = temp.variables
-    except err.UnoBridgeException as e:
+    except ot.errors.UnoException as e:
         restart_soffice()
         if error_catched:
             return (
@@ -217,39 +177,50 @@ def scan_file(directory: str, file: str, error_catched=False) -> Union[tuple[dic
     return {'file': file, 'message': "Successfully scanned", 'variables': variables}
 
 
-def fill_file(directory: str, file: str, format: str, json, export_names, error_catched=False) -> Union[tuple[dict, int], dict]:
+def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tuple[dict, int], dict]:
     """
     fill the specified file
 
-    :param export_names: the names of the files to export
     :param directory: the directory where the file is
     :param file: the file to fill
-    :param format: the specified export format
     :param json: the json to fill the document with
     :param error_catched: specify if an error was already catched
     :return: a json and optionaly an int which represent the status code to return
     """
 
-    try:
-        json_variables = ot.convert_to_datas_template("request body", json)
-    except Exception as e:
-        return error_format(e), 415
+    if type(json) != list or not json:
+        return error_sim("JsonSyntaxError", "The json should be a non-empty array"), 415
+
     try:
         with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
-            try:
-                temp.search_error(json_variables, "request body")
-                temp.fill(json)
-                exports = temp.export([f"exports/{name}.{format}" for name in export_names], True)
-                if len(exports) == 1:
-                    return send_file(exports[0], attachment_filename=exports[0].split("/")[-1])
-                else:
-                    with ZipFile('exports/export.zip', 'w') as zipped:
-                        for elem in exports:
-                            zipped.write(elem, elem.split("/")[-1])
-                    return send_file('exports/export.zip', 'export.zip')
-            except Exception as e:
-                return error_format(e), 415
-    except err.UnoBridgeException as e:
+
+            exports = []
+
+            for elem in json:
+
+                if (type(elem) != dict or not elem.get("name") or not elem["name"] or type(elem["name"]) != str or
+                        not elem.get("variables") or len(elem) > 2):
+                    return error_sim(
+                        "JsonSyntaxError",
+                        "Each instance of the array in the json should be an object containing only 'name' - "
+                        "a non-empty string, and 'variables' - a non-empty object"), 415
+
+                try:
+                    json_variables = ot.convert_to_datas_template(elem["variables"])
+                    temp.search_error(json_variables)
+                    temp.fill(elem["variables"])
+                    exports.append(temp.export("exports/" + elem["name"], should_replace=(True if len(json) == 1 else False)))
+                except Exception as e:
+                    return error_format(e), 415
+
+            if len(exports) == 1:
+                return send_file(exports[0], attachment_filename=exports[0].split("/")[-1])
+            else:
+                with ZipFile('exports/export.zip', 'w') as zipped:
+                    for elem2 in exports:
+                        zipped.write(elem2, elem2.split("/")[-1])
+                return send_file('exports/export.zip', 'export.zip')
+    except ot.errors.UnoException as e:
         restart_soffice()
         if error_catched:
             return (
@@ -258,17 +229,7 @@ def fill_file(directory: str, file: str, format: str, json, export_names, error_
                 500
             )
         else:
-            return fill_file(directory, file, format, json, ["export"], True)
-    except err.UnoConnectionClosed as e:
-        restart_soffice()
-        if error_catched:
-            return (
-                error_format(e, "Internal server error : the soffice process keeps closing. Please check the error "
-                                "for more help"),
-                500
-            )
-        else:
-            return fill_file(directory, file, format, json, ["export"], True)
+            return fill_file(directory, file, json, True)
 
 
 @app.route("/", methods=['PUT', 'GET'])
@@ -353,23 +314,9 @@ def file(directory, file):
         os.remove(f"uploads/temp_{file}")
         return datas
     elif request.method == 'POST':
-        if 'format' not in request.headers:
-            return error_sim("BadRequest", "You must provide a valid format in the headers, key 'format'",
-                             {'key': 'format'}), 400
         if not request.json:
             return error_sim("BadRequest", "You must provide a json in the body"), 400
-        try:
-            if type(request.json['names']) != list:
-                raise TypeError
-            for elem in request.json['names']:
-                if type(elem) != str:
-                    raise TypeError
-            return fill_file(directory, file, request.headers['format'], request.json['values'], request.json['names'])
-        except:
-            return error_sim(
-                "BadRequest",
-                "The given json is invalid. Should {'names':[<array of names>], 'values':[<array of values>]}"
-            ), 400
+        return fill_file(directory, file, request.json)
     elif request.method == 'DELETE':
         os.remove(f"uploads/{directory}/{file}")
         return {'directory': directory, 'file': file, 'message': "File successfully deleted"}

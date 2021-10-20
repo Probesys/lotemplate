@@ -1,9 +1,26 @@
-[{
-"aerhh": "1",
-"h": "fgerhh",
-"rh": "trh",
-"gjerg": "atehaeth",
-"aet": "2",
-"jean": "jean"
+{
+  "aerhh": {
+    "type": "text",
+    "value": "regerheh"
+  },
+  "h": {
+    "type": "text",
+    "value": "zerthae"
+  },
+  "rh": {
+    "type": "text",
+    "value": "zetrhaerth"
+  },
+  "gjerg": {
+    "type": "text",
+    "value": "azerthaeth"
+  },
+  "aet": {
+    "type": "text",
+    "value": "zetheatth"
+  },
+  "jean": {
+    "type": "text",
+    "value": "zethetrh"
+  }
 }
-]

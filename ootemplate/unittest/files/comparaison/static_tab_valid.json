@@ -1,5 +1,4 @@
-[{
-	"var1": "test",
-	"var2": "jean"
+{
+	"var1": {"type": "text", "value": "jean mi"},
+	"var2": {"type": "text", "value": "jean"}
 }
-]
