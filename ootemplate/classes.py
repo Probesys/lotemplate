@@ -22,6 +22,7 @@ from com.sun.star.lang import IllegalArgumentException, DisposedException
 from com.sun.star.connection import NoConnectException
 from com.sun.star.uno import RuntimeException
 from com.sun.star.awt import Size
+
 from . import errors
 from .utils import *
 
@@ -53,7 +54,7 @@ class Connexion:
             self.ctx = self.local_ctx.ServiceManager.createInstanceWithContext(
                 "com.sun.star.bridge.UnoUrlResolver", self.local_ctx
             ).resolve(f"uno:socket,host={host},port={port};urp;StarOffice.ComponentContext")
-        except NoConnectException as e:
+        except (NoConnectException, RuntimeException) as e:
             raise errors.UnoException(
                 f"Couldn't find/connect to the soffice process on \'{host}:{port}\'. "
                 f"Make sure the soffice process is correctly running with correct host and port informations. "

@@ -37,8 +37,11 @@ def restart_soffice() -> None:
         f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
         shell=True
     )
-    sleep(1)
-    cnx.restart()
+    sleep(1.5)
+    try:
+        cnx.restart()
+    except:
+        pass
 
 
 def clean_tempfiles():
