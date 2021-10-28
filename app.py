@@ -52,9 +52,15 @@ def clean_tempfiles():
     """
     for d in os.listdir("uploads"):
         for f in glob.glob(f"uploads/{d}/.~lock.*#"):
-            os.remove(f)
+            try:
+                os.remove(f)
+            except:
+                continue
     for f in os.scandir("exports"):
-        os.remove(f.path)
+        try:
+            os.remove(f.path)
+        except:
+            continue
 
 
 def delete_file(directory: str, name: str) -> None:
