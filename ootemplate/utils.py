@@ -58,9 +58,6 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
             dict(variable_type=type(json).__name__)
         )
 
-    if not json:
-        raise errors.JsonSyntaxError(f"The given json object is empty", {})
-
     def check_type(f):
         # pris en charge : toutes les objects non récursifs (int, str, bool), None, ainsi que les listes
         # (première instance seulement) et dictionnaires (clé et valeur)

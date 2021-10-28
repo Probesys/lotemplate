@@ -202,7 +202,7 @@ def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tup
             for elem in json:
 
                 if (type(elem) != dict or not elem.get("name") or not elem["name"] or type(elem["name"]) != str or
-                        not elem.get("variables") or len(elem) > 2):
+                        elem.get("variables") is None or len(elem) > 2):
                     return error_sim(
                         "JsonSyntaxError",
                         "Each instance of the array in the json should be an object containing only 'name' - "
