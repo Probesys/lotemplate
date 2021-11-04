@@ -16,7 +16,7 @@ before_script:
   - IMAGE_TAG_LATEST=latest
   - IMAGE_TAG_COMMIT=$CI_COMMIT_SHORT_SHA
 
-build_cyrus:
+build_ootemplate:
   stage: build
   script:
     - docker build -t $CI_REGISTRY_IMAGE/ootemplate:$IMAGE_TAG_LATEST -t $CI_REGISTRY_IMAGE/ootemplate:$IMAGE_TAG_COMMIT .
