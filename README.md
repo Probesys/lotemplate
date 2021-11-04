@@ -45,6 +45,9 @@ docker-compose up
 
 Then use the following routes :
 
+*all routes take a secret key in the header, key `secret_key`, that correspond to the secret key configured in the 
+[.flaskenv](.flaskenv) file. If no secret key is configured, the secret key isn't required at request.*
+
 - /
   - PUT : take a directory name in the headers, key 'directory'. Creates a directory with the specified name
   - GET : returns the list of existing directories
@@ -87,11 +90,11 @@ with the host and port you wish (recommended = localhost:2002). Be sure that the
 
 Then run the script with the following arguments :
 ```
-usage: ootemplate.py [-h] [--json_file JSON_FILE [JSON_FILE ...]]
-                     [--json JSON [JSON ...]] [--output OUTPUT]
-                     [--config CONFIG] --host HOST --port PORT [--scan]
-                     [--force_replacement]
-                     template_file
+usage: ootemplate_cli.py [-h] [--json_file JSON_FILE [JSON_FILE ...]]
+                         [--json JSON [JSON ...]] [--output OUTPUT]
+                         [--config CONFIG] --host HOST --port PORT [--scan]
+                         [--force_replacement]
+                         template_file
 positional arguments:
   template_file         Template file to scan or fill
 optional arguments:
