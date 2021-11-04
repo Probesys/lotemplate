@@ -1,0 +1,6 @@
+{
+	"var1": {
+		"type": "table",
+		"value": ["test", "test2"]
+	}
+}

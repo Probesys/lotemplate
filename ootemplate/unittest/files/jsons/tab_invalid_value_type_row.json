@@ -1,0 +1,10 @@
+{
+	"var": {
+		"type": "table",
+		"value": ["jean", "test"]
+	},
+	"var2": {
+		"type": "table",
+		"value": "jean"
+	}
+}

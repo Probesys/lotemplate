@@ -1,0 +1,10 @@
+{
+	"image": {
+		"type": "image",
+		"value": "files/jsons/Yami_Yugi.png"
+	},
+	"img2": {
+		"type": "image",
+		"value": "files/jsons/Yami_Yugi.png"
+	}
+}

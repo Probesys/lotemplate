@@ -1,0 +1,14 @@
+{
+	"var1": {
+		"type": "table",
+		"value": ["test", "test2"]
+	},
+	"var2": {
+		"type": "table",
+		"value": ["jean", "pierre", "troisième"]
+	},
+	"var3": {
+		"type": "table",
+		"value": ["jeasdfgn", "tnonroisième"]
+	}
+}
