@@ -1,4 +1,4 @@
-FROM debian:bullseye as prod 
+FROM debian:bullseye as prod
 RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,id=debconf,target=/var/cache/debconf,sharing=locked \
@@ -9,6 +9,6 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
 	&& useradd -d /app python
 COPY . /app
 WORKDIR /app
-Run chown python /app -R \ 
+Run chown python /app -R \
        && pip install -r requirements.txt
 USER python
