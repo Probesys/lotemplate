@@ -54,6 +54,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
 
     if type(json) is not dict:
         raise errors.JsonSyntaxError(
+            'invalid_base_value_type',
             f"The value type {repr(get_type(json))} isn't accepted in json, only objects",
             dict(variable_type=type(json).__name__)
         )
@@ -69,6 +70,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
                 if (type(rec_type) is type and type(rec_value) is not rec_type) or \
                         (rec_type is None and rec_value is not None):
                     raise errors.JsonSyntaxError(
+                        'invalid_variable_value_type',
                         f"The variable value type {repr(get_type(rec_value))} isn't accepted for variable type "
                         f"{repr(f.__name__[12:])}, only {repr(get_type(rec_type, is_type=True))} is "
                         f"(variable: {repr(var_name)}).",
@@ -81,6 +83,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
                 elif type(rec_type) is types.GenericAlias:
                     if type(rec_value) is not rec_type.__origin__:
                         raise errors.JsonSyntaxError(
+                            'invalid_variable_value_type',
                             f"The variable value type {repr(get_type(rec_value))} isn't accepted for variable type "
                             f"{repr(f.__name__[12:])}, only {repr(get_type(rec_type, is_type=True))} is "
                             f"(variable: {repr(var_name)}).",
@@ -93,8 +96,10 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
                     try:
                         if not rec_value:
                             raise errors.JsonSyntaxError(
-                                f"The variable {repr(var_name)} is missing some required informations",
-                                dict(varible=var_name)
+                                'missing_variable_elements',
+                                f"The variable {repr(var_name)} is missing some required elements (expected: "
+                                f"{repr(get_type(rec_type, is_type=True))}",
+                                dict(varible=var_name, expected_variable_value_type=get_type(rec_type, is_type=True))
                             )
                         if rec_type.__origin__ == list:
                             for element in rec_value:
@@ -105,6 +110,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
                                 recursive_check_type(rec_type.__args__[1], value)
                     except errors.JsonSyntaxError:
                         raise errors.JsonSyntaxError(
+                            'invalid_variable_value_type',
                             f"The variable value type provided in variable {repr(var_name)} isn't accepted for "
                             f"variable type {repr(f.__name__[12:])}, only {repr(get_type(rec_type, is_type=True))} is.",
                             dict(
@@ -138,7 +144,8 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
 
         if not is_network_based(var_value) and not os.path.isfile(var_value):
             raise errors.JsonSyntaxError(
-                f"The image {repr(var_value)} don't exist (variable {repr(var_name)})",
+                'image_invalid_path',
+                f"The image {repr(var_value)} doesn't exist (variable {repr(var_name)})",
                 dict(variable=var_name, value=var_value)
             )
         elif is_network_based(var_value):
@@ -146,7 +153,8 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
                 urllib.request.urlopen(var_value)
             except urllib.error.URLError as error:
                 raise errors.JsonSyntaxError(
-                    f"The image {repr(var_value)} don't exist (variable {repr(var_name)})",
+                    'image_invalid_path',
+                    f"The image {repr(var_value)} doesn't exist (variable {repr(var_name)})",
                     dict(variable=var_name, value=var_value)
                 ) from error
 
@@ -162,13 +170,15 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
     for variable_name, variable_infos in json.items():
         if type(variable_infos) != dict:
             raise errors.JsonSyntaxError(
-                f"The value type {repr(get_type(variable_infos))} isn't accepted in json, only objects "
+                'invalid_variable_base_value_type',
+                f"The value type {repr(get_type(variable_infos))} isn't accepted in variable, only objects "
                 f"(variable {repr(variable_name)}).",
                 dict_of(variable_name, variable_type=get_type(variable_infos))
             )
 
         if 'type' not in variable_infos or 'value' not in variable_infos:
             raise errors.JsonSyntaxError(
+                'missing_variable_informations',
                 f"The information {repr('value' if 'type' in variable_infos else 'type')} is missing from the variable "
                 f"{repr(variable_name)}",
                 dict_of(variable_name, missing_information=('value' if 'type' in variable_infos else 'type'))
@@ -176,6 +186,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
 
         if invalid_infos := list(set(variable_infos) - {'type', 'value'}):
             raise errors.JsonSyntaxError(
+                'unknown_variable_information',
                 f"The information {repr(invalid_infos[0])} is invalid for the variable {repr(variable_name)}. "
                 f"Only 'type' and 'value' are expected.",
                 dict_of(variable_name, information=invalid_infos[0])
@@ -183,6 +194,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
 
         if type(variable_infos['type']) != str:
             raise errors.JsonSyntaxError(
+                'invalid_variable_type_value_type',
                 f"The 'type' information is supposed to be string, not a {repr(get_type(variable_infos['type']))} "
                 f"(variable {repr(variable_name)}).",
                 dict_of(variable_name, type_info_type=get_type(variable_infos['type']))
@@ -193,6 +205,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
                 f"get_cleaned_{variable_infos['type']}(variable_name, variable_infos['value'])")
         except NameError:
             raise errors.JsonSyntaxError(
+                'invalid_variable_type',
                 f"The variable type {repr(variable_infos['type'])} isn't accepted (variable {repr(variable_name)}).",
                 dict_of(variable_name, variable_type=variable_infos['type'])
             )

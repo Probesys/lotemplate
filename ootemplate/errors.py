@@ -18,8 +18,9 @@ from typing import Union
 
 
 class OotemplateError(Exception):
-    def __init__(self, message, infos: dict[str: Union[str, int]]):
+    def __init__(self, code: str, message: str, infos: dict[str: Union[str, int]]):
         super().__init__(message)
+        self.code = code
         self.infos = infos
 
 
