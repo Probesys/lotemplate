@@ -33,7 +33,6 @@ def main_route():
 @app.route("/<directory>", methods=['PUT', 'DELETE', 'PATCH', 'GET'])
 def directory_route(directory):
     if request.headers.get('secret_key', '') != os.environ.get('SECRET_KEY', ''):
-        print('test')
         return utils.error_sim(
             'ApiError', 'invalid_secret_key', f"The secret key is invalid or not given", {'key': 'secret_key'}), 401
     if not os.path.isdir(f"uploads/{directory}") and request.method != 'PUT':
