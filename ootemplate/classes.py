@@ -56,6 +56,7 @@ class Connexion:
             ).resolve(f"uno:socket,host={host},port={port};urp;StarOffice.ComponentContext")
         except (NoConnectException, RuntimeException) as e:
             raise errors.UnoException(
+                'connection_error',
                 f"Couldn't find/connect to the soffice process on \'{host}:{port}\'. "
                 f"Make sure the soffice process is correctly running with correct host and port informations. "
                 f"Read the README file, section 'Executing the script' for more informations about how to "
@@ -118,6 +119,7 @@ class Template:
         except DisposedException as e:
             self.close()
             raise errors.UnoException(
+                'bridge_exception',
                 f"The connection bridge on '{self.cnx.host}:{self.cnx.port}' crashed on file opening."
                 f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
                 f"it, please read the README file, section 'Unsolvable Problems'.",
@@ -126,12 +128,14 @@ class Template:
         except IllegalArgumentException:
             self.close()
             raise errors.FileNotFoundError(
+                'file_not_found',
                 f"the given file does not exist or has not been found (file {repr(file_path)})",
                 dict_of(file_path)
             ) from None
         except RuntimeException as e:
             self.close()
             raise errors.UnoException(
+                'connection_closed',
                 f"The previously etablished connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
                 f"has been closed, or ran into an unknown error. Please restart the soffice process, and retry.",
                 dict_of(cnx.host, cnx.port)
@@ -140,6 +144,7 @@ class Template:
         if not self.doc or not self.doc.supportsService('com.sun.star.text.GenericTextDocument'):
             self.close()
             raise errors.TemplateError(
+                'invalid_format',
                 f"The given format ({repr(self.file_name.split('.')[-1])}) is invalid, or the file is already open by "
                 f"an other process (accepted formats: ODT, OTT, DOC, DOCX, HTML, RTF or TXT)",
                 dict(format=self.file_name.split('.')[-1])
@@ -211,6 +216,7 @@ class Template:
                     if should_close:
                         self.close()
                     raise errors.TemplateError(
+                        'variable_not_in_last_row',
                         f"The variable {repr(var['v_name'])} (table {repr(var['t_name'])}) "
                         f"isn't in the last row (got: row {repr(var['v_row'])}, expected: row {repr(var['t_rows'])})",
                         dict(table=var['t_name'], actual_row=var['v_row'], expected_row=var['t_rows'],
@@ -246,6 +252,7 @@ class Template:
             if should_close:
                 self.close()
             raise errors.TemplateError(
+                'duplicated_variable',
                 f"The variable {repr(duplicates[0])} is mentioned two times, but for two different types : "
                 f"{repr(first_type)}, and {repr(second_type)}",
                 dict_of(first_type, second_type, variable=duplicates[0])
@@ -267,6 +274,7 @@ class Template:
         json_missing = [key for key in set(self.variables) - set(json_vars)]
         if json_missing:
             raise errors.JsonComparaisonError(
+                'missing_required_variable',
                 f"The variable {repr(json_missing[0])}, present in the template, "
                 f"isn't present in the json.",
                 dict(variable=json_missing[0])
@@ -275,6 +283,7 @@ class Template:
         template_missing = [key for key in set(json_vars) - set(self.variables)]
         if template_missing:
             raise errors.JsonComparaisonError(
+                'unknown_variable',
                 f"The variable {repr(template_missing[0])}, present in the json, isn't present in the template.",
                 dict(variable=template_missing[0])
             )
@@ -282,6 +291,7 @@ class Template:
         json_incorrect = [key for key in json_vars if json_vars[key]['type'] != self.variables[key]['type']]
         if json_incorrect:
             raise errors.JsonComparaisonError(
+                'incorrect_value_type',
                 f"The variable {repr(json_incorrect[0])} should be of type "
                 f"{repr(self.variables[json_incorrect[0]]['type'])}, like in the template, but is of type "
                 f"{repr(json_vars[json_incorrect[0]]['type'])}",
@@ -290,6 +300,7 @@ class Template:
             )
 
         raise errors.JsonComparaisonError(
+            'unknown_reason',
             f"Variables given in the json don't match with the given template, but no reason was found", {})
 
     def fill(self, variables: dict[str, dict[str, Union[str, list[str]]]]) -> None:
@@ -409,6 +420,7 @@ class Template:
             self.new = (self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ()))
         except DisposedException as e:
             raise errors.UnoException(
+                'bridge_exception',
                 f"The connection bridge on '{self.cnx.host}:{self.cnx.port}' crashed on file opening."
                 f"Please restart the soffice process. For more informations on what caused this bug and how to "
                 f"avoid it, please read the README file, section 'Unsolvable Problems'.",
@@ -416,6 +428,7 @@ class Template:
             ) from e
         except RuntimeException as e:
             raise errors.UnoException(
+                'connection_closed',
                 f"The previously etablished connection with the soffice process on "
                 f"'{self.cnx.host}:{self.cnx.port}' has been closed, or ran into an unknown error. "
                 f"Please restart the soffice process, and retry.",
@@ -463,9 +476,11 @@ class Template:
             self.new.storeToURL(url, (PropertyValue("FilterName", 0, formats[file_type], 0),))
 
         except KeyError:
-            raise errors.ExportError(f"Invalid export format {repr(file_type)}.", dict_of(file_type)) from None
+            raise errors.ExportError('invalid_format',
+                                     f"Invalid export format {repr(file_type)}.", dict_of(file_type)) from None
         except IOException as error:
             raise errors.ExportError(
+                'unknown_error',
                 f"Unable to save document to {repr(path)} : error {repr(error.value)}",
                 dict_of(path, error)
             ) from error

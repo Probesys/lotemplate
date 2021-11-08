@@ -46,7 +46,7 @@ docker-compose up
 Then use the following routes :
 
 *all routes take a secret key in the header, key `secret_key`, that correspond to the secret key configured in the 
-[.flaskenv](.flaskenv) file. If no secret key is configured, the secret key isn't required at request.*
+[.env](.env) file. If no secret key is configured, the secret key isn't required at request.*
 
 - /
   - PUT : take a directory name in the headers, key 'directory'. Creates a directory with the specified name

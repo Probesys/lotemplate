@@ -91,26 +91,26 @@ def error_format(exception: Exception, message: str = None) -> dict:
     formatted = (
         {
             'error': type(exception).__name__,
-            'message': str(exception),
+            'code': exception.code if isinstance(exception, ot.errors.OotemplateError) else type(exception).__name__,
+            'message': message or str(exception),
             'variables': exception.infos if isinstance(exception, ot.errors.OotemplateError) else {}
         }
     )
-    if message:
-        formatted['message'] = message
     return formatted
 
 
-def error_sim(exception: str, message: str, variables=dict({})) -> dict:
+def error_sim(exception: str, code: str, message: str, variables=dict({})) -> dict:
     """
     Simulate an error catch, ans return a error-formatted dict in the same way as error_format does
 
     :param exception: the exception name
+    :param code: the exception id
     :param message: the message of the exception
     :param variables: the list of variables to join
     :return: the formatted dict
     """
 
-    return {'error': exception, 'message': message, 'variables': variables}
+    return {'error': exception, 'code': code, 'message': message, 'variables': variables}
 
 
 def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[dict, int], dict]:
@@ -198,7 +198,7 @@ def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tup
     """
 
     if type(json) != list or not json:
-        return error_sim("JsonSyntaxError", "The json should be a non-empty array"), 415
+        return error_sim("JsonSyntaxError", 'api_invalid_base_value_type', "The json should be a non-empty array"), 415
 
     try:
         with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
@@ -211,6 +211,7 @@ def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tup
                         elem.get("variables") is None or len(elem) > 2):
                     return error_sim(
                         "JsonSyntaxError",
+                        'api_invalid_instance_syntax',
                         "Each instance of the array in the json should be an object containing only 'name' - "
                         "a non-empty string, and 'variables' - a non-empty object"), 415
 
