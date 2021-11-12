@@ -13,6 +13,7 @@ from urllib import request
 from PIL import Image
 from re import findall
 from sorcery import dict_of
+import regex
 
 import uno
 import unohelper
@@ -24,6 +25,7 @@ from com.sun.star.uno import RuntimeException
 from com.sun.star.awt import Size
 
 from . import errors
+from .utils import get_regex
 from .utils import *
 
 
@@ -169,22 +171,17 @@ class Template:
             :return: the scanned variables
             """
 
-            search = doc.createSearchDescriptor()
-            search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}\\w+'
-            founded = doc.findAll(search)
+            matches = regex.finditer(get_regex(prefix), doc.getText().getString())
+            plain_vars = {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches}
 
-            plain_vars_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
-            plain_vars = {var.String[len(prefix):]: {'type': 'text', 'value': ''} for var in plain_vars_generator}
-
-            text_fields_vars_list = []
-
+            text_fields_vars = {}
             for page in doc.getDrawPages():
                 for shape in page:
-                    if shape.getShapeType() == "com.sun.star.drawing.TextShape":
-                        text_fields_vars_list += findall(f"\\{prefix}\\w+", shape.String)
-
-            text_fields_vars = {elem[len(prefix):]: {'type': 'text', 'value': ''} for elem in text_fields_vars_list}
+                    if shape.ShapeType != "com.sun.star.drawing.TextShape":
+                        continue
+                    matches = regex.finditer(get_regex(prefix), shape.String)
+                    text_fields_vars = (text_fields_vars |
+                                        {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches})
 
             return plain_vars | text_fields_vars
 
@@ -202,14 +199,13 @@ class Template:
             search.SearchString = f'\\{prefix}\\w+'
             founded = doc.findAll(search)
 
+            matches = set(founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable)
             tab_vars = [{
                 "t_name": var.TextTable.Name,
                 "t_rows": len(var.TextTable.getRows()),
                 "v_name": var.String[len(prefix):],
                 "v_row": int("".join(filter(str.isdigit, var.Cell.CellName)))
-            } for var in set(
-                founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable
-            )]
+            } for var in matches]
 
             for var in tab_vars:
                 if var['v_row'] != var['t_rows']:
@@ -236,7 +232,7 @@ class Template:
 
             return {
                 elem[len(prefix):]: {'type': 'image', 'value': ''}
-                for elem in doc.getGraphicObjects().getElementNames() if elem[:len(prefix)] == prefix
+                for elem in doc.getGraphicObjects().getElementNames() if regex.fullmatch(f'\\{prefix}\\w+', elem)
             }
 
         texts = scan_text(self.doc, "$")
@@ -376,16 +372,16 @@ class Template:
             search.SearchString = f'\\{prefix}\\w+'
             founded = doc.findAll(search)
 
+            matches = set(founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable)
             tab_vars = [{
                 "table": variable.TextTable,
                 "var": variable.String[len(prefix):]
-            } for variable in set(
-                founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable
-            )]
+            } for variable in matches]
 
             tables = [
                 {'table': tab, 'vars':
-                    {tab_var['var']: variables[tab_var['var']]['value'] for tab_var in tab_vars if tab_var['table'] == tab}
+                    {tab_var['var']: variables[tab_var['var']]['value']
+                     for tab_var in tab_vars if tab_var['table'] == tab}
                  } for tab in list(set(variable['table'] for variable in tab_vars))
             ]
 

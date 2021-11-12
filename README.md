@@ -185,6 +185,7 @@ For trying to fix these problems, you can try:
 - [Unoconv source code for list formats - and properties - compatible with LibreOffice for export](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391)
 - [OpenOffice Python Bridge information and code exemples](http://www.openoffice.org/udk/python/python-bridge.html)
 - [com.sun.star Java API docs (On which pyuno is based - but is not identical)](https://www.openoffice.org/api/docs/common/ref/com/sun/star/module-ix.html)
+- [Java LibreOffice Programming Book](http://fivedots.coe.psu.ac.th/~ad/jlop)
 - [Old OOTemplate code](https://gitlab.probesys.com/troizaire/ootemplate/-/blob/c8f1e759db9494823fa4dded8c70a31d4e047c05/old.py)
 - [Deploying Flask](https://flask.palletsprojects.com/en/2.0.x/deploying/)
 - [Flask documentation - quickstart](https://flask.palletsprojects.com/en/2.0.x/quickstart/)

@@ -14,9 +14,8 @@ def file_to_dict(file_path: str) -> dict:
 
 class Generic(unittest.TestCase):
 
-    def test_invalid_empty(self):
-        with self.assertRaises(ot.errors.JsonSyntaxError):
-            ot.convert_to_datas_template(file_to_dict("files/jsons/empty.json"))
+    def test_valid_empty(self):
+        self.assertEqual({}, ot.convert_to_datas_template(file_to_dict("files/jsons/empty.json")))
 
     def test_invalid_really_empty(self):
         with self.assertRaises(json.JSONDecodeError):

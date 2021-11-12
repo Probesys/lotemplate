@@ -231,3 +231,38 @@ def get_file_url(file: str) -> str:
             os.getcwd() + "/" + file if file[0] != '/' else file
         )
     )
+
+
+def get_regex(prefix):
+    """
+    returns the regex search according to the prefix
+
+    :param prefix: the variable prefix (1 character long)
+    :return: the regex string
+    """
+    # exemples :
+    #   $test1.$test2()
+    #   $test3($test4 $test5)
+    #   $test6($test7($test8 $test9) $test10($test11))
+    #   $test12("_ttrrt'è""'çè_" $test13($test14))
+    #   $test15("_ttrrt'è'çè_" $test16($test17))
+    #   $test18($test19 "resr")
+    #   $test20($test21("jean" "jeanb" $test22))
+    #   $test23("jean" "jeanb" $test24)
+    #   $test25("test")
+    #   $test26($test27($test28(tst $test29("test" $test30($test31($test32 "test") "test"))) test33))
+    #
+    #   $test34("enjrg()()k")
+    #   $test35("test" $test36+test)
+    #   $test37("test)
+    #   $test38((zuef))
+    #   $test39
+    #   "dhjye euuz"
+    #   "te"y"
+    #   etst "test"
+
+    return (
+            '(\\' + prefix + '\\w+)(\\((((?R)|(\\"[^\\"]+\\")|([^\\' + prefix +
+            '\\"\\s\\(\\)][^\\s\\(\\)]*))(( |\\+)((?R)|(\\"[^\\"]+\\")|([^\\' + prefix +
+            '\\"\\s\\(\\)][^\\s\\(\\)]*)))*)\\))?'
+    )
