@@ -1,0 +1,9 @@
+.bash_history
+.cache
+.config
+.local
+uploads
+test_files
+.env
+.idea
+.vscode
