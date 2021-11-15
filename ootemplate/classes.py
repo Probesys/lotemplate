@@ -11,7 +11,6 @@ import os
 from typing import Union
 from urllib import request
 from PIL import Image
-from re import findall
 from sorcery import dict_of
 import regex
 
@@ -112,9 +111,8 @@ class Template:
         self.variables = None
         self.doc = None
         try:
-            if os.path.isfile(self.file_dir + "/.~lock." + self.file_name + "#"):
-                os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
-        except:
+            os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
+        except FileNotFoundError:
             pass
         try:
             self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
@@ -162,16 +160,17 @@ class Template:
 
         should_close = kargs["should_close"] if "should_close" in kargs else False
 
-        def scan_text(doc, prefix: str) -> dict[str, dict[str, str]]:
+        def scan_text(doc, prefix: str, sec_prefix: str) -> dict[str, dict[str, str]]:
             """
             scan for text in the given doc
 
             :param doc: the document to scan
             :param prefix: the variables prefix
+            :param sec_prefix: the second prefix (the one excluded from the search)
             :return: the scanned variables
             """
 
-            matches = regex.finditer(get_regex(prefix), doc.getText().getString())
+            matches = regex.finditer(get_regex(prefix, sec_prefix), doc.getText().getString())
             plain_vars = {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches}
 
             text_fields_vars = {}
@@ -179,47 +178,45 @@ class Template:
                 for shape in page:
                     if shape.ShapeType != "com.sun.star.drawing.TextShape":
                         continue
-                    matches = regex.finditer(get_regex(prefix), shape.String)
+                    matches = regex.finditer(get_regex(prefix, sec_prefix), shape.String)
                     text_fields_vars = (text_fields_vars |
                                         {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches})
 
             return plain_vars | text_fields_vars
 
-        def scan_table(doc, prefix: str) -> dict:
+        def scan_table(doc, prefix: str, fnc_prefix) -> dict:
             """
             scan for tables in the given doc
 
             :param doc: the document to scan
             :param prefix: the variables prefix
+            :param fnc_prefix: the variable-function prefix
             :return: the scanned variables
             """
 
-            search = doc.createSearchDescriptor()
-            search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}\\w+'
-            founded = doc.findAll(search)
+            text_vars = scan_text(doc, fnc_prefix, prefix)
+            tab_vars: dict = {}
+            for i in range(doc.getTextTables().getCount()):
+                table_data: tuple[tuple[str]] = doc.getTextTables().getByIndex(i).getDataArray()
+                t_name = doc.getTextTables().getByIndex(i).getName()
+                nb_rows = len(table_data)
+                for row_i, row in enumerate(table_data):
+                    for column in row:
+                        matches = [elem.group(0)[len(prefix):]
+                                   for elem in regex.finditer(get_regex(fnc_prefix, prefix, 1), column)]
+                        for match in matches:
+                            if match in text_vars:
+                                continue
+                            if row_i != nb_rows - 1:
+                                raise errors.TemplateError(
+                                    'variable_not_in_last_row',
+                                    f"The variable {repr(matches[0])} (table {repr(t_name)}) "
+                                    f"isn't in the last row (got: row {repr(row_i + 1)}, "
+                                    f"expected: row {repr(nb_rows)})",
+                                    dict(table=t_name, actual_row=row_i + 1, expected_row=nb_rows, variable=matches[0]))
+                            tab_vars[match] = {'type': 'table', 'value': ['']}
 
-            matches = set(founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable)
-            tab_vars = [{
-                "t_name": var.TextTable.Name,
-                "t_rows": len(var.TextTable.getRows()),
-                "v_name": var.String[len(prefix):],
-                "v_row": int("".join(filter(str.isdigit, var.Cell.CellName)))
-            } for var in matches]
-
-            for var in tab_vars:
-                if var['v_row'] != var['t_rows']:
-                    if should_close:
-                        self.close()
-                    raise errors.TemplateError(
-                        'variable_not_in_last_row',
-                        f"The variable {repr(var['v_name'])} (table {repr(var['t_name'])}) "
-                        f"isn't in the last row (got: row {repr(var['v_row'])}, expected: row {repr(var['t_rows'])})",
-                        dict(table=var['t_name'], actual_row=var['v_row'], expected_row=var['t_rows'],
-                             variable=var['v_name'])
-                    )
-
-            return {var['v_name']: {'type': 'table', 'value': [""]} for var in tab_vars}
+            return tab_vars
 
         def scan_image(doc, prefix: str) -> dict[str, dict[str, str]]:
             """
@@ -235,8 +232,8 @@ class Template:
                 for elem in doc.getGraphicObjects().getElementNames() if regex.fullmatch(f'\\{prefix}\\w+', elem)
             }
 
-        texts = scan_text(self.doc, "$")
-        tables = scan_table(self.doc, "&")
+        texts = scan_text(self.doc, "$", '&')
+        tables = scan_table(self.doc, "&", "$")
         images = scan_image(self.doc, "$")
 
         variables_list = list(texts.keys()) + list(tables.keys()) + list(images.keys())
@@ -500,7 +497,6 @@ class Template:
             self.doc.dispose()
             self.doc.close(True)
         try:
-            if os.path.isfile(self.file_dir + "/.~lock." + self.file_name + "#"):
-                os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
-        except:
+            os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
+        except FileNotFoundError:
             pass

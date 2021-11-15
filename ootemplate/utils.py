@@ -233,11 +233,13 @@ def get_file_url(file: str) -> str:
     )
 
 
-def get_regex(prefix):
+def get_regex(prefix, second_prefix, mode=0):
     """
     returns the regex search according to the prefix
 
     :param prefix: the variable prefix (1 character long)
+    :param second_prefix: the variable prefix for introducing a second type of variables
+    :param mode: the regex string mode wanted (0 = text, 1 = table)
     :return: the regex string
     """
     # exemples :
@@ -262,7 +264,9 @@ def get_regex(prefix):
     #   etst "test"
 
     return (
+            ('(' if mode == 1 else '') +
             '(\\' + prefix + '\\w+)(\\((((?R)|(\\"[^\\"]+\\")|([^\\' + prefix +
-            '\\"\\s\\(\\)][^\\s\\(\\)]*))(( |\\+)((?R)|(\\"[^\\"]+\\")|([^\\' + prefix +
-            '\\"\\s\\(\\)][^\\s\\(\\)]*)))*)\\))?'
+            '\\"\\' + second_prefix + '\\s\\(\\)][^\\s\\(\\)]*))(( |\\+)((?R)|(\\"[^\\"]+\\")|([^\\' + prefix +
+            '\\"\\s\\(\\)][^\\s\\(\\)]*)))*)\\))?' +
+            (')|(\\' + second_prefix + '\\w+)' if mode == 1 else '')
     )
