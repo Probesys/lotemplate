@@ -181,8 +181,10 @@ class Template:
 
             for page in doc.getDrawPages():
                 for shape in page:
-                    if shape.getShapeType() == "com.sun.star.drawing.TextShape":
+                    try:
                         text_fields_vars_list += findall(f"\\{prefix}\\w+", shape.String)
+                    except AttributeError:
+                        continue
 
             text_fields_vars = {elem[len(prefix):]: {'type': 'text', 'value': ''} for elem in text_fields_vars_list}
 
