@@ -176,9 +176,10 @@ class Template:
             text_fields_vars = {}
             for page in doc.getDrawPages():
                 for shape in page:
-                    if shape.ShapeType != "com.sun.star.drawing.TextShape":
+                    try:
+                        matches = regex.finditer(get_regex(prefix, sec_prefix), shape.String)
+                    except AttributeError:
                         continue
-                    matches = regex.finditer(get_regex(prefix, sec_prefix), shape.String)
                     text_fields_vars = (text_fields_vars |
                                         {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches})
 
