@@ -170,7 +170,10 @@ class Template:
             :return: the scanned variables
             """
 
-            matches = regex.finditer(get_regex(prefix, sec_prefix), doc.getText().getString())
+            raw_string = doc.getText().getString()
+            for elem in scan_table(doc, sec_prefix, prefix):
+                raw_string = raw_string.replace(elem, '')
+            matches = regex.finditer(get_regex(prefix, sec_prefix), raw_string)
             plain_vars = {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches}
 
             text_fields_vars = {}
@@ -195,7 +198,6 @@ class Template:
             :return: the scanned variables
             """
 
-            text_vars = scan_text(doc, fnc_prefix, prefix)
             tab_vars: dict = {}
             for i in range(doc.getTextTables().getCount()):
                 table_data: tuple[tuple[str]] = doc.getTextTables().getByIndex(i).getDataArray()
@@ -203,10 +205,10 @@ class Template:
                 nb_rows = len(table_data)
                 for row_i, row in enumerate(table_data):
                     for column in row:
-                        matches = [elem.group(0)[len(prefix):]
+                        matches = [elem.group(0)
                                    for elem in regex.finditer(get_regex(fnc_prefix, prefix, 1), column)]
                         for match in matches:
-                            if match in text_vars:
+                            if regex.fullmatch(get_regex(fnc_prefix, prefix), match):
                                 continue
                             if row_i != nb_rows - 1:
                                 raise errors.TemplateError(
@@ -215,7 +217,7 @@ class Template:
                                     f"isn't in the last row (got: row {repr(row_i + 1)}, "
                                     f"expected: row {repr(nb_rows)})",
                                     dict(table=t_name, actual_row=row_i + 1, expected_row=nb_rows, variable=matches[0]))
-                            tab_vars[match] = {'type': 'table', 'value': ['']}
+                            tab_vars[match[len(prefix):]] = {'type': 'table', 'value': ['']}
 
             return tab_vars
 
@@ -356,29 +358,32 @@ class Template:
 
             graphic_object.Graphic = new_image
 
-        def tables_fill(doc, prefix: str) -> None:
+        def tables_fill(doc, text_prefix: str, table_prefix: str) -> None:
             """
             Fills all the table-related content
 
-            :param prefix: the variables prefix
             :param doc: the document to fill
+            :param text_prefix: the prefix for text variables
+            :param table_prefix: the prefix for table variables
             :return: None
             """
 
             search = doc.createSearchDescriptor()
-            search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}\\w+'
-            founded = doc.findAll(search)
-
-            matches = set(founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable)
+            matches = []
+            for element, infos in sorted(variables.items(), key=lambda s: -len(s[0])):
+                if infos['type'] != 'table':
+                    continue
+                search.SearchString = (text_prefix if '(' in element else table_prefix) + element
+                founded = doc.findAll(search)
+                matches += [founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable]
             tab_vars = [{
                 "table": variable.TextTable,
-                "var": variable.String[len(prefix):]
+                "var": variable.String
             } for variable in matches]
 
             tables = [
                 {'table': tab, 'vars':
-                    {tab_var['var']: variables[tab_var['var']]['value']
+                    {tab_var['var']: variables[tab_var['var'][1:]]['value']
                      for tab_var in tab_vars if tab_var['table'] == tab}
                  } for tab in list(set(variable['table'] for variable in tab_vars))
             ]
@@ -399,7 +404,7 @@ class Template:
                     for variable_name, variable_value in sorted(table_vars.items(), key=lambda s: -len(s[0])):
                         new_row = tuple(
                             elem.replace(
-                                prefix + variable_name, variable_value[i]
+                                variable_name, variable_value[i]
                                 if i < len(variable_value) else ""
                             ) for elem in new_row
                         )
@@ -434,7 +439,7 @@ class Template:
                 text_fill(self.new, "$" + var, details['value'])
             elif details['type'] == 'image':
                 image_fill(self.new, self.cnx.graphic_provider, "$" + var, details['value'])
-        tables_fill(self.new, '&')
+        tables_fill(self.new, '$', '&')
 
     def export(self, name: str, should_replace=False) -> Union[str, None]:
         """
