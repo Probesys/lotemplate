@@ -265,8 +265,8 @@ def get_regex(prefix, second_prefix, mode=0):
 
     return (
             ('(' if mode == 1 else '') +
-            '(\\' + prefix + '\\w+)(\\((((?R)|(\\"[^\\"]+\\")|([^\\' + prefix +
-            '\\"\\' + second_prefix + '\\s\\(\\)][^\\s\\(\\)]*))(( |\\+)((?R)|(\\"[^\\"]+\\")|([^\\' + prefix +
+            '(\\' + prefix + '\\w+)(\\((((?R)|(\\"[^\\"]*\\")|([^\\' + prefix +
+            '\\"\\' + second_prefix + '\\s\\(\\)][^\\s\\(\\)]*))(( |\\+)((?R)|(\\"[^\\"]*\\")|([^\\' + prefix +
             '\\"\\' + second_prefix + '\\s\\(\\)][^\\s\\(\\)]*)))*)\\))?' +
             (')|(\\' + second_prefix + '\\w+)' if mode == 1 else '')
     )
