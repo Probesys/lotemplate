@@ -27,7 +27,16 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
     :return: the converted dictionary
     """
 
-    def get_type(obj, **kargs):
+    def get_type(obj, **kargs) -> str:
+        """
+        Abstract and jsonify the type of the given object - or the given type
+        :param obj: the object or type
+        :param kargs: the keyword-only arguments
+        :Keyword Arguments:
+            * *is_type* (``bool``) --
+                precise if obj is already a type or not
+        :return: the displayable type
+        """
         # Unions non prises en charges
         if 'is_type' in kargs and kargs['is_type'] is True:
             pytype = obj
@@ -60,6 +69,12 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
         )
 
     def check_type(f):
+        """
+        A decorator that checks if the arguments are of the right type, following typeints of the function
+
+        :param f: the function to wraps
+        :return: the wrapper
+        """
         # pris en charge : toutes les objects non récursifs (int, str, bool), None, ainsi que les listes
         # (première instance seulement) et dictionnaires (clé et valeur)
         @functools.wraps(f)
@@ -162,6 +177,13 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
 
     @check_type
     def get_cleaned_text(var_name: str, var_value: str) -> str:
+        """
+        clean a text variable
+
+        :param var_name: the variable name
+        :param var_value: the text value
+        :return: the cleaned text
+        """
         return ""
 
     json = deepcopy(json)
@@ -226,6 +248,12 @@ def is_network_based(file: str) -> bool:
 
 
 def get_file_url(file: str) -> str:
+    """
+    returns the URL or URI of the file, following if it's an url or a path
+
+    :param file: the path or url to the file
+    :return: the URL or URI to the path
+    """
     return file if is_network_based(file) else (
         unohelper.systemPathToFileUrl(
             os.getcwd() + "/" + file if file[0] != '/' else file

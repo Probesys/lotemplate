@@ -171,7 +171,7 @@ class Template:
             """
 
             raw_string = doc.getText().getString()
-            for elem in scan_table(doc, sec_prefix, prefix):
+            for elem, _ in sorted(scan_table(doc, sec_prefix, prefix).items(), key=lambda s: -len(s[0])):
                 raw_string = raw_string.replace(elem, '')
             matches = regex.finditer(get_regex(prefix, sec_prefix), raw_string)
             plain_vars = {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches}
