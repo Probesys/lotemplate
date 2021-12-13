@@ -129,7 +129,7 @@ to fill it.
 
 ## Template Syntax
 - text variables : putting '$variable' in the document is enough to add the variable 'variable'.
-- image variables : add any image in the document, and put in the name of the image (properties) '$' followed by
+- image variables : add any image in the document, and put in the title of the alt text of the image (properties) '$' followed by
   the desired name ('$image' for example to add the image 'image')
 - dynamic arrays : allows you to add an unknown number of rows to the array.
   the array, but only on the last line. Add the dynamic variables in the last row of the table, 
@@ -142,7 +142,7 @@ to fill it.
 |-------------------------|----------|------|-----------|-----|-----|-------|
 | text variables support  | ✅        | ✅    | ✅         | ✅   | ✅   | ❌     |
 | dynamic tables support  | ✅        | ✅    | ✅         | ✅   | ❌   | ❌     |
-| image variables support | ✅        | ✅    | ❌         | ❌   | ❌   | ❌     |
+| image variables support | ✅        | ✅    | ✅         | ❌   | ❌   | ❌     |
 
 ### Export
 odt, pdf, html, docx.
@@ -179,7 +179,7 @@ For trying to fix these problems, you can try:
 - Use another operating system, or another version/distribution
 - Use the native LibreOffice/OpenOffice python binary to run this script (if there is one)
 
-## Useful links
+## Useful elements
 - [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
 - [The unoconv source code, written in python with PyUNO](https://github.com/unoconv/unoconv/blob/master/unoconv)
 - [Unoconv source code for list formats - and properties - compatible with LibreOffice for export](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391)
@@ -190,6 +190,9 @@ For trying to fix these problems, you can try:
 - [Deploying Flask](https://flask.palletsprojects.com/en/2.0.x/deploying/)
 - [Flask documentation - quickstart](https://flask.palletsprojects.com/en/2.0.x/quickstart/)
 - [Flask documentation - upload](https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/)
+
+`.getPropertySetInfo().getProperties()` on any uno object to get a list of all the object's attributes
+(`__dict__` don't work)
     
 ## To consider
 

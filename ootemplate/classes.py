@@ -231,8 +231,8 @@ class Template:
             """
 
             return {
-                elem[len(prefix):]: {'type': 'image', 'value': ''}
-                for elem in doc.getGraphicObjects().getElementNames() if regex.fullmatch(f'\\{prefix}\\w+', elem)
+                elem.Title[len(prefix):]: {'type': 'image', 'value': ''}
+                for elem in doc.getGraphicObjects() if regex.fullmatch(f'\\{prefix}\\w+', elem.Title)
             }
 
         texts = scan_text(self.doc, "$", '&')
@@ -345,18 +345,21 @@ class Template:
             if not path:
                 return
 
-            graphic_object = doc.getGraphicObjects().getByName(variable)
-            new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0),))
+            for graphic_object in doc.getGraphicObjects():
+                if graphic_object.Title != variable:
+                    continue
 
-            if should_resize:
-                with Image.open(request.urlopen(path) if is_network_based(path) else path) as image:
-                    ratio = image.width / image.height
-                new_size = Size()
-                new_size.Height = graphic_object.Size.Height
-                new_size.Width = graphic_object.Size.Height * ratio
-                graphic_object.setSize(new_size)
+                new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0),))
 
-            graphic_object.Graphic = new_image
+                if should_resize:
+                    with Image.open(request.urlopen(path) if is_network_based(path) else path) as image:
+                        ratio = image.width / image.height
+                    new_size = Size()
+                    new_size.Height = graphic_object.Size.Height
+                    new_size.Width = graphic_object.Size.Height * ratio
+                    graphic_object.setSize(new_size)
+
+                graphic_object.Graphic = new_image
 
         def tables_fill(doc, text_prefix: str, table_prefix: str) -> None:
             """
