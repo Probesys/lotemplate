@@ -11,8 +11,8 @@ import os
 from typing import Union
 from urllib import request
 from PIL import Image
-from re import findall
 from sorcery import dict_of
+import regex
 
 import uno
 import unohelper
@@ -24,6 +24,7 @@ from com.sun.star.uno import RuntimeException
 from com.sun.star.awt import Size
 
 from . import errors
+from .utils import get_regex
 from .utils import *
 
 
@@ -110,9 +111,8 @@ class Template:
         self.variables = None
         self.doc = None
         try:
-            if os.path.isfile(self.file_dir + "/.~lock." + self.file_name + "#"):
-                os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
-        except:
+            os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
+        except FileNotFoundError:
             pass
         try:
             self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
@@ -160,72 +160,66 @@ class Template:
 
         should_close = kargs["should_close"] if "should_close" in kargs else False
 
-        def scan_text(doc, prefix: str) -> dict[str, dict[str, str]]:
+        def scan_text(doc, prefix: str, sec_prefix: str) -> dict[str, dict[str, str]]:
             """
             scan for text in the given doc
 
             :param doc: the document to scan
             :param prefix: the variables prefix
+            :param sec_prefix: the second prefix (the one excluded from the search)
             :return: the scanned variables
             """
 
-            search = doc.createSearchDescriptor()
-            search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}\\w+'
-            founded = doc.findAll(search)
+            raw_string = doc.getText().getString()
+            for elem, _ in sorted(scan_table(doc, sec_prefix, prefix).items(), key=lambda s: -len(s[0])):
+                raw_string = raw_string.replace(elem, '')
+            matches = regex.finditer(get_regex(prefix, sec_prefix), raw_string)
+            plain_vars = {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches}
 
-            plain_vars_generator = set(founded.getByIndex(i) for i in range(founded.getCount()))
-            plain_vars = {var.String[len(prefix):]: {'type': 'text', 'value': ''} for var in plain_vars_generator}
-
-            text_fields_vars_list = []
-
+            text_fields_vars = {}
             for page in doc.getDrawPages():
                 for shape in page:
                     try:
-                        text_fields_vars_list += findall(f"\\{prefix}\\w+", shape.String)
+                        matches = regex.finditer(get_regex(prefix, sec_prefix), shape.String)
                     except AttributeError:
                         continue
-
-            text_fields_vars = {elem[len(prefix):]: {'type': 'text', 'value': ''} for elem in text_fields_vars_list}
+                    text_fields_vars = (text_fields_vars |
+                                        {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches})
 
             return plain_vars | text_fields_vars
 
-        def scan_table(doc, prefix: str) -> dict:
+        def scan_table(doc, prefix: str, fnc_prefix) -> dict:
             """
             scan for tables in the given doc
 
             :param doc: the document to scan
             :param prefix: the variables prefix
+            :param fnc_prefix: the variable-function prefix
             :return: the scanned variables
             """
 
-            search = doc.createSearchDescriptor()
-            search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}\\w+'
-            founded = doc.findAll(search)
+            tab_vars: dict = {}
+            for i in range(doc.getTextTables().getCount()):
+                table_data: tuple[tuple[str]] = doc.getTextTables().getByIndex(i).getDataArray()
+                t_name = doc.getTextTables().getByIndex(i).getName()
+                nb_rows = len(table_data)
+                for row_i, row in enumerate(table_data):
+                    for column in row:
+                        matches = [elem.group(0)
+                                   for elem in regex.finditer(get_regex(fnc_prefix, prefix, 1), column)]
+                        for match in matches:
+                            if regex.fullmatch(get_regex(fnc_prefix, prefix), match):
+                                continue
+                            if row_i != nb_rows - 1:
+                                raise errors.TemplateError(
+                                    'variable_not_in_last_row',
+                                    f"The variable {repr(matches[0])} (table {repr(t_name)}) "
+                                    f"isn't in the last row (got: row {repr(row_i + 1)}, "
+                                    f"expected: row {repr(nb_rows)})",
+                                    dict(table=t_name, actual_row=row_i + 1, expected_row=nb_rows, variable=matches[0]))
+                            tab_vars[match[len(prefix):]] = {'type': 'table', 'value': ['']}
 
-            tab_vars = [{
-                "t_name": var.TextTable.Name,
-                "t_rows": len(var.TextTable.getRows()),
-                "v_name": var.String[len(prefix):],
-                "v_row": int("".join(filter(str.isdigit, var.Cell.CellName)))
-            } for var in set(
-                founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable
-            )]
-
-            for var in tab_vars:
-                if var['v_row'] != var['t_rows']:
-                    if should_close:
-                        self.close()
-                    raise errors.TemplateError(
-                        'variable_not_in_last_row',
-                        f"The variable {repr(var['v_name'])} (table {repr(var['t_name'])}) "
-                        f"isn't in the last row (got: row {repr(var['v_row'])}, expected: row {repr(var['t_rows'])})",
-                        dict(table=var['t_name'], actual_row=var['v_row'], expected_row=var['t_rows'],
-                             variable=var['v_name'])
-                    )
-
-            return {var['v_name']: {'type': 'table', 'value': [""]} for var in tab_vars}
+            return tab_vars
 
         def scan_image(doc, prefix: str) -> dict[str, dict[str, str]]:
             """
@@ -237,12 +231,12 @@ class Template:
             """
 
             return {
-                elem[len(prefix):]: {'type': 'image', 'value': ''}
-                for elem in doc.getGraphicObjects().getElementNames() if elem[:len(prefix)] == prefix
+                elem.Title[len(prefix):]: {'type': 'image', 'value': ''}
+                for elem in doc.getGraphicObjects() if regex.fullmatch(f'\\{prefix}\\w+', elem.Title)
             }
 
-        texts = scan_text(self.doc, "$")
-        tables = scan_table(self.doc, "&")
+        texts = scan_text(self.doc, "$", '&')
+        tables = scan_table(self.doc, "&", "$")
         images = scan_image(self.doc, "$")
 
         variables_list = list(texts.keys()) + list(tables.keys()) + list(images.keys())
@@ -351,43 +345,49 @@ class Template:
             if not path:
                 return
 
-            graphic_object = doc.getGraphicObjects().getByName(variable)
-            new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0),))
+            for graphic_object in doc.getGraphicObjects():
+                if graphic_object.Title != variable:
+                    continue
 
-            if should_resize:
-                with Image.open(request.urlopen(path) if is_network_based(path) else path) as image:
-                    ratio = image.width / image.height
-                new_size = Size()
-                new_size.Height = graphic_object.Size.Height
-                new_size.Width = graphic_object.Size.Height * ratio
-                graphic_object.setSize(new_size)
+                new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0),))
 
-            graphic_object.Graphic = new_image
+                if should_resize:
+                    with Image.open(request.urlopen(path) if is_network_based(path) else path) as image:
+                        ratio = image.width / image.height
+                    new_size = Size()
+                    new_size.Height = graphic_object.Size.Height
+                    new_size.Width = graphic_object.Size.Height * ratio
+                    graphic_object.setSize(new_size)
 
-        def tables_fill(doc, prefix: str) -> None:
+                graphic_object.Graphic = new_image
+
+        def tables_fill(doc, text_prefix: str, table_prefix: str) -> None:
             """
             Fills all the table-related content
 
-            :param prefix: the variables prefix
             :param doc: the document to fill
+            :param text_prefix: the prefix for text variables
+            :param table_prefix: the prefix for table variables
             :return: None
             """
 
             search = doc.createSearchDescriptor()
-            search.SearchRegularExpression = True
-            search.SearchString = f'\\{prefix}\\w+'
-            founded = doc.findAll(search)
-
+            matches = []
+            for element, infos in sorted(variables.items(), key=lambda s: -len(s[0])):
+                if infos['type'] != 'table':
+                    continue
+                search.SearchString = (text_prefix if '(' in element else table_prefix) + element
+                founded = doc.findAll(search)
+                matches += [founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable]
             tab_vars = [{
                 "table": variable.TextTable,
-                "var": variable.String[len(prefix):]
-            } for variable in set(
-                founded.getByIndex(i) for i in range(founded.getCount()) if founded.getByIndex(i).TextTable
-            )]
+                "var": variable.String
+            } for variable in matches]
 
             tables = [
                 {'table': tab, 'vars':
-                    {tab_var['var']: variables[tab_var['var']]['value'] for tab_var in tab_vars if tab_var['table'] == tab}
+                    {tab_var['var']: variables[tab_var['var'][1:]]['value']
+                     for tab_var in tab_vars if tab_var['table'] == tab}
                  } for tab in list(set(variable['table'] for variable in tab_vars))
             ]
 
@@ -407,7 +407,7 @@ class Template:
                     for variable_name, variable_value in sorted(table_vars.items(), key=lambda s: -len(s[0])):
                         new_row = tuple(
                             elem.replace(
-                                prefix + variable_name, variable_value[i]
+                                variable_name, variable_value[i]
                                 if i < len(variable_value) else ""
                             ) for elem in new_row
                         )
@@ -442,7 +442,7 @@ class Template:
                 text_fill(self.new, "$" + var, details['value'])
             elif details['type'] == 'image':
                 image_fill(self.new, self.cnx.graphic_provider, "$" + var, details['value'])
-        tables_fill(self.new, '&')
+        tables_fill(self.new, '$', '&')
 
     def export(self, name: str, should_replace=False) -> Union[str, None]:
         """
@@ -506,7 +506,6 @@ class Template:
             self.doc.dispose()
             self.doc.close(True)
         try:
-            if os.path.isfile(self.file_dir + "/.~lock." + self.file_name + "#"):
-                os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
-        except:
+            os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
+        except FileNotFoundError:
             pass

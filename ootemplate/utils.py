@@ -27,7 +27,16 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
     :return: the converted dictionary
     """
 
-    def get_type(obj, **kargs):
+    def get_type(obj, **kargs) -> str:
+        """
+        Abstract and jsonify the type of the given object - or the given type
+        :param obj: the object or type
+        :param kargs: the keyword-only arguments
+        :Keyword Arguments:
+            * *is_type* (``bool``) --
+                precise if obj is already a type or not
+        :return: the displayable type
+        """
         # Unions non prises en charges
         if 'is_type' in kargs and kargs['is_type'] is True:
             pytype = obj
@@ -60,6 +69,12 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
         )
 
     def check_type(f):
+        """
+        A decorator that checks if the arguments are of the right type, following typeints of the function
+
+        :param f: the function to wraps
+        :return: the wrapper
+        """
         # pris en charge : toutes les objects non récursifs (int, str, bool), None, ainsi que les listes
         # (première instance seulement) et dictionnaires (clé et valeur)
         @functools.wraps(f)
@@ -162,6 +177,13 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
 
     @check_type
     def get_cleaned_text(var_name: str, var_value: str) -> str:
+        """
+        clean a text variable
+
+        :param var_name: the variable name
+        :param var_value: the text value
+        :return: the cleaned text
+        """
         return ""
 
     json = deepcopy(json)
@@ -226,8 +248,53 @@ def is_network_based(file: str) -> bool:
 
 
 def get_file_url(file: str) -> str:
+    """
+    returns the URL or URI of the file, following if it's an url or a path
+
+    :param file: the path or url to the file
+    :return: the URL or URI to the path
+    """
     return file if is_network_based(file) else (
         unohelper.systemPathToFileUrl(
             os.getcwd() + "/" + file if file[0] != '/' else file
         )
+    )
+
+
+def get_regex(prefix, second_prefix, mode=0):
+    """
+    returns the regex search according to the prefix
+
+    :param prefix: the variable prefix (1 character long)
+    :param second_prefix: the variable prefix for introducing a second type of variables
+    :param mode: the regex string mode wanted (0 = text, 1 = table)
+    :return: the regex string
+    """
+    # exemples :
+    #   $test1.$test2()
+    #   $test3($test4 $test5)
+    #   $test6($test7($test8 $test9) $test10($test11))
+    #   $test12("_ttrrt'è""'çè_" $test13($test14))
+    #   $test15("_ttrrt'è'çè_" $test16($test17))
+    #   $test18($test19 "resr")
+    #   $test20($test21("jean" "jeanb" $test22))
+    #   $test23("jean" "jeanb" $test24)
+    #   $test25("test")
+    #   $test26($test27($test28(tst $test29("test" $test30($test31($test32 "test") "test"))) test33))
+    #
+    #   $test34("enjrg()()k")
+    #   $test35("test" $test36+test)
+    #   $test37("test)
+    #   $test38((zuef))
+    #   $test39
+    #   "dhjye euuz"
+    #   "te"y"
+    #   etst "test"
+
+    return (
+            ('(' if mode == 1 else '') +
+            '(\\' + prefix + '\\w+)(\\((((?R)|(\\"[^\\"]*\\")|([^\\' + prefix +
+            '\\"\\' + second_prefix + '\\s\\(\\)][^\\s\\(\\)]*))(( |\\+)((?R)|(\\"[^\\"]*\\")|([^\\' + prefix +
+            '\\"\\' + second_prefix + '\\s\\(\\)][^\\s\\(\\)]*)))*)\\))?' +
+            (')|(\\' + second_prefix + '\\w+)' if mode == 1 else '')
     )

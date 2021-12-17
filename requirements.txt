@@ -6,3 +6,4 @@ python-dotenv~=0.19
 gunicorn
 Werkzeug~=2.0.1
 sorcery~=0.2.1
+regex~=2021.11.2

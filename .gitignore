@@ -7,3 +7,5 @@ test_files
 .env
 .idea
 .vscode
+.~lock.*#
+exports
