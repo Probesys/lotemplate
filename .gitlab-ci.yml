@@ -7,14 +7,21 @@ services:
 variables:
   DOCKER_BUILDKIT: 1
   BUILDKIT_INLINE_CACHE: 1
+  DOCKER_HOST: "tcp://172.17.0.1:2376"
 
 stages:
   - build
 
 before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  - IMAGE_TAG_LATEST=latest
-  - IMAGE_TAG_COMMIT=$CI_COMMIT_SHORT_SHA
+  - |-
+        if [[ ! -z $CI_COMMIT_BRANCH  ]]; then
+            PREFIX=$CI_COMMIT_BRANCH
+        else
+            PREFIX="UNKNOWN"
+        fi
+  - IMAGE_TAG_LATEST=$PREFIX-latest
+  - IMAGE_TAG_COMMIT=$PREFIX-$CI_COMMIT_SHORT_SHA
 
 build_ootemplate:
   stage: build
@@ -22,3 +29,6 @@ build_ootemplate:
     - docker build -t $CI_REGISTRY_IMAGE/ootemplate:$IMAGE_TAG_LATEST -t $CI_REGISTRY_IMAGE/ootemplate:$IMAGE_TAG_COMMIT .
     - docker push $CI_REGISTRY_IMAGE/ootemplate:$IMAGE_TAG_LATEST
     - docker push $CI_REGISTRY_IMAGE/ootemplate:$IMAGE_TAG_COMMIT
+  only:
+    - master
+    - production
