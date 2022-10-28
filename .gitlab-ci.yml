@@ -7,7 +7,6 @@ services:
 variables:
   DOCKER_BUILDKIT: 1
   BUILDKIT_INLINE_CACHE: 1
-  DOCKER_HOST: "tcp://172.17.0.1:2376"
 
 stages:
   - build
