@@ -1,9 +1,8 @@
 configargparse~=1.5.1
-Flask~=2.0.1
-unotools~=0.3.3
-Pillow~=8.3.1
-python-dotenv~=0.19
-gunicorn
-Werkzeug~=2.0.1
+Flask~=2.2.2
+python-dotenv~=0.21.0
+Pillow~=9.3.0
+gunicorn~=20.1.0
+Werkzeug~=2.2.2
 sorcery~=0.2.1
-regex~=2021.11.2
+regex~=2022.10.31
