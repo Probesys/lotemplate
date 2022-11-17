@@ -31,6 +31,13 @@ class Text(unittest.TestCase):
         )
         doc.close()
 
+    def test_function_variable(self):
+        self.assertEqual(
+            {"test(\"jean\")": {"type": "text", "value": ""}},
+            (doc := ot.Template("files/templates/function_variable.odt", cnx, False)).scan()
+        )
+        doc.close()
+
 
 class Images(unittest.TestCase):
 
@@ -134,7 +141,7 @@ class Generic(unittest.TestCase):
     def test_online_empty_doc(self):
         self.assertEqual(
             {},
-            (doc := ot.Template("https://file-examples-com.github.io/uploads/2017/02/file-sample_100kB.docx", cnx, False)).scan()
+            (doc := ot.Template("https://www.mtsac.edu/webdesign/accessible-docs/word/example03.docx", cnx, False)).scan()
         )
         doc.close()
 

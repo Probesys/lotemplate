@@ -13,8 +13,6 @@ from typing import Union
 from sorcery import dict_of
 from copy import deepcopy
 
-import unohelper
-
 from . import errors
 
 
@@ -255,10 +253,7 @@ def get_file_url(file: str) -> str:
     :return: the URL or URI to the path
     """
     return file if is_network_based(file) else (
-        unohelper.systemPathToFileUrl(
-            os.getcwd() + "/" + file if file[0] != '/' else file
-        )
-    )
+        "file://" + ((os.getcwd() + "/" + file) if file[0] != '/' else file))
 
 
 def get_regex(prefix, second_prefix, mode=0):

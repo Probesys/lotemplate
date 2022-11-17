@@ -186,7 +186,7 @@ def scan_file(directory: str, file: str, error_catched=False) -> Union[tuple[dic
     return {'file': file, 'message': "Successfully scanned", 'variables': variables}
 
 
-def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tuple[dict, int], dict]:
+def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tuple[dict, int], dict, Response]:
     """
     fill the specified file
 
@@ -225,7 +225,7 @@ def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tup
                     return error_format(e), 415
 
             if len(exports) == 1:
-                return send_file(exports[0], attachment_filename=exports[0].split("/")[-1])
+                return send_file(exports[0], download_name=exports[0].split("/")[-1])
             else:
                 with ZipFile('exports/export.zip', 'w') as zipped:
                     for elem2 in exports:

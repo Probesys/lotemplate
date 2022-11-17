@@ -231,8 +231,8 @@ class Template:
             """
 
             return {
-                elem.Title[len(prefix):]: {'type': 'image', 'value': ''}
-                for elem in doc.getGraphicObjects() if regex.fullmatch(f'\\{prefix}\\w+', elem.Title)
+                elem.LinkDisplayName[len(prefix):]: {'type': 'image', 'value': ''}
+                for elem in doc.getGraphicObjects() if regex.fullmatch(f'\\{prefix}\\w+', elem.LinkDisplayName)
             }
 
         texts = scan_text(self.doc, "$", '&')
@@ -346,7 +346,7 @@ class Template:
                 return
 
             for graphic_object in doc.getGraphicObjects():
-                if graphic_object.Title != variable:
+                if graphic_object.LinkDisplayName != variable:
                     continue
 
                 new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0),))
