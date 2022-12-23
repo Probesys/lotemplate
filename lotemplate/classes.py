@@ -24,7 +24,6 @@ from com.sun.star.uno import RuntimeException
 from com.sun.star.awt import Size
 
 from . import errors
-from .utils import get_regex
 from .utils import *
 
 
