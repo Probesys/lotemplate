@@ -16,7 +16,7 @@ import regex
 
 import uno
 import unohelper
-from com.sun.star.beans import PropertyValue
+from com.sun.star.beans import PropertyValue, UnknownPropertyException
 from com.sun.star.io import IOException
 from com.sun.star.lang import IllegalArgumentException, DisposedException
 from com.sun.star.connection import NoConnectException
@@ -181,7 +181,7 @@ class Template:
                 for shape in page:
                     try:
                         matches = regex.finditer(get_regex(prefix, sec_prefix), shape.String)
-                    except AttributeError:
+                    except (AttributeError, UnknownPropertyException):  # ignore non-text shapes
                         continue
                     text_fields_vars = (text_fields_vars |
                                         {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches})
