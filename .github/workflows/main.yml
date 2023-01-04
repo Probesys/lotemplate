@@ -17,6 +17,6 @@ jobs:
         echo Starting to push repo to gitlab
         git config user.name "githubBot"
         git config user.email "githubBot@users.noreply.github.com"
-        git remote add gitlab "https://githubBot:${{ secrets.GITLAB_ACCESS_TOKEN }}@gitlab.probesys.com:troizaire/ootemplate.git"
+        git remote add gitlab "https://githubBot:${{ secrets.GITLAB_ACCESS_TOKEN }}@gitlab.probesys.com/troizaire/ootemplate.git"
         git fetch --all        
         git push gitlab master:master
