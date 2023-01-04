@@ -1,4 +1,4 @@
-import ootemplate as ot
+import lotemplate as ot
 
 import configargparse as cparse
 import json

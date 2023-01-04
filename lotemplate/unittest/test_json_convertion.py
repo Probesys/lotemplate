@@ -1,7 +1,7 @@
 import json
 import unittest
 import urllib.request
-import ootemplate as ot
+import lotemplate as ot
 
 
 def file_to_dict(file_path: str) -> dict:

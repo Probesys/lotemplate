@@ -5,7 +5,7 @@ custom attributes, useful for the API
 
 
 __all__ = (
-    'OotemplateError',
+    'LotemplateError',
     'JsonSyntaxError',
     'TemplateError',
     'JsonComparaisonError',
@@ -17,32 +17,32 @@ __all__ = (
 from typing import Union
 
 
-class OotemplateError(Exception):
+class LotemplateError(Exception):
     def __init__(self, code: str, message: str, infos: dict[str: Union[str, int]]):
         super().__init__(message)
         self.code = code
         self.infos = infos
 
 
-class JsonSyntaxError(OotemplateError):
+class JsonSyntaxError(LotemplateError):
     pass
 
 
-class TemplateError(OotemplateError):
+class TemplateError(LotemplateError):
     pass
 
 
-class JsonComparaisonError(OotemplateError):
+class JsonComparaisonError(LotemplateError):
     pass
 
 
-class ExportError(OotemplateError):
+class ExportError(LotemplateError):
     pass
 
 
-class FileNotFoundError(OotemplateError):
+class FileNotFoundError(LotemplateError):
     pass
 
 
-class UnoException(OotemplateError):
+class UnoException(LotemplateError):
     pass

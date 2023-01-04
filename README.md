@@ -90,7 +90,7 @@ with the host and port you wish (recommended = localhost:2002). Be sure that the
 
 Then run the script with the following arguments :
 ```
-usage: ootemplate_cli.py [-h] [--json_file JSON_FILE [JSON_FILE ...]]
+usage: lotemplate_cli.py [-h] [--json_file JSON_FILE [JSON_FILE ...]]
                          [--json JSON [JSON ...]] [--output OUTPUT]
                          [--config CONFIG] --host HOST --port PORT [--scan]
                          [--force_replacement]
@@ -148,7 +148,7 @@ to fill it.
 odt, pdf, html, docx.
 
 Other formats can be easily added by adding the format information in the dictionary `formats` in 
-[ootemplate/classes.py](ootemplate/classes.py) > Template > export().
+[lotemplate/classes.py](lotemplate/classes.py) > Template > export().
 
 Format information can be found on the 
 [unoconv repo](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391).
@@ -183,7 +183,6 @@ For trying to fix these problems, you can try:
 - [OpenOffice Python Bridge information and code exemples](http://www.openoffice.org/udk/python/python-bridge.html)
 - [com.sun.star Java API docs (On which pyuno is based - but is not identical)](https://www.openoffice.org/api/docs/common/ref/com/sun/star/module-ix.html)
 - [Java LibreOffice Programming Book](http://fivedots.coe.psu.ac.th/~ad/jlop)
-- [Old OOTemplate code](https://gitlab.probesys.com/troizaire/ootemplate/-/blob/c8f1e759db9494823fa4dded8c70a31d4e047c05/old.py)
 - [Deploying Flask](https://flask.palletsprojects.com/en/2.0.x/deploying/)
 - [Flask documentation - quickstart](https://flask.palletsprojects.com/en/2.0.x/quickstart/)
 - [Flask documentation - upload](https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/)

@@ -1,6 +1,6 @@
 from flask import *
 
-import ootemplate as ot
+import lotemplate as ot
 
 import configparser
 import glob
@@ -91,9 +91,9 @@ def error_format(exception: Exception, message: str = None) -> dict:
     formatted = (
         {
             'error': type(exception).__name__,
-            'code': exception.code if isinstance(exception, ot.errors.OotemplateError) else type(exception).__name__,
+            'code': exception.code if isinstance(exception, ot.errors.LotemplateError) else type(exception).__name__,
             'message': message or str(exception),
-            'variables': exception.infos if isinstance(exception, ot.errors.OotemplateError) else {}
+            'variables': exception.infos if isinstance(exception, ot.errors.LotemplateError) else {}
         }
     )
     return formatted

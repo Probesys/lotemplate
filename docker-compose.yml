@@ -1,6 +1,6 @@
 version: '3'
 services:
-  oo_api:
+  lo_api:
     build:
       context: .
       dockerfile: ./Dockerfile

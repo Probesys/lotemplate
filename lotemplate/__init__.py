@@ -1,13 +1,13 @@
 """
-OOTemplate Filler
+LOTemplate Filler
 ~~~~~~~~~~~~~~~~~
 
-A module for manipulate and fill openoffice writter-like documents with given variables
+A module for manipulate and fill libreoffice writter-like documents with given variables
 Contains the two used classes, errors raised and some utils fonctions
 """
 
 
-__title__ = 'OOTemplate Filler'
+__title__ = 'LOTemplate Filler'
 __version__ = '1.0'
 __all__ = (
     'Connexion',

@@ -1,5 +1,5 @@
 import unittest
-import ootemplate as ot
+import lotemplate as ot
 from time import sleep
 import subprocess
 

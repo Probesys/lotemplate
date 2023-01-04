@@ -1,5 +1,5 @@
 import unittest
-import ootemplate as ot
+import lotemplate as ot
 import test_json_convertion
 from time import sleep
 import subprocess
