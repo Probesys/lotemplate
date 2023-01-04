@@ -1,6 +1,6 @@
-# OOTemplateFiller
+# LOTemplateFiller
 
-OOTemplateFiller is a script that fills a given document, used as a template, with elements given in a 
+LOTemplateFiller is a script that fills a given document, used as a template, with elements given in a 
 json file. This script can be used as an API (using Flask), a CLI or a python module for your own code.
 For more information on a specific usage, read, the `Execute and use the API` or 
 `Execute and use the CLI` section.
@@ -158,11 +158,11 @@ Format information can be found on the
 The error `UnoException` happens frequently and 
 unpredictably, and this error stops the soffice processus 
 (please note that the API try to re-launch the process by itself). This error, particularly annoying, is unfortunately 
-impossible to fix, since it can be caused by multiples soffice (so OpenOffice or LibreOffice) bugs.
+impossible to fix, since it can be caused by multiples soffice (LibreOffice) bugs.
 Here is a non-exhaustive list of cases that ***can*** cause this bug :
 - The soffice process was simply closed after the connection is established.
 - The `.~lock.[FILENAME].odt#` file is present in the folder where the document is open. This file is created when the 
-  file is currently edited via libreoffice or openoffice, and deleted when the programs in which it is edited are 
+  file is currently edited via libreoffice, and deleted when the programs in which it is edited are 
   closed. The program try to avoid this error by deleting this file at document opening.
 - The first line of the document is occupied by a table or another dynamic element
   (just jump a line, it will solve the problem)
@@ -171,13 +171,10 @@ Here is a non-exhaustive list of cases that ***can*** cause this bug :
   error.
 
 The amount of memory used by soffice can increase with its use, even when open files are properly closed (which is the 
-case). Again, this is a bug in OpenOffice/soffice that has existed for years.
+case). Again, this is a bug in LibreOffice/soffice that has existed for years.
 
 For trying to fix these problems, you can try:
-- Use the most recent stable release of LibreOffice/OpenOffice (less memory, more stable, fewer crashes)
-- Switching from OpenOffice to LibreOffice (more stable, more maintained)
-- Use another operating system, or another version/distribution
-- Use the native LibreOffice/OpenOffice python binary to run this script (if there is one)
+- Use the most recent stable release of LibreOffice (less memory, more stable, fewer crashes)
 
 ## Useful elements
 - [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
