@@ -1,0 +1,22 @@
+name: Mirroring
+
+on: [push]
+
+jobs:
+  to_gitlab:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with: 
+        fetch-depth: 0
+      env: 
+        token: ${{ secrets.GITLAB_ACCESS_TOKEN }}  
+    - name: Push To Gitlab
+      run: |
+        echo Starting to push repo to gitlab
+        git config user.name "githubBot"
+        git config user.email "githubBot@users.noreply.github.com"
+        git remote add gitlab "https://githubBot:${{ secrets.GITLAB_ACCESS_TOKEN }}@gitlab.probesys.com/agentj/agentj-docker.git"
+        git fetch --all        
+        git push gitlab main:gitlab_ci_dev
