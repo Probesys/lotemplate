@@ -1,0 +1,87 @@
+name: Bug Report
+description: Fill a bug report
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: |
+        A clear and concise description of what the bug is.
+      placeholder: |
+        The program crashes when [...]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: To Reproduce
+      description: |
+        Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: |
+        A clear and concise description of what you expected to happen.
+      placeholder: |
+        The program should [...]
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: |
+        A clear and concise description of what actually happened.
+        Feel free to add screenshots or screen recordings to help explain your problem.
+      placeholder: |
+        The program does instead [...]
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: System information
+      description: The operating system you are using.
+      options:
+        - macOS
+        - Windows 10
+        - Windows 11
+        - Other Windows version
+        - Ubuntu
+        - Fedora
+        - Kali
+        - Other debian-based Linux distribution
+        - Other Linux
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Version or commit hash of the application you're running.
+      placeholder: 1.0.3 or f0a3816d40687d688faaaff91e81c5188ed08faf
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: |
+        Add any other context about the problem here if applicable.
+      placeholder: |
+        Note that [...]
