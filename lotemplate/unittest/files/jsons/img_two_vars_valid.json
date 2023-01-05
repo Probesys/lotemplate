@@ -1,10 +1,10 @@
 {
 	"image": {
 		"type": "image",
-		"value": "files/jsons/Yami_Yugi.png"
+		"value": "lotemplate/unittest/files/jsons/Yami_Yugi.png"
 	},
 	"image2": {
 		"type": "image",
-		"value": "files/jsons/Yami_Yugi.png"
+		"value": "lotemplate/unittest/files/jsons/Yami_Yugi.png"
 	}
 }

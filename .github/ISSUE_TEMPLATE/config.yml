@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Closed issues
+    url: https://github.com/Probesys/lotemplate/issues?q=is%3Aissue+is%3Aclosed
+    about: Please verify that your issue has not already been resolved.

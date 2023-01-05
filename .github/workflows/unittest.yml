@@ -1,0 +1,24 @@
+name: Unittest
+
+on:
+  [push, workflow_dispatch]
+
+jobs:
+  lotemplate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Install dependencies
+      run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+    - name: Install system dependencies
+      run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-uno libreoffice-nogui fonts-liberation ttf-mscorefonts-installer
+    - name: Run Unittest
+      run: python3 -m unittest discover -s lotemplate/unittest
