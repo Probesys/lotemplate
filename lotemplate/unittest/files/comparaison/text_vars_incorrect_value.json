@@ -4,5 +4,5 @@
   "rh": {"type": "text", "value": "jean"},
   "gjerg": {"type": "text", "value": "jhtr"},
   "aet": {"type": "text", "value": "2"},
-  "jean": {"type": "image", "value": "files/jsons/Yami_Yugi.png"}
+  "jean": {"type": "image", "value": "lotemplate/unittest/files/jsons/Yami_Yugi.png"}
 }
