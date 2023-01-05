@@ -1,4 +1,7 @@
 """
+Copyright (C) 2023 Probesys
+
+
 Utils functions, used by the CLI, the API or the core itself
 """
 

@@ -1,3 +1,9 @@
+#!/bin/python3
+
+"""
+Copyright (C) 2023 Probesys
+"""
+
 import lotemplate as ot
 
 import configargparse as cparse

@@ -1,3 +1,7 @@
+"""
+Copyright (C) 2023 Probesys
+"""
+
 from flask import *
 
 import lotemplate as ot

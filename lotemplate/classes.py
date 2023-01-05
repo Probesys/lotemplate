@@ -1,4 +1,7 @@
 """
+Copyright (C) 2023 Probesys
+
+
 The classes used for document connexion and manipulation
 """
 
@@ -204,6 +207,7 @@ class Template:
                 nb_rows = len(table_data)
                 for row_i, row in enumerate(table_data):
                     for column in row:
+                        print(f"row number {row_i}, cell content: {repr(column)}")
                         matches = [elem.group(0)
                                    for elem in regex.finditer(get_regex(fnc_prefix, prefix, 1), column)]
                         for match in matches:

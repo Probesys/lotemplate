@@ -1,4 +1,7 @@
 """
+Copyright (C) 2023 Probesys
+
+
 A class containing all necessaries exceptions with
 custom attributes, useful for the API
 """

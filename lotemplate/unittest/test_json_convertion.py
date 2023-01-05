@@ -1,3 +1,7 @@
+"""
+Copyright (C) 2023 Probesys
+"""
+
 import json
 import unittest
 import urllib.request

@@ -1,3 +1,7 @@
+"""
+Copyright (C) 2023 Probesys
+"""
+
 import unittest
 import lotemplate as ot
 from time import sleep
