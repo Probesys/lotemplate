@@ -186,9 +186,6 @@ For trying to fix these problems, you can try:
 - [Deploying Flask](https://flask.palletsprojects.com/en/2.0.x/deploying/)
 - [Flask documentation - quickstart](https://flask.palletsprojects.com/en/2.0.x/quickstart/)
 - [Flask documentation - upload](https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/)
-
-`.getPropertySetInfo().getProperties()` on any uno object to get a list of all the object's attributes
-(`__dict__` don't work)
     
 ## To consider
 

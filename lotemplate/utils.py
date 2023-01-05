@@ -2,7 +2,7 @@
 Utils functions, used by the CLI, the API or the core itself
 """
 
-__all__ = ('convert_to_datas_template', 'is_network_based', 'get_file_url',)
+__all__ = ('convert_to_datas_template', 'is_network_based', 'get_file_url', 'get_regex')
 
 import functools
 import os
