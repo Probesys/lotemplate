@@ -3,6 +3,7 @@ name: Mirroring
 on:
   push:
     branches:  [master]
+  workflow_dispatch:
 
 jobs:
   to_gitlab:
