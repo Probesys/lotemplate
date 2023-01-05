@@ -1,28 +1,24 @@
 name: Unittest
 
 on:
-  [push, pull_request, workflow_dispatch]
+  [push, workflow_dispatch]
 
 jobs:
   lotemplate:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-        cache: 'pip'
     - name: Install dependencies
       run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
     - name: Install system dependencies
       run: |
           sudo apt-get update
           sudo apt-get install -y python3-uno libreoffice-nogui fonts-liberation ttf-mscorefonts-installer
     - name: Run Unittest
-      run: python -m unittest discover -s lotemplate/unittest
+      run: python3 -m unittest discover -s lotemplate/unittest
