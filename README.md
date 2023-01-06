@@ -18,8 +18,7 @@ For Docker use of the API, you can skip this step.
 - a Java JRE
 - the package `libreoffice-java-common`
 - some python packages specified in [requirement.txt](requirements.txt) that you can install with
-  `pip install -r requirements.txt`. `Flask` and `Werkzeug` are optional, as they are used only for the API, as well
-  as `configargparse`, used only for the CLI.
+  `pip install -r requirements.txt`. `Flask` and `Werkzeug` are optional, as they are used only for the API.
 
 more information on [the GitHub page of unotools](https://github.com/t2y/unotools)
 
@@ -48,55 +47,50 @@ Then use the following routes :
 *all routes take a secret key in the header, key `secret_key`, that correspond to the secret key configured in the 
 [.env](.env) file. If no secret key is configured, the secret key isn't required at request.*
 
-- /
-  - PUT : take a directory name in the headers, key 'directory'. Creates a directory with the specified name
-  - GET : returns the list of existing directories
+- `/`
+  - `PUT` : take a directory name in the headers, key 'directory'. Creates a directory with the specified name
+  - `GET` : returns the list of existing directories
 
-- /\<directory> : directory correspond to an existing directory
-  - GET : returns a list of existing templates within the directory, with their scanned variables
-  - PUT : take a file in the body, key 'file'. Uploads the given file in the directory, and returns the saved file 
+- `/<directory>` : directory correspond to an existing directory
+  - `GET` : returns a list of existing templates within the directory, with their scanned variables
+  - `PUT` : take a file in the body, key 'file'. Uploads the given file in the directory, and returns the saved file 
     name and its scanned variables
-  - DELETE : deletes the specified directory, and all its contents
-  - PATCH : take a name in the headers, key 'name'. Rename the directory with the specified name.
+  - `DELETE` : deletes the specified directory, and all its contents
+  - `PATCH` : take a name in the headers, key 'name'. Rename the directory with the specified name.
 
-- /\<directory>/\<file> : directory correspond to an existing directory, and file to an existing file within the 
+- `/<directory>/<file>` : directory correspond to an existing directory, and file to an existing file within the 
   directory
-  - GET : returns the file and the scanned variables of the file
-  - DELETE : deletes the specified file
-  - PATCH : take a file in the body, key 'file'. replace the existing file with the given file. 
+  - `GET` : returns the file and the scanned variables of the file
+  - `DELETE` : deletes the specified file
+  - `PATCH` : take a file in the body, key 'file'. replace the existing file with the given file. 
     returns the file and the scanned variables of the file
-  - POST : take a json in the raw body.
+  - `POST` : take a json in the raw body.
     fills the template with the values given in the json. returns the filled document(s).
-- /\<directory>/\<file>/download : directory correspond to an existing directory, and file to an existing file within 
+- `/<directory>/<file>/download` : directory correspond to an existing directory, and file to an existing file within 
   the directory
-  - GET : returns the original template file, as it was sent
+  - `GET` : returns the original template file, as it was sent
 
 you may wish to deploy the API on your server. 
 [Here's how to do it](https://flask.palletsprojects.com/en/2.0.x/deploying/) - 
 *but don't forget that you should have soffice installed on the server*
 
-You can also change the flask options - like port and ip - in the [.flaskenv](.flaskenv) file, or the soffice options in the [config.ini](config.ini) file.
+You can also change the flask options - like port and ip - in the [.flaskenv](.flaskenv) file.
 If you're deploying the app with Docker, port and ip are editable in the [Dockerfile](Dockerfile).
+You can also specify the host and port used to run and connect to soffice as command line arguments,
+or in a config file (`config.yml`/`config.ini`/`config` or specified via --config).
 
 ## Execute and use the CLI
 
-Run the following command on your terminal or a server
-```shell
-soffice "--accept=socket,host=[HOST],port=[PORT];urp;StarOffice.ServiceManager"
-```
-
-with the host and port you wish (recommended = localhost:2002). Be sure that they correspond to the ones provided in the
-[config.ini](config.ini) file , or to the one provided via command-line
-
-Then run the script with the following arguments :
+Run the script with the following arguments :
 ```
 usage: lotemplate_cli.py [-h] [--json_file JSON_FILE [JSON_FILE ...]]
                          [--json JSON [JSON ...]] [--output OUTPUT]
-                         [--config CONFIG] --host HOST --port PORT [--scan]
-                         [--force_replacement]
-                         template_file
+                         [--config CONFIG] [--host HOST] [--port PORT]
+                         [--scan] [--force_replacement] template_file
+
 positional arguments:
   template_file         Template file to scan or fill
+
 optional arguments:
   -h, --help            show this help message and exit
   --json_file JSON_FILE [JSON_FILE ...], -jf JSON_FILE [JSON_FILE ...]
@@ -104,8 +98,8 @@ optional arguments:
   --json JSON [JSON ...], -j JSON [JSON ...]
                         Json strings that must fill the template, if any
   --output OUTPUT, -o OUTPUT
-                        Names of the filled files, if the template should be
-                        filled. supported formats: pdf, html, docx, png, odt
+                        Names of the filled files, if the template should
+                        be filled. supported formats: pdf, html, docx, png, odt
   --config CONFIG, -c CONFIG
                         Configuration file path
   --host HOST           Host address to use for the libreoffice connection
@@ -115,8 +109,9 @@ optional arguments:
   --force_replacement, -f
                         Specify if the program should ignore the scan's result
 ```
+
 Args that start with '--' (e.g. --json) can also be set in a config file
-(config.ini or specified via --config). Config file syntax allows: key=value,
+(`config.yml`/`config.ini`/`config` or specified via --config). Config file syntax allows: key=value,
 flag=true, stuff=[a,b,c] (for details, [see syntax](https://goo.gl/R74nmi)).
 If an arg is specified in more than one place, then commandline values
 override config file values which override defaults.
@@ -129,8 +124,8 @@ to fill it.
 
 ## Template Syntax
 - text variables : putting '$variable' in the document is enough to add the variable 'variable'.
-- image variables : add any image in the document, and put in the title of the alt text of the image (properties) '$' followed by
-  the desired name ('$image' for example to add the image 'image')
+- image variables : add any image in the document, and put in the title of the alt text of the image
+  (properties) '$' followed by the desired name ('$image' for example to add the image 'image')
 - dynamic arrays : allows you to add an unknown number of rows to the array.
   the array, but only on the last line. Add the dynamic variables in the last row of the table, 
   exactly like text variables, but with a '&'
