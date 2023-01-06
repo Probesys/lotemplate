@@ -12,6 +12,8 @@ import urllib.request
 import urllib.error
 import sys
 import traceback
+import subprocess
+from time import sleep
 
 
 def set_arguments() -> cparse.Namespace:
@@ -21,7 +23,7 @@ def set_arguments() -> cparse.Namespace:
     :return: user-given values for set up command-line arguments
     """
 
-    p = cparse.ArgumentParser(default_config_files=['config.ini'])
+    p = cparse.ArgumentParser(default_config_files=['config.yml', 'config.ini', 'config'])
     p.add_argument('template_file',
                    help="Template file to scan or fill")
     p.add_argument('--json_file', '-jf', nargs='+', default=[],
@@ -32,8 +34,8 @@ def set_arguments() -> cparse.Namespace:
                    help="Names of the filled files, if the template should be filled. supported formats: "
                         "pdf, html, docx, png, odt")
     p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
-    p.add_argument('--host', required=True, help='Host address to use for the libreoffice connection')
-    p.add_argument('--port', required=True, help='Port to use for the libreoffice connexion')
+    p.add_argument('--host', default="2002", help='Host address to use for the libreoffice connection')
+    p.add_argument('--port', default="localhost", help='Port to use for the libreoffice connexion')
     p.add_argument('--scan', '-s', action='store_true',
                    help="Specify if the program should just scan the template and return the information, or fill it.")
     p.add_argument('--force_replacement', '-f', action='store_true',
@@ -42,21 +44,13 @@ def set_arguments() -> cparse.Namespace:
 
 
 if __name__ == '__main__':
-    """
-    before running the script, please run the following command on your OpenOffice host:
-    
-    soffice "--accept=socket,host=localhost,port=2002;urp;StarOffice.ServiceManager"
-    
-    read the README file for more infos
-    """
 
     # get the necessaries arguments
     args = set_arguments()
 
-    import subprocess
-    from time import sleep
-    subprocess.call(f'soffice "--accept=socket,host={args.host},port={args.port};urp;StarOffice.ServiceManager" &',
-                    shell=True)
+    # run soffice
+    subprocess.call(
+        f'soffice "--accept=socket,host={args.host},port={args.port};urp;StarOffice.ServiceManager" &', shell=True)
     sleep(2)
 
     # establish the connection to the server

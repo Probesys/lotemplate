@@ -11,3 +11,4 @@ uploads/
 .vscode/
 .~lock.*#
 exports/
+/config*

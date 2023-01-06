@@ -6,7 +6,7 @@ from flask import *
 
 import lotemplate as ot
 
-import configparser
+import configargparse as cparse
 import glob
 import os
 import subprocess
@@ -14,16 +14,18 @@ from time import sleep
 from typing import Union
 from zipfile import ZipFile
 
+p = cparse.ArgumentParser(default_config_files=['config.yml', 'config.ini', 'config'])
+p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
+p.add_argument('--host', default="2002", help='Host address to use for the libreoffice connection')
+p.add_argument('--port', default="localhost", help='Port to use for the libreoffice connexion')
+args = p.parse_known_args()[0]
+
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("exports", exist_ok=True)
-
-config = configparser.ConfigParser()
-config.read("config.ini")
-host = config['Soffice']['host']
-port = config['Soffice']['port']
-subprocess.call(f'soffice "--accept=socket,host={host},port={port};urp;StarOffice.ServiceManager" &', shell=True)
+subprocess.call(
+    f'soffice "--accept=socket,host={args.host},port={args.port};urp;StarOffice.ServiceManager" &', shell=True)
 sleep(3)
-cnx = ot.Connexion(host, port)
+cnx = ot.Connexion(args.host, args.port)
 
 
 def restart_soffice() -> None:
