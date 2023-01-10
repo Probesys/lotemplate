@@ -16,8 +16,8 @@ from zipfile import ZipFile
 
 p = cparse.ArgumentParser(default_config_files=['config.yml', 'config.ini', 'config'])
 p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
-p.add_argument('--host', default="2002", help='Host address to use for the libreoffice connection')
-p.add_argument('--port', default="localhost", help='Port to use for the libreoffice connexion')
+p.add_argument('--host', default="localhost", help='Host address to use for the libreoffice connection')
+p.add_argument('--port', default="2002", help='Port to use for the libreoffice connexion')
 args = p.parse_known_args()[0]
 
 os.makedirs("uploads", exist_ok=True)
