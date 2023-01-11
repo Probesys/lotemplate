@@ -22,7 +22,9 @@ For Docker use of the API, you can skip this step.
 
 more information on [the GitHub page of unotools](https://github.com/t2y/unotools)
 
-## Execute and use the API
+## Use the API
+
+### Run the API
 
 Run the following command on your server :
 
@@ -37,10 +39,65 @@ flask run
 ```
 
 or, for Docker deployment:
+
 ```shell
 docker-compose up
 ```
 
+### Quick start with the API
+
+```bash
+# creation of a directory
+curl -X PUT -H 'secret_key: my_secret_key' -H 'directory: test_dir1' http://lotemplate:8000/
+# {"directory":"test_dir1","message":"Successfully created"}
+curl -X PUT -H 'secret_key: my_secret_key' -H 'directory: test_dir2' http://lotemplate:8000/
+# {"directory":"test_dir2","message":"Successfully created"}
+
+# look at the created directories
+curl -X GET -H 'secret_key: my_secret_key' http://lotemplate:8000/
+# ["test_dir2","test_dir1"]
+
+# delete a directory (and it's content
+curl -X DELETE -H 'secret_key: my_secret_key' http://lotemplate:8000/test_dir2
+# {"directory":"test_dir2","message":"The directory and all his content has been deleted"}
+
+# look at the directories
+curl -X GET -H 'secret_key: my_secret_key' http://lotemplate:8000/
+# ["test_dir1"]
+```
+
+Let's imagine we have an odt file (created by libreoffice) like this :
+
+```
+Test document
+
+let’s see if the tag $my_tag is replaced and this $other_tag is detected.
+```
+
+Upload this file to lotemplate
+
+```bash
+# upload a template
+curl -X PUT -H 'secret_key: my_secret_key' -F file=@/tmp/basic_test.odt http://lotemplate:8000/test_dir1
+{"file":"basic_test.odt","message":"Successfully uploaded","variables":{"my_tag":{"type":"text","value":""},"other_tag":{"type":"text","value":""}}}
+
+# analyse an existing file and get variables
+curl -X GET -H 'secret_key: my_secret_key'  http://lotemplate:8000/test_dir1/basic_test.odt
+# {"file":"basic_test.odt","message":"Successfully scanned","variables":{"my_tag":{"type":"text","value":""},"other_tag":{"type":"text","value":""}}}
+
+# generate a file titi.odt from a template and a json content
+ curl -X POST -H 'secret_key: my_secret_key' -H 'Content-Type: application/json' -d '[{"name":"my_file.odt","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}}}]' --output titi.odt http://lotemplate:8000/test_dir1/basic_test.odt 
+```
+
+After the operation, you get the file titi.odt with this content :
+
+```
+Test document
+
+let’s see if the tag foo is replaced and this bar is detected.
+```
+
+### API reference
 
 Then use the following routes :
 
