@@ -280,11 +280,11 @@ def var_regex(variable_type: VTypes = VTypes.TEXT) -> regex.Pattern:
     :param variable_type: the type of the variable
     :return: the regex pattern
     """
-    pat = r'\$\w+'
+    pt = r'\$\w+'
 
     if variable_type is not VTypes.IMAGE:
-        pat = r'(?:\((?<arg>(?R)|"[^"]*"|[^"&\s()][^\s()]*)(?:[+ ](?&arg))*\))?'
+        pt += r'(?:\((?<arg>(?R)|"[^"]*"|[^"&\s()][^\s()]*)(?:[+ ](?&arg))*\))?'
     if variable_type is VTypes.TABLE:
-        pat += r'|&\w+'
+        pt += r'|&\w+'
 
-    return regex.compile(pat)
+    return regex.compile(pt)
