@@ -22,4 +22,4 @@ jobs:
         git config user.email "githubBot@users.noreply.github.com"
         git remote add gitlab "https://githubBot:${{ secrets.GITLAB_ACCESS_TOKEN }}@gitlab.probesys.com/troizaire/ootemplate.git"
         git fetch --all        
-        git push --force gitlab master:master
+        git push gitlab master:master
