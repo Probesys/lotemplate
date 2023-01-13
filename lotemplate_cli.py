@@ -34,8 +34,8 @@ def set_arguments() -> cparse.Namespace:
                    help="Names of the filled files, if the template should be filled. supported formats: "
                         "pdf, html, docx, png, odt")
     p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
-    p.add_argument('--host', default="2002", help='Host address to use for the libreoffice connection')
-    p.add_argument('--port', default="localhost", help='Port to use for the libreoffice connexion')
+    p.add_argument('--host', default="localhost", help='Host address to use for the libreoffice connection')
+    p.add_argument('--port', default="2002", help='Port to use for the libreoffice connexion')
     p.add_argument('--scan', '-s', action='store_true',
                    help="Specify if the program should just scan the template and return the information, or fill it.")
     p.add_argument('--force_replacement', '-f', action='store_true',
