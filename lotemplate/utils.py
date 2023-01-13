@@ -5,7 +5,13 @@ Copyright (C) 2023 Probesys
 Utils functions, used by the CLI, the API or the core itself
 """
 
-__all__ = ('convert_to_datas_template', 'is_network_based', 'get_file_url', 'get_regex')
+__all__ = (
+    'convert_to_datas_template',
+    'is_network_based',
+    'get_file_url',
+    'var_regex',
+    'VTypes'
+)
 
 import functools
 import os
@@ -15,6 +21,8 @@ import urllib.error
 from typing import Union
 from sorcery import dict_of
 from copy import deepcopy
+import regex
+from enum import Enum, auto
 
 from . import errors
 
@@ -259,40 +267,24 @@ def get_file_url(file: str) -> str:
         "file://" + ((os.getcwd() + "/" + file) if file[0] != '/' else file))
 
 
-def get_regex(prefix, second_prefix, mode=0):
-    """
-    returns the regex search according to the prefix
+class VTypes(Enum):
+    TEXT = auto()
+    IMAGE = auto()
+    TABLE = auto()
 
-    :param prefix: the variable prefix (1 character long)
-    :param second_prefix: the variable prefix for introducing a second type of variables
-    :param mode: the regex string mode wanted (0 = text, 1 = table)
-    :return: the regex string
-    """
-    # exemples :
-    #   $test1.$test2()
-    #   $test3($test4 $test5)
-    #   $test6($test7($test8 $test9) $test10($test11))
-    #   $test12("_ttrrt'è""'çè_" $test13($test14))
-    #   $test15("_ttrrt'è'çè_" $test16($test17))
-    #   $test18($test19 "resr")
-    #   $test20($test21("jean" "jeanb" $test22))
-    #   $test23("jean" "jeanb" $test24)
-    #   $test25("test")
-    #   $test26($test27($test28(tst $test29("test" $test30($test31($test32 "test") "test"))) test33))
-    #
-    #   $test34("enjrg()()k")
-    #   $test35("test" $test36+test)
-    #   $test37("test)
-    #   $test38((zuef))
-    #   $test39
-    #   "dhjye euuz"
-    #   "te"y"
-    #   etst "test"
 
-    return (
-            ('(' if mode == 1 else '') +
-            '(\\' + prefix + '\\w+)(\\((((?R)|(\\"[^\\"]*\\")|([^\\' + prefix +
-            '\\"\\' + second_prefix + '\\s\\(\\)][^\\s\\(\\)]*))(( |\\+)((?R)|(\\"[^\\"]*\\")|([^\\' + prefix +
-            '\\"\\' + second_prefix + '\\s\\(\\)][^\\s\\(\\)]*)))*)\\))?' +
-            (')|(\\' + second_prefix + '\\w+)' if mode == 1 else '')
-    )
+def var_regex(variable_type: VTypes = VTypes.TEXT) -> regex.Pattern:
+    """
+    returns the regex pattern for variables
+
+    :param variable_type: the type of the variable
+    :return: the regex pattern
+    """
+    pat = r'\$\w+'
+
+    if variable_type is not VTypes.IMAGE:
+        pat = r'(?:\((?<arg>(?R)|"[^"]*"|[^"&\s()][^\s()]*)(?:[+ ](?&arg))*\))?'
+    if variable_type is VTypes.TABLE:
+        pat += r'|&\w+'
+
+    return regex.compile(pat)

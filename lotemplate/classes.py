@@ -15,7 +15,6 @@ from typing import Union
 from urllib import request
 from PIL import Image
 from sorcery import dict_of
-import regex
 
 import uno
 import unohelper
@@ -175,14 +174,14 @@ class Template:
             raw_string = doc.getText().getString()
             for elem, _ in sorted(scan_table(doc, sec_prefix, prefix).items(), key=lambda s: -len(s[0])):
                 raw_string = raw_string.replace(elem, '')
-            matches = regex.finditer(get_regex(prefix, sec_prefix), raw_string)
+            matches = var_regex().finditer(raw_string)
             plain_vars = {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches}
 
             text_fields_vars = {}
             for page in doc.getDrawPages():
                 for shape in page:
                     try:
-                        matches = regex.finditer(get_regex(prefix, sec_prefix), shape.String)
+                        matches = var_regex().finditer(shape.String)
                     except (AttributeError, UnknownPropertyException):  # ignore non-text shapes
                         continue
                     text_fields_vars = (text_fields_vars |
@@ -207,10 +206,12 @@ class Template:
                 nb_rows = len(table_data)
                 for row_i, row in enumerate(table_data):
                     for column in row:
-                        matches = [elem.group(0)
-                                   for elem in regex.finditer(get_regex(fnc_prefix, prefix, 1), column)]
+                        matches = [
+                            elem.group(0)
+                            for elem in var_regex(VTypes.TABLE).finditer(column)
+                        ]
                         for match in matches:
-                            if regex.fullmatch(get_regex(fnc_prefix, prefix), match):
+                            if var_regex().fullmatch(match):
                                 continue
                             if row_i != nb_rows - 1:
                                 raise errors.TemplateError(
@@ -234,7 +235,8 @@ class Template:
 
             return {
                 elem.LinkDisplayName[len(prefix):]: {'type': 'image', 'value': ''}
-                for elem in doc.getGraphicObjects() if regex.fullmatch(f'\\{prefix}\\w+', elem.LinkDisplayName)
+                for elem in doc.getGraphicObjects()
+                if var_regex(VTypes.IMAGE).fullmatch(elem.LinkDisplayName)
             }
 
         texts = scan_text(self.doc, "$", '&')
