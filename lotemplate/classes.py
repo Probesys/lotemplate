@@ -161,21 +161,19 @@ class Template:
 
         should_close = kargs["should_close"] if "should_close" in kargs else False
 
-        def scan_text(doc, prefix: str, sec_prefix: str) -> dict[str, dict[str, str]]:
+        def scan_text(doc) -> dict[str, dict[str, str]]:
             """
             scan for text in the given doc
 
             :param doc: the document to scan
-            :param prefix: the variables prefix
-            :param sec_prefix: the second prefix (the one excluded from the search)
             :return: the scanned variables
             """
 
             raw_string = doc.getText().getString()
-            for elem, _ in sorted(scan_table(doc, sec_prefix, prefix).items(), key=lambda s: -len(s[0])):
+            for elem, _ in sorted(scan_table(doc).items(), key=lambda s: -len(s[0])):
                 raw_string = raw_string.replace(elem, '')
             matches = var_regex().finditer(raw_string)
-            plain_vars = {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches}
+            plain_vars = {var.group(0)[1:]: {'type': 'text', 'value': ''} for var in matches}
 
             text_fields_vars = {}
             for page in doc.getDrawPages():
@@ -185,17 +183,15 @@ class Template:
                     except (AttributeError, UnknownPropertyException):  # ignore non-text shapes
                         continue
                     text_fields_vars = (text_fields_vars |
-                                        {var.group(0)[len(prefix):]: {'type': 'text', 'value': ''} for var in matches})
+                                        {var.group(0)[1:]: {'type': 'text', 'value': ''} for var in matches})
 
             return plain_vars | text_fields_vars
 
-        def scan_table(doc, prefix: str, fnc_prefix) -> dict:
+        def scan_table(doc) -> dict:
             """
             scan for tables in the given doc
 
             :param doc: the document to scan
-            :param prefix: the variables prefix
-            :param fnc_prefix: the variable-function prefix
             :return: the scanned variables
             """
 
@@ -220,28 +216,27 @@ class Template:
                                     f"isn't in the last row (got: row {repr(row_i + 1)}, "
                                     f"expected: row {repr(nb_rows)})",
                                     dict(table=t_name, actual_row=row_i + 1, expected_row=nb_rows, variable=matches[0]))
-                            tab_vars[match[len(prefix):]] = {'type': 'table', 'value': ['']}
+                            tab_vars[match[1:]] = {'type': 'table', 'value': ['']}
 
             return tab_vars
 
-        def scan_image(doc, prefix: str) -> dict[str, dict[str, str]]:
+        def scan_image(doc) -> dict[str, dict[str, str]]:
             """
             scan for images in the given doc
 
             :param doc: the document to scan
-            :param prefix: the variables prefix
             :return: the scanned variables
             """
 
             return {
-                elem.LinkDisplayName[len(prefix):]: {'type': 'image', 'value': ''}
+                elem.LinkDisplayName[1:]: {'type': 'image', 'value': ''}
                 for elem in doc.getGraphicObjects()
                 if var_regex(VTypes.IMAGE).fullmatch(elem.LinkDisplayName)
             }
 
-        texts = scan_text(self.doc, "$", '&')
-        tables = scan_table(self.doc, "&", "$")
-        images = scan_image(self.doc, "$")
+        texts = scan_text(self.doc)
+        tables = scan_table(self.doc)
+        images = scan_image(self.doc)
 
         variables_list = list(texts.keys()) + list(tables.keys()) + list(images.keys())
         duplicates = [variable for variable in variables_list if variables_list.count(variable) > 1]
