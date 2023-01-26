@@ -15,8 +15,7 @@ For more information on a specific usage, read, the `Execute and use the API` or
 For Docker use of the API, you can skip this step.
 
 - LibreOffice (the console-line version will be enough)
-- a Java JRE
-- the package `libreoffice-java-common`
+- python3.8 or higher
 - some python packages specified in [requirement.txt](requirements.txt) that you can install with
   `pip install -r requirements.txt`. `Flask` and `Werkzeug` are optional, as they are used only for the API.
 
