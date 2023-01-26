@@ -19,8 +19,6 @@ For Docker use of the API, you can skip this step.
 - some python packages specified in [requirement.txt](requirements.txt) that you can install with
   `pip install -r requirements.txt`. `Flask` and `Werkzeug` are optional, as they are used only for the API.
 
-more information on [the GitHub page of unotools](https://github.com/t2y/unotools)
-
 ## Use the API
 
 ### Run the API
