@@ -123,6 +123,17 @@ class Tables(unittest.TestCase):
         )
         doc.close()
 
+    def test_function_variable(self):
+        self.assertEqual(
+            {
+                "test(&jean)": {"type": "table", "value": [""]},
+                "test": {"type": "table", "value": [""]},
+                "test2": {"type": "text", "value": ""},
+            },
+            (doc := ot.Template("lotemplate/unittest/files/templates/function_variable_tab.odt", cnx, False)).scan()
+        )
+        doc.close()
+
 
 class Generic(unittest.TestCase):
 

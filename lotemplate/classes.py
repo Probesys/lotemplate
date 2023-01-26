@@ -33,9 +33,9 @@ class Connexion:
 
     def __repr__(self):
         return (
-            f"<Connexion object :'host'={repr(self.host)}, 'port'={repr(self.port)}, "
-            f"'local_ctx'={repr(self.local_ctx)}, 'ctx'={repr(self.local_ctx)}, 'desktop'={repr(self.desktop)}, "
-            f"'graphic_provider'={repr(self.graphic_provider)}>"
+            f"<Connexion object :'host'={self.host!r}, 'port'={self.port!r}, "
+            f"'local_ctx'={self.local_ctx!r}, 'ctx'={self.local_ctx!r}, 'desktop'={self.desktop!r}, "
+            f"'graphic_provider'={self.graphic_provider!r}>"
         )
 
     def __str__(self):
@@ -130,7 +130,7 @@ class Template:
             self.close()
             raise errors.FileNotFoundError(
                 'file_not_found',
-                f"the given file does not exist or has not been found (file {repr(file_path)})",
+                f"the given file does not exist or has not been found (file {file_path!r})",
                 dict_of(file_path)
             ) from None
         except RuntimeException as e:
@@ -146,7 +146,7 @@ class Template:
             self.close()
             raise errors.TemplateError(
                 'invalid_format',
-                f"The given format ({repr(self.file_name.split('.')[-1])}) is invalid, or the file is already open by "
+                f"The given format ({self.file_name.split('.')[-1]!r}) is invalid, or the file is already open by "
                 f"an other process (accepted formats: ODT, OTT, DOC, DOCX, HTML, RTF or TXT)",
                 dict(format=self.file_name.split('.')[-1])
             )
@@ -170,55 +170,70 @@ class Template:
             """
 
             raw_string = doc.getText().getString()
-            for elem, _ in sorted(scan_table(doc).items(), key=lambda s: -len(s[0])):
-                raw_string = raw_string.replace(elem, '')
-            matches = var_regex().finditer(raw_string)
-            plain_vars = {var.group(0)[1:]: {'type': 'text', 'value': ''} for var in matches}
+
+            matches = var_regexes['text'].finditer(raw_string)
+            plain_vars = {
+                var[0][1:]: {'type': 'text', 'value': ''} for var in matches}
 
             text_fields_vars = {}
             for page in doc.getDrawPages():
                 for shape in page:
                     try:
-                        matches = var_regex().finditer(shape.String)
-                    except (AttributeError, UnknownPropertyException):  # ignore non-text shapes
+                        matches = var_regexes['text'].finditer(shape.String)
+                    except (AttributeError, UnknownPropertyException):
                         continue
                     text_fields_vars = (text_fields_vars |
                                         {var.group(0)[1:]: {'type': 'text', 'value': ''} for var in matches})
 
+            for var in scan_table(doc, get_list=True):
+                if '$' + var in plain_vars:
+                    del plain_vars[var]
+
             return plain_vars | text_fields_vars
 
-        def scan_table(doc) -> dict:
+        def scan_table(doc, get_list=False) -> Union[dict, list]:
             """
             scan for tables in the given doc
 
+            :param get_list: indicates if the function should return a list
+            of variables or the formatted dictionary of variables
             :param doc: the document to scan
             :return: the scanned variables
             """
 
-            tab_vars: dict = {}
+            def scan_cell(cell) -> None:
+                """
+                scan for variables in the given cell
+
+                :param cell: the cell to scan
+                :return: None
+                """
+                for match in var_regexes['table'].finditer(cell):
+                    if not match.captures('var'):
+                        continue
+                    if row_i != nb_rows - 1:
+                        raise errors.TemplateError(
+                            'variable_not_in_last_row',
+                            f"The variable {match[0]!r} (table {t_name!r}) "
+                            f"isn't in the last row (got: row {row_i + 1!r}, "
+                            f"expected: row {nb_rows!r})",
+                            dict(table=t_name, actual_row=row_i + 1,
+                                 expected_row=nb_rows, variable=match[0])
+                        )
+                    tab_vars[match[0][1:]] = {'type': 'table', 'value': ['']}
+                    list_tab_vars.append(match[0])
+
+            tab_vars = {}
+            list_tab_vars = []
             for i in range(doc.getTextTables().getCount()):
-                table_data: tuple[tuple[str]] = doc.getTextTables().getByIndex(i).getDataArray()
+                table_data = doc.getTextTables().getByIndex(i).getDataArray()
                 t_name = doc.getTextTables().getByIndex(i).getName()
                 nb_rows = len(table_data)
                 for row_i, row in enumerate(table_data):
                     for column in row:
-                        matches = [
-                            elem.group(0)
-                            for elem in var_regex(VTypes.TABLE).finditer(column)
-                        ]
-                        for match in matches:
-                            if var_regex().fullmatch(match):
-                                continue
-                            if row_i != nb_rows - 1:
-                                raise errors.TemplateError(
-                                    'variable_not_in_last_row',
-                                    f"The variable {repr(matches[0])} (table {repr(t_name)}) "
-                                    f"isn't in the last row (got: row {repr(row_i + 1)}, "
-                                    f"expected: row {repr(nb_rows)})",
-                                    dict(table=t_name, actual_row=row_i + 1, expected_row=nb_rows, variable=matches[0]))
-                            tab_vars[match[1:]] = {'type': 'table', 'value': ['']}
+                        scan_cell(column)
 
-            return tab_vars
+            return list_tab_vars if get_list else tab_vars
 
         def scan_image(doc) -> dict[str, dict[str, str]]:
             """
@@ -231,7 +246,7 @@ class Template:
             return {
                 elem.LinkDisplayName[1:]: {'type': 'image', 'value': ''}
                 for elem in doc.getGraphicObjects()
-                if var_regex(VTypes.IMAGE).fullmatch(elem.LinkDisplayName)
+                if var_regexes['image'].fullmatch(elem.LinkDisplayName)
             }
 
         texts = scan_text(self.doc)
@@ -248,8 +263,8 @@ class Template:
                 self.close()
             raise errors.TemplateError(
                 'duplicated_variable',
-                f"The variable {repr(duplicates[0])} is mentioned two times, but for two different types : "
-                f"{repr(first_type)}, and {repr(second_type)}",
+                f"The variable {duplicates[0]!r} is mentioned two times, but "
+                f"for two different types: {first_type!r}, and {second_type!r}",
                 dict_of(first_type, second_type, variable=duplicates[0])
             )
 
@@ -270,7 +285,7 @@ class Template:
         if json_missing:
             raise errors.JsonComparaisonError(
                 'missing_required_variable',
-                f"The variable {repr(json_missing[0])}, present in the template, "
+                f"The variable {json_missing[0]!r}, present in the template, "
                 f"isn't present in the json.",
                 dict(variable=json_missing[0])
             )
@@ -279,7 +294,7 @@ class Template:
         if template_missing:
             raise errors.JsonComparaisonError(
                 'unknown_variable',
-                f"The variable {repr(template_missing[0])}, present in the json, isn't present in the template.",
+                f"The variable {template_missing[0]!r}, present in the json, isn't present in the template.",
                 dict(variable=template_missing[0])
             )
 
@@ -287,9 +302,9 @@ class Template:
         if json_incorrect:
             raise errors.JsonComparaisonError(
                 'incorrect_value_type',
-                f"The variable {repr(json_incorrect[0])} should be of type "
-                f"{repr(self.variables[json_incorrect[0]]['type'])}, like in the template, but is of type "
-                f"{repr(json_vars[json_incorrect[0]]['type'])}",
+                f"The variable {json_incorrect[0]!r} should be of type "
+                f"{self.variables[json_incorrect[0]]['type']!r}, like in the template, but is of type "
+                f"{json_vars[json_incorrect[0]]['type']!r}",
                 dict(variable=json_incorrect[0], actual_variable_type=json_vars[json_incorrect[0]]['type'],
                      expected_variable_type=self.variables[json_incorrect[0]]['type'])
             )
@@ -478,11 +493,11 @@ class Template:
 
         except KeyError:
             raise errors.ExportError('invalid_format',
-                                     f"Invalid export format {repr(file_type)}.", dict_of(file_type)) from None
+                                     f"Invalid export format {file_type!r}.", dict_of(file_type)) from None
         except IOException as error:
             raise errors.ExportError(
                 'unknown_error',
-                f"Unable to save document to {repr(path)} : error {repr(error.value)}",
+                f"Unable to save document to {path!r} : error {error.value!r}",
                 dict_of(path, error)
             ) from error
 

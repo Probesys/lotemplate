@@ -9,8 +9,7 @@ __all__ = (
     'convert_to_datas_template',
     'is_network_based',
     'get_file_url',
-    'var_regex',
-    'VTypes'
+    'var_regexes'
 )
 
 import functools
@@ -22,7 +21,6 @@ from typing import Union
 from sorcery import dict_of
 from copy import deepcopy
 import regex
-from enum import Enum, auto
 
 from . import errors
 
@@ -267,24 +265,13 @@ def get_file_url(file: str) -> str:
         "file://" + ((os.getcwd() + "/" + file) if file[0] != '/' else file))
 
 
-class VTypes(Enum):
-    TEXT = auto()
-    IMAGE = auto()
-    TABLE = auto()
-
-
-def var_regex(variable_type: VTypes = VTypes.TEXT) -> regex.Pattern:
-    """
-    returns the regex pattern for variables
-
-    :param variable_type: the type of the variable
-    :return: the regex pattern
-    """
-    pt = r'\$\w+'
-
-    if variable_type is not VTypes.IMAGE:
-        pt += r'(?:\((?<arg>(?R)|"[^"]*"|[^"&\s()][^\s()]*)(?:[+ ](?&arg))*\))?'
-    if variable_type is VTypes.TABLE:
-        pt += r'|&\w+'
-
-    return regex.compile(pt)
+var_regexes = {
+    'image': regex.compile(r'\$\w+'),
+    'text': regex.compile(
+        r'\$\w+'
+        r'(?:\((?<arg>(?R)|"[^"]*"|[^$"\s()][^\s()]*)(?:[+ ](?&arg))*\))?'),
+    'table': regex.compile(
+        r'\$\w+'
+        r'(?:\((?<arg>(?R)|"[^"]*"|[^$&"\s()][^\s()]*)(?:[+ ](?&arg))*\))?'
+        r'|(?<var>&\w+)'),
+}
