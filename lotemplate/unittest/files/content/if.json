@@ -1,0 +1,10 @@
+{
+  "tutu": {
+    "type": "text",
+    "value": "oui"
+  },
+  "tata": {
+		"type": "text",
+		"value": "foo"
+  }
+}

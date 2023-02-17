@@ -177,12 +177,38 @@ of an array to dynamically add rows. Then pass the file, and the completed json 
 to fill it.
 
 ## Template Syntax
-- text variables : putting '$variable' in the document is enough to add the variable 'variable'.
-- image variables : add any image in the document, and put in the title of the alt text of the image
-  (properties) '$' followed by the desired name ('$image' for example to add the image 'image')
-- dynamic arrays : allows you to add an unknown number of rows to the array.
-  the array, but only on the last line. Add the dynamic variables in the last row of the table, 
-  exactly like text variables, but with a '&'
+
+### text variables
+
+Put `$variable` in the document is enough to add the variable 'variable'.
+
+### image variables
+
+Add any image in the document, and put in the title of the alt text of the image
+(properties) '$' followed by the desired name ('$image' for example to add the image 'image')
+
+### dynamic arrays
+
+You can add an unknown number of rows to the array but only on the last line.
+Add the dynamic variables in the last row of the table, exactly like text variables, but with a '&' instead of a the '$'
+
+### if statement
+
+You can use if statement in order to display or to hide a part of your document.
+
+There is two possible operators : `==` or `!=`
+
+```
+[if $my_var == my_value]
+here you have your document
+[endif]
+
+[if $my_var != my_value]
+here you have your document
+[endif]
+```
+
+limitation : you can not have an if inside another if.
 
 ## Supported formats
 
@@ -201,6 +227,16 @@ Other formats can be easily added by adding the format information in the dictio
 
 Format information can be found on the 
 [unoconv repo](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391).
+
+## Doc for developpers
+
+### Run the tests
+
+You need to have docker and docker-compose installed and then run
+
+```bash
+make tests
+```
 
 ## Unsolvable problems
 
