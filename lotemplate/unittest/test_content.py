@@ -39,7 +39,10 @@ def compareFiles(name: str):
         os.remove(getFilename('unittest.txt'))
     temp.export(getFilename('unittest.txt'), True)
     temp.close
-    return filecmp.cmp(getFilename('unittest.txt'), getFilename('expected.txt'))
+    response = filecmp.cmp(getFilename('unittest.txt'), getFilename('expected.txt'))
+    if os.path.isfile(getFilename('unittest.txt')):
+        os.remove(getFilename('unittest.txt'))
+    return response
 
 
 class Text(unittest.TestCase):
