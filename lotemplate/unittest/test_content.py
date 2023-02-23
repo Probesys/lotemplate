@@ -40,8 +40,8 @@ def compareFiles(name: str):
     temp.export(getFilename('unittest.txt'), True)
     temp.close
     response = filecmp.cmp(getFilename('unittest.txt'), getFilename('expected.txt'))
-    if os.path.isfile(getFilename('unittest.txt')):
-        os.remove(getFilename('unittest.txt'))
+    #if os.path.isfile(getFilename('unittest.txt')):
+    #    os.remove(getFilename('unittest.txt'))
     return response
 
 

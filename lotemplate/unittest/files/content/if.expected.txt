@@ -17,8 +17,7 @@ This paragraph should be displayed (!= glouglou)
 several lines
 
 
-[ERROR - No endif found. if foo == foo]
-The paragraph should remain here because there is no endif at the end
-[type_in_endif]
+the foo variable
+
 
 End of the test
