@@ -255,13 +255,6 @@ class Template:
                     positionInText = positionInText + 1
                     selectedString = cursor.String
                     match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
-                cursor.goLeft(len(match.group(1)),False)
-                cursor.goRight(len(match.group(1)),True)
-                positionInText = positionInText - len(match.group(1))
-                cursor.String = ''
-                cursor.goLeft(positionInText, False)
-                cursor.goRight(len(ifStatement.ifString), True)
-                cursor.String = ''
 
             search = doc.createSearchDescriptor()
             search.SearchString = IfStatement.startRegex
@@ -332,8 +325,8 @@ class Template:
                 if var_regexes['image'].fullmatch(elem.LinkDisplayName)
             }
 
-        scan_if(self.doc)
         texts = scan_text(self.doc)
+        scan_if(self.doc)
         tables = scan_table(self.doc)
         images = scan_image(self.doc)
 
