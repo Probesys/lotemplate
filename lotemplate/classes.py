@@ -17,6 +17,7 @@ from PIL import Image
 from sorcery import dict_of
 
 import uno
+import re
 import unohelper
 from com.sun.star.beans import PropertyValue, UnknownPropertyException
 from com.sun.star.io import IOException
@@ -76,6 +77,28 @@ class Connexion:
 
         self.__init__(self.host, self.port)
 
+class IfStatement:
+    """
+    Class representing an if statement in a template libreoffice
+    """
+    startRegex = r'\[\s*if\s*\$([a-zA-Z0-9_]+)\s*(\=\=|\!\=)\s*([a-zA-Z0-9_\-\.\,]+)\s*\]'
+    endRegex = r'(\[\s*endif\s*\])$'
+    def __init__(self, ifString):
+        self.ifString = ifString
+        match = re.search(self.__class__.startRegex, ifString, re.IGNORECASE)
+        self.variableName = match.group(1)
+        self.operator = match.group(2)
+        self.value = match.group(3)
+
+    def getIfResult(self, value):
+        if self.operator == '==' and value == self.value:
+            return True
+        if self.operator == '!=' and value != self.value:
+            return True
+        if self.operator == '==' and value != self.value:
+            return False
+        if self.operator == '!=' and value == self.value:
+            return False
 
 class Template:
 
@@ -321,6 +344,100 @@ class Template:
         :return: None
         """
 
+        def ifReplace(doc, variables: dict[str, dict[str, Union[str, list[str]]]]) -> None:
+            """
+            Parse statements like [if $myvar==TOTO]...[endif]
+
+            If the condition matches we remove the if and endif statement.
+            It the condition doesn't match, we remove the statements and the text between the statements.
+
+            :param doc: the document to fill
+            :param variables: the variables
+            :return: None
+            """
+            def displayIfError(xFound, ifString, message):
+                """
+                Change the if in the document in order to display a yellow message in error.
+                """
+                BOLD = uno.getConstantByName("com.sun.star.awt.FontWeight.BOLD")
+                xFound.CharWeight = BOLD
+                # this is a yellow #FFFF00 converted to int
+                xFound.CharBackColor = 16776960
+                text = xFound.getText()
+                cursor = text.createTextCursorByRange(xFound)
+                cursor.goLeft(len(ifString)-1, False)
+                text.insertString( cursor, message, 0 )
+
+            def computeIf(xFound):
+                """
+                Compute the if statement.
+                """
+                ifStatement = IfStatement(xFound.getString())
+
+                ifResult = None
+                if (ifStatement.variableName not in variables) or (variables[ifStatement.variableName]['type'] != 'text'):
+                    ifResult = None
+                else:
+                    ifResult = ifStatement.getIfResult(variables[ifStatement.variableName]['value'])
+
+                if (ifResult == None):
+                    # la variable n'existe pas ou la variable reçue n'est pas un texte.
+                    displayIfError(xFound, ifStatement.ifString, 'ERROR - unknown variable or not a text variable. ')
+                    return
+                elif (ifResult == False):
+                    # le if n'est pas vérifié => on efface le paragraphe avec le if
+                    text = xFound.getText()
+                    cursor = text.createTextCursorByRange(xFound)
+                    cursor.goLeft(len(ifStatement.ifString), False)
+                    cursor.goRight(len(ifStatement.ifString), True)
+                    if cursor.goRight(1, True) == False:
+                        displayIfError(xFound, ifStatement.ifString, 'ERROR - No endif found. ')
+                        return
+                    selectedString = cursor.String
+                    match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
+                    while match == None:
+                        if cursor.goRight(1, True) == False:
+                            displayIfError(xFound, ifStatement.ifString, 'ERROR - No endif found. ')
+                            return
+                        selectedString = cursor.String
+                        match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
+                    cursor.String = ''
+                elif ifResult == True:
+                    # le if est vérifié, on enlève les statements if et endif, mais on garde le paragraphe
+                    positionInText = len(ifStatement.ifString)
+                    text = xFound.getText()
+                    cursor = text.createTextCursorByRange(xFound)
+                    if cursor.goRight(1, True) == False:
+                        displayIfError(xFound, ifStatement.ifString, 'ERROR - No endif found. ')
+                        return
+                    positionInText = positionInText + 1
+                    selectedString = cursor.String
+                    match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
+                    while match == None:
+                        if cursor.goRight(1, True) == False:
+                            displayIfError(xFound, ifStatement.ifString, 'ERROR - No endif found. ')
+                            return
+                        positionInText = positionInText + 1
+                        selectedString = cursor.String
+                        match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
+                    cursor.goLeft(len(match.group(1)),False)
+                    cursor.goRight(len(match.group(1)),True)
+                    positionInText = positionInText - len(match.group(1))
+                    cursor.String = ''
+                    cursor.goLeft(positionInText, False)
+                    cursor.goRight(len(ifStatement.ifString), True)
+                    cursor.String = ''
+
+            # main of ifReplace
+            search = doc.createSearchDescriptor()
+            search.SearchString = IfStatement.startRegex
+            search.SearchRegularExpression = True
+            search.SearchCaseSensitive = False
+            xFound = doc.findFirst(search)
+            while xFound != None:
+                computeIf(xFound)
+                xFound = doc.findNext(xFound.End, search)
+
         def text_fill(doc, variable: str, value: str) -> None:
             """
             Fills all the text-related content
@@ -451,6 +568,8 @@ class Template:
                 dict_of(self.cnx.host, self.cnx.port)
             ) from e
 
+        ifReplace(self.new, variables)
+
         for var, details in sorted(variables.items(), key=lambda s: -len(s[0])):
             if details['type'] == 'text':
                 text_fill(self.new, "$" + var, details['value'])
@@ -481,11 +600,15 @@ class Template:
                 i += 1
 
         url = unohelper.systemPathToFileUrl(path)
+
+        # list of available convert filters : https://help.libreoffice.org/latest/he/text/shared/guide/convertfilters.html
         formats = {
             "odt": "writer8",
             "pdf": "writer_pdf_Export",
             "html": "HTML (StarWriter)",
             "docx": "Office Open XML Text",
+            "txt": "Text (encoded)",
+            'rtf': 'Rich Text Format'
         }
 
         try:

@@ -1,0 +1,24 @@
+﻿
+Tests of if statements
+
+We check the values with the tutu = oui
+
+
+This paragraph should be displayed (==oui)
+
+
+
+
+
+
+
+This paragraph should be displayed (!= glouglou)
+
+several lines
+
+
+[ERROR - No endif found. if foo == foo]
+The paragraph should remain here because there is no endif at the end
+[type_in_endif]
+
+End of the test
