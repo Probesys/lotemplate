@@ -19,5 +19,6 @@ several lines
 
 the foo variable
 
+La fonction a bien été prise en compte
 
 End of the test

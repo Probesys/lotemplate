@@ -81,14 +81,14 @@ class IfStatement:
     """
     Class representing an if statement in a template libreoffice
     """
-    startRegex = r'\[\s*if\s*\$([a-zA-Z0-9_]+)\s*(\=\=|\!\=)\s*([a-zA-Z0-9_\-\.\,]+)\s*\]'
+    startRegex = r'\[\s*if\s*\$(\w+(\(.+\))?)\s*(\=\=|\!\=)\s*([\w\-\.\,]+)\s*\]'
     endRegex = r'(\[\s*endif\s*\])$'
     def __init__(self, ifString):
         self.ifString = ifString
         match = re.search(self.__class__.startRegex, ifString, re.IGNORECASE)
         self.variableName = match.group(1)
-        self.operator = match.group(2)
-        self.value = match.group(3)
+        self.operator = match.group(3)
+        self.value = match.group(4)
 
     def getIfResult(self, value):
         if self.operator == '==' and value == self.value:

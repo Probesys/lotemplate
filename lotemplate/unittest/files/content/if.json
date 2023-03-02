@@ -6,5 +6,9 @@
   "tata": {
 		"type": "text",
 		"value": "foo"
+  },
+  "my_func(toto)": {
+		"type": "text",
+		"value": "my_func_value"
   }
 }
