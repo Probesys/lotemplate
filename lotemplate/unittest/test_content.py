@@ -52,3 +52,6 @@ class Text(unittest.TestCase):
 
     def test_if(self):
         self.assertTrue(compareFiles('if'))
+
+    def test_function_variable(self):
+        self.assertTrue(compareFiles('function_variable'))
