@@ -81,7 +81,7 @@ class IfStatement:
     """
     Class representing an if statement in a template libreoffice
     """
-    startRegex = r'\[\s*if\s*\$(\w+(\(.+\))?)\s*(\=\=|\!\=)\s*([\w\-\.\,]+)\s*\]'
+    startRegex = r'\[\s*if\s*\$(\w+(\(.+?\))?)\s*(\=\=|\!\=)\s*([\w\-\.\,]+)\s*\]'
     endRegex = r'(\[\s*endif\s*\])$'
     def __init__(self, ifString):
         self.ifString = ifString
