@@ -77,20 +77,22 @@ class Connexion:
 
         self.__init__(self.host, self.port)
 
+
 class IfStatement:
     """
     Class representing an if statement in a template libreoffice
     """
-    startRegex = r'\[\s*if\s*\$(\w+(\(.+?\))?)\s*(\=\=|\!\=)\s*([\w\-\.\,]+)\s*\]'
-    endRegex = r'(\[\s*endif\s*\])$'
-    def __init__(self, ifString):
-        self.ifString = ifString
-        match = re.search(self.__class__.startRegex, ifString, re.IGNORECASE)
-        self.variableName = match.group(1)
+    start_regex = r'\[\s*if\s*\$(\w+(\(.+?\))?)\s*(\=\=|\!\=)\s*([\w\-\.\,]+)\s*\]'
+    end_regex = r'(\[\s*endif\s*\])$'
+
+    def __init__(self, if_string):
+        self.if_string = if_string
+        match = re.search(self.__class__.start_regex, if_string, re.IGNORECASE)
+        self.variable_name = match.group(1)
         self.operator = match.group(3)
         self.value = match.group(4)
 
-    def getIfResult(self, value):
+    def get_if_result(self, value):
         if self.operator == '==' and value == self.value:
             return True
         if self.operator == '!=' and value != self.value:
@@ -99,6 +101,7 @@ class IfStatement:
             return False
         if self.operator == '!=' and value == self.value:
             return False
+
 
 class Template:
 
@@ -219,53 +222,43 @@ class Template:
             scan for if statement. No return. We just verify that there is
             and endif for each if statement
             """
-            def scan_single_if(xFound):
+
+            def scan_single_if(local_x_found):
                 """
                 scan for a single if statement
                 """
-                def raise_if_error():
-                    """
-                    raise an error if the if statement is not valid
-                    """
-                    raise errors.TemplateError(
-                        'invalid_if',
-                        f"the if statement {xFound} is not valid",
-                        dict_of(xFound)
-                    )
-                ifStatement = IfStatement(xFound.getString())
-                positionInText = len(ifStatement.ifString)
-                text = xFound.getText()
-                cursor = text.createTextCursorByRange(xFound)
-                if cursor.goRight(1, True) == False:
+                if_statement = IfStatement(local_x_found.getString())
+                position_in_text = len(if_statement.if_string)
+                text = local_x_found.getText()
+                cursor = text.createTextCursorByRange(local_x_found)
+                if not cursor.goRight(1, True):
                     raise errors.TemplateError(
                         'no_endif_found',
-                        f"The statement {ifStatement} has no endif",
-                        dict_of(ifStatement)
+                        f"The statement {if_statement} has no endif",
+                        dict_of(if_statement)
                     )
-                positionInText = positionInText + 1
-                selectedString = cursor.String
-                match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
-                while match == None:
-                    if cursor.goRight(1, True) == False:
+                position_in_text = position_in_text + 1
+                selected_string = cursor.String
+                match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
+                while match is None:
+                    if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endif_found',
-                            f"The statement {ifStatement} has no endif",
-                            dict_of(ifStatement)
+                            f"The statement {if_statement} has no endif",
+                            dict_of(if_statement)
                         )
-                    positionInText = positionInText + 1
-                    selectedString = cursor.String
-                    match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
+                    position_in_text = position_in_text + 1
+                    selected_string = cursor.String
+                    match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
 
             search = doc.createSearchDescriptor()
-            search.SearchString = IfStatement.startRegex
+            search.SearchString = IfStatement.start_regex
             search.SearchRegularExpression = True
             search.SearchCaseSensitive = False
-            xFound = doc.findFirst(search)
-            while xFound != None:
-                scan_single_if(xFound)
-                xFound = doc.findNext(xFound.End, search)
-
-
+            x_found = doc.findFirst(search)
+            while x_found is not None:
+                scan_single_if(x_found)
+                x_found = doc.findNext(x_found.End, search)
 
         def scan_table(doc, get_list=False) -> Union[dict, list]:
             """
@@ -398,7 +391,7 @@ class Template:
         :return: None
         """
 
-        def ifReplace(doc, variables: dict[str, dict[str, Union[str, list[str]]]]) -> None:
+        def if_replace(doc, local_variables: dict[str, dict[str, Union[str, list[str]]]]) -> None:
             """
             Parse statements like [if $myvar==TOTO]...[endif]
 
@@ -406,81 +399,81 @@ class Template:
             It the condition doesn't match, we remove the statements and the text between the statements.
 
             :param doc: the document to fill
-            :param variables: the variables
+            :param local_variables: the variables
             :return: None
             """
 
-            def computeIf(xFound):
+            def compute_if(local_x_found):
                 """
                 Compute the if statement.
                 """
-                ifStatement = IfStatement(xFound.getString())
-                ifResult = ifStatement.getIfResult(variables[ifStatement.variableName]['value'])
-                if (ifResult == False):
+                if_statement = IfStatement(local_x_found.getString())
+                if_result = if_statement.get_if_result(local_variables[if_statement.variable_name]['value'])
+                if not if_result:
                     # le if n'est pas vérifié => on efface le paragraphe avec le if
-                    text = xFound.getText()
-                    cursor = text.createTextCursorByRange(xFound)
-                    cursor.goLeft(len(ifStatement.ifString), False)
-                    cursor.goRight(len(ifStatement.ifString), True)
-                    if cursor.goRight(1, True) == False:
+                    text = local_x_found.getText()
+                    cursor = text.createTextCursorByRange(local_x_found)
+                    cursor.goLeft(len(if_statement.if_string), False)
+                    cursor.goRight(len(if_statement.if_string), True)
+                    if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endif_found',
-                            f"The statement {ifStatement} has no endif",
-                            dict_of(ifStatement)
+                            f"The statement {if_statement} has no endif",
+                            dict_of(if_statement)
                         )
-                    selectedString = cursor.String
-                    match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
-                    while match == None:
-                        if cursor.goRight(1, True) == False:
+                    selected_string = cursor.String
+                    match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
+                    while match is None:
+                        if not cursor.goRight(1, True):
                             raise errors.TemplateError(
                                 'no_endif_found',
-                                f"The statement {ifStatement} has no endif",
-                                dict_of(ifStatement)
+                                f"The statement {if_statement} has no endif",
+                                dict_of(if_statement)
                             )
-                        selectedString = cursor.String
-                        match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
+                        selected_string = cursor.String
+                        match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
                     cursor.String = ''
-                elif ifResult == True:
+                elif if_result:
                     # the if is verified. We remove the statement and the endif but we keep the content
-                    positionInText = len(ifStatement.ifString)
-                    text = xFound.getText()
-                    cursor = text.createTextCursorByRange(xFound)
-                    if cursor.goRight(1, True) == False:
+                    position_in_text = len(if_statement.if_string)
+                    text = local_x_found.getText()
+                    cursor = text.createTextCursorByRange(local_x_found)
+                    if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endif_found',
-                            f"The statement {ifStatement} has no endif",
-                            dict_of(ifStatement)
+                            f"The statement {if_statement} has no endif",
+                            dict_of(if_statement)
                         )
-                    positionInText = positionInText + 1
-                    selectedString = cursor.String
-                    match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
-                    while match == None:
-                        if cursor.goRight(1, True) == False:
+                    position_in_text = position_in_text + 1
+                    selected_string = cursor.String
+                    match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
+                    while match is None:
+                        if not cursor.goRight(1, True):
                             raise errors.TemplateError(
                                 'no_endif_found',
-                                f"The statement {ifStatement} has no endif",
-                                dict_of(ifStatement)
+                                f"The statement {if_statement} has no endif",
+                                dict_of(if_statement)
                             )
-                        positionInText = positionInText + 1
-                        selectedString = cursor.String
-                        match = re.search(IfStatement.endRegex, selectedString, re.IGNORECASE)
-                    cursor.goLeft(len(match.group(1)),False)
-                    cursor.goRight(len(match.group(1)),True)
-                    positionInText = positionInText - len(match.group(1))
+                        position_in_text = position_in_text + 1
+                        selected_string = cursor.String
+                        match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
+                    cursor.goLeft(len(match.group(1)), False)
+                    cursor.goRight(len(match.group(1)), True)
+                    position_in_text = position_in_text - len(match.group(1))
                     cursor.String = ''
-                    cursor.goLeft(positionInText, False)
-                    cursor.goRight(len(ifStatement.ifString), True)
+                    cursor.goLeft(position_in_text, False)
+                    cursor.goRight(len(if_statement.if_string), True)
                     cursor.String = ''
 
-            # main of ifReplace
+            # main of if_replace
             search = doc.createSearchDescriptor()
-            search.SearchString = IfStatement.startRegex
+            search.SearchString = IfStatement.start_regex
             search.SearchRegularExpression = True
             search.SearchCaseSensitive = False
-            xFound = doc.findFirst(search)
-            while xFound != None:
-                computeIf(xFound)
-                xFound = doc.findNext(xFound.End, search)
+            x_found = doc.findFirst(search)
+            while x_found is not None:
+                compute_if(x_found)
+                x_found = doc.findNext(x_found.End, search)
 
         def text_fill(doc, variable: str, value: str) -> None:
             """
@@ -612,7 +605,7 @@ class Template:
                 dict_of(self.cnx.host, self.cnx.port)
             ) from e
 
-        ifReplace(self.new, variables)
+        if_replace(self.new, variables)
 
         for var, details in sorted(variables.items(), key=lambda s: -len(s[0])):
             if details['type'] == 'text':
@@ -645,7 +638,8 @@ class Template:
 
         url = unohelper.systemPathToFileUrl(path)
 
-        # list of available convert filters : https://help.libreoffice.org/latest/he/text/shared/guide/convertfilters.html
+        # list of available convert filters
+        # cf https://help.libreoffice.org/latest/he/text/shared/guide/convertfilters.html
         formats = {
             "odt": "writer8",
             "pdf": "writer_pdf_Export",

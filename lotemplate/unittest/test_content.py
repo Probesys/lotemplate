@@ -15,6 +15,7 @@ subprocess.call(f'soffice "--accept=socket,host=localhost,port=2002;urp;StarOffi
 sleep(2)
 cnx = ot.Connexion("localhost", "2002")
 
+
 def file_to_dict(file_path: str) -> dict:
     if ot.is_network_based(file_path):
         return json.loads(urllib.request.urlopen(file_path).read())
@@ -22,33 +23,35 @@ def file_to_dict(file_path: str) -> dict:
         with open(file_path) as f:
             return json.loads(f.read())
 
+
 def to_data(file: str):
     return ot.convert_to_datas_template(file_to_dict(file))
 
-def compareFiles(name: str):
-    basePath = 'lotemplate/unittest/files/content'
 
-    def getFilename(ext: str):
-        return basePath+'/'+name+'.'+ext
+def compare_files(name: str):
+    base_path = 'lotemplate/unittest/files/content'
 
-    temp = ot.Template(getFilename('odt'), cnx, True)
-    temp.search_error(to_data(getFilename('json')))
-    temp.fill(file_to_dict(getFilename('json')))
+    def get_filename(ext: str):
+        return base_path + '/' + name + '.' + ext
 
-    if os.path.isfile(getFilename('unittest.txt')):
-        os.remove(getFilename('unittest.txt'))
-    temp.export(getFilename('unittest.txt'), True)
-    temp.close
-    response = filecmp.cmp(getFilename('unittest.txt'), getFilename('expected.txt'))
-    #if os.path.isfile(getFilename('unittest.txt')):
-    #    os.remove(getFilename('unittest.txt'))
+    temp = ot.Template(get_filename('odt'), cnx, True)
+    temp.search_error(to_data(get_filename('json')))
+    temp.fill(file_to_dict(get_filename('json')))
+
+    if os.path.isfile(get_filename('unittest.txt')):
+        os.remove(get_filename('unittest.txt'))
+    temp.export(get_filename('unittest.txt'), True)
+    temp.close()
+    response = filecmp.cmp(get_filename('unittest.txt'), get_filename('expected.txt'))
+    # if os.path.isfile(get_filename('unittest.txt')):
+    #    os.remove(get_filename('unittest.txt'))
     return response
 
 
 class Text(unittest.TestCase):
 
     def test_vars(self):
-        self.assertTrue(compareFiles('text_vars'))
+        self.assertTrue(compare_files('text_vars'))
 
     def test_if(self):
-        self.assertTrue(compareFiles('if'))
+        self.assertTrue(compare_files('if'))
