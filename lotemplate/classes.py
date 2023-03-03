@@ -415,21 +415,11 @@ class Template:
                     cursor = text.createTextCursorByRange(local_x_found)
                     cursor.goLeft(len(if_statement.if_string), False)
                     cursor.goRight(len(if_statement.if_string), True)
-                    if not cursor.goRight(1, True):
-                        raise errors.TemplateError(
-                            'no_endif_found',
-                            f"The statement {if_statement} has no endif",
-                            dict_of(if_statement)
-                        )
+                    cursor.goRight(1, True)
                     selected_string = cursor.String
                     match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
                     while match is None:
-                        if not cursor.goRight(1, True):
-                            raise errors.TemplateError(
-                                'no_endif_found',
-                                f"The statement {if_statement} has no endif",
-                                dict_of(if_statement)
-                            )
+                        cursor.goRight(1, True)
                         selected_string = cursor.String
                         match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
                     cursor.String = ''
@@ -438,22 +428,12 @@ class Template:
                     position_in_text = len(if_statement.if_string)
                     text = local_x_found.getText()
                     cursor = text.createTextCursorByRange(local_x_found)
-                    if not cursor.goRight(1, True):
-                        raise errors.TemplateError(
-                            'no_endif_found',
-                            f"The statement {if_statement} has no endif",
-                            dict_of(if_statement)
-                        )
+                    cursor.goRight(1, True)
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
                     match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
                     while match is None:
-                        if not cursor.goRight(1, True):
-                            raise errors.TemplateError(
-                                'no_endif_found',
-                                f"The statement {if_statement} has no endif",
-                                dict_of(if_statement)
-                            )
+                        cursor.goRight(1, True)
                         position_in_text = position_in_text + 1
                         selected_string = cursor.String
                         match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
