@@ -87,20 +87,17 @@ class IfStatement:
 
     def __init__(self, if_string):
         self.if_string = if_string
-        match = re.search(self.__class__.start_regex, if_string, re.IGNORECASE)
+        match = re.search(self.start_regex, if_string, re.IGNORECASE)
         self.variable_name = match.group(1)
         self.operator = match.group(3)
         self.value = match.group(4)
 
     def get_if_result(self, value):
-        if self.operator == '==' and value == self.value:
-            return True
-        if self.operator == '!=' and value != self.value:
-            return True
-        if self.operator == '==' and value != self.value:
-            return False
-        if self.operator == '!=' and value == self.value:
-            return False
+        if self.operator == '==':
+            return value == self.value
+        if self.operator == '!=':
+            return value != self.value
+        return False
 
 
 class Template:
@@ -237,7 +234,7 @@ class Template:
                         f"The statement {if_statement} has no endif",
                         dict_of(if_statement)
                     )
-                position_in_text = position_in_text + 1
+                position_in_text += 1
                 selected_string = cursor.String
                 match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
                 while match is None:
@@ -434,12 +431,12 @@ class Template:
                     match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
                     while match is None:
                         cursor.goRight(1, True)
-                        position_in_text = position_in_text + 1
+                        position_in_text += 1
                         selected_string = cursor.String
                         match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
                     cursor.goLeft(len(match.group(1)), False)
                     cursor.goRight(len(match.group(1)), True)
-                    position_in_text = position_in_text - len(match.group(1))
+                    position_in_text -= len(match.group(1))
                     cursor.String = ''
                     cursor.goLeft(position_in_text, False)
                     cursor.goRight(len(if_statement.if_string), True)
