@@ -83,7 +83,7 @@ class IfStatement:
     Class representing an if statement in a template libreoffice
     """
     start_regex = r'\[\s*if\s*\$(\w+(\(.+?\))?)\s*(\=\=|\!\=)\s*([\w\-\.\,]+)\s*\]'
-    end_regex = r'(\[\s*endif\s*\])$'
+    end_regex = r'\[\s*endif\s*\]'
 
     def __init__(self, if_string):
         self.if_string = if_string
@@ -434,9 +434,9 @@ class Template:
                         position_in_text += 1
                         selected_string = cursor.String
                         match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-                    cursor.goLeft(len(match.group(1)), False)
-                    cursor.goRight(len(match.group(1)), True)
-                    position_in_text -= len(match.group(1))
+                    cursor.goLeft(len(match.group(0)), False)
+                    cursor.goRight(len(match.group(0)), True)
+                    position_in_text -= len(match.group(0))
                     cursor.String = ''
                     cursor.goLeft(position_in_text, False)
                     cursor.goRight(len(if_statement.if_string), True)
