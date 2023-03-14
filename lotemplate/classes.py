@@ -82,15 +82,40 @@ class IfStatement:
     """
     Class representing an if statement in a template libreoffice
     """
-    start_regex = r'\[\s*if\s*\$(\w+(\(.+?\))?)\s*(\=\=|\!\=)\s*([\w\-\.\,]+)\s*\]'
+    start_regex = r"""
+        \[\s*if\s*          # [if detection
+          \$                # var start with $
+          (\w+              # basic var name
+            (\(             # parsing of fonction var
+              ((?:          # ?: is for non capturing group : the regex inside the parenthesis must be matched but does not create the capturing group
+                \\.|.       # everything that is escaped or every simple char
+              )*?)          # the ? before the ) in order to be not greedy (stop on the first unescaped ")"
+            \))
+          ?)                # the ? before the ) in order to be not greedy (won't go until the last ")")
+          \s*(              # equality
+            \=\=|
+            \!\=
+          )\s*
+          (                 # value is anything, should escape [ and ]
+            (?:
+              \\.|.
+            )*
+          ?)                # not too greedy
+        \s*\]
+    """
+    # remove comments, spaces and newlines
+    start_regex = re.sub(r'#.*', '', start_regex).replace("\n","").replace("\t", "").replace(" ","")
+    # print(start_regex)
+    # \[\s*if\s*\$(\w+(\(((?:\\.|.)*?)\))?)\s*(\=\=|\!\=)\s*((?:\\.|.)*?)\s*\]
+
     end_regex = r'\[\s*endif\s*\]'
 
     def __init__(self, if_string):
         self.if_string = if_string
         match = re.search(self.start_regex, if_string, re.IGNORECASE)
         self.variable_name = match.group(1)
-        self.operator = match.group(3)
-        self.value = match.group(4)
+        self.operator = match.group(4)
+        self.value = match.group(5)
 
     def get_if_result(self, value):
         if self.operator == '==':

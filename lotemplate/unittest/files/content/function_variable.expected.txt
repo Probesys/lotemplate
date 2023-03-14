@@ -3,3 +3,5 @@
 gloubi value
 
 user_value
+
+on va tester plusieurs variables sur la même ligne :  extended value et user_value et une variable simple : valeur simple

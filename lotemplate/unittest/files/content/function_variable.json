@@ -10,5 +10,13 @@
   "user(odoo.test.glou)": {
 		"type": "text",
 		"value": "user_value"
+  },
+  "user($foo\\(bar\\))": {
+		"type": "text",
+		"value": "extended value"
+  },
+  "simple_var": {
+		"type": "text",
+		"value": "valeur simple"
   }
 }

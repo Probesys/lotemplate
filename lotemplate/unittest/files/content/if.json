@@ -10,5 +10,9 @@
   "my_func(toto)": {
 		"type": "text",
 		"value": "my_func_value"
+  },
+  "odoo(status)": {
+    "type": "text",
+    "value": "SARL"
   }
 }
