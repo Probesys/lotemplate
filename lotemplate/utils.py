@@ -268,8 +268,7 @@ def get_file_url(file: str) -> str:
 var_regexes = {
     'image': regex.compile(r'\$\w+'),
     'text': regex.compile(
-        r'\$\w+'
-        r'(?:\((?<arg>(?R)|"[^"]*"|[^$"\s()][^\s()]*)(?:[+ ](?&arg))*\))?'),
+        r'\$(\w+(\(((?:\\.|.)*?)\))?)'),
     'table': regex.compile(
         r'\$\w+'
         r'(?:\((?<arg>(?R)|"[^"]*"|[^$&"\s()][^\s()]*)(?:[+ ](?&arg))*\))?'

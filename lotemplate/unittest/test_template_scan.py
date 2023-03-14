@@ -75,6 +75,12 @@ class Images(unittest.TestCase):
         )
         doc.close()
 
+class Ifs(unittest.TestCase):
+    def test_no_endif(self):
+        with self.assertRaises(ot.errors.TemplateError):
+            (doc := ot.Template("lotemplate/unittest/files/templates/invalid_if_statement.odt", cnx, False)).scan()
+        doc.close()
+
 
 class Tables(unittest.TestCase):
 

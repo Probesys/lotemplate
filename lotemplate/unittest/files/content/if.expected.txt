@@ -1,0 +1,29 @@
+﻿
+Tests of if statements
+
+We check the values with the tutu = oui
+
+
+This paragraph should be displayed (==oui)
+
+
+
+
+
+
+
+This paragraph should be displayed (!= glouglou)
+
+several lines
+
+
+the foo variable
+
+La fonction a bien été prise en compte
+
+End of the test
+
+We need to test 2 if statements on the same line
+
+SARL type of status
+end of file
