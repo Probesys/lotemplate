@@ -152,14 +152,14 @@ class Template:
             )
         self.variables = self.scan(should_close=True) if should_scan else None
 
-    def scan(self, **kargs) -> dict[str: dict[str, Union[str, list[str]]]]:
+    def scan(self, **kwargs) -> dict[str: dict[str, Union[str, list[str]]]]:
         """
         scans the variables contained in the template. Supports text, tables and images
 
         :return: list containing all the variables founded in the template
         """
 
-        should_close = kargs["should_close"] if "should_close" in kargs else False
+        should_close = kwargs.get("should_close", False)
 
         def scan_text(doc) -> dict[str, dict[str, str]]:
             """

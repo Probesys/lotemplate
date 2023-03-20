@@ -34,18 +34,18 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
     :return: the converted dictionary
     """
 
-    def get_type(obj, **kargs) -> str:
+    def get_type(obj, **kwargs) -> str:
         """
         Abstract and jsonify the type of the given object - or the given type
         :param obj: the object or type
-        :param kargs: the keyword-only arguments
+        :param kwargs: the keyword-only arguments
         :Keyword Arguments:
             * *is_type* (``bool``) --
                 precise if obj is already a type or not
         :return: the displayable type
         """
         # Unions non prises en charges
-        if 'is_type' in kargs and kargs['is_type'] is True:
+        if kwargs.get('is_type', False):
             pytype = obj
         else:
             pytype = type(obj) if obj is not None else None
