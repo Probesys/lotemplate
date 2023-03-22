@@ -77,7 +77,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
 
     def check_type(f):
         """
-        A decorator that checks if the arguments are of the right type, following typeints of the function
+        A decorator that checks if the arguments are of the right type, following typehints of the function
 
         :param f: the function to wraps
         :return: the wrapper

@@ -7,7 +7,7 @@ services:
     volumes:
       - ./:/app/
     ports:
-      - 8000:8000
+      - "8000:8000"
     environment:
       - SECRET_KEY=$SECRET_KEY
     command: "gunicorn -w 4 -b 0.0.0.0:8000 app:app"

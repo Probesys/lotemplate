@@ -75,7 +75,7 @@ def directory_route(directory):
         os.rename(f"uploads/{directory}", f"uploads/{new_name}")
         return {'directory': new_name,
                 'old_directory': directory,
-                "message": f"directory {directory} sucessfully renamed in {new_name}"}
+                "message": f"directory {directory} successfully renamed in {new_name}"}
 
 
 @app.route("/<directory>/<file>", methods=['GET', 'PATCH', 'DELETE', 'POST'])

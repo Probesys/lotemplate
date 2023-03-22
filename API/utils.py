@@ -35,7 +35,7 @@ def restart_soffice() -> None:
     :return: None
     """
 
-    clean_tempfiles()
+    clean_temp_files()
     subprocess.call(
         f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
         shell=True
@@ -47,7 +47,7 @@ def restart_soffice() -> None:
         pass
 
 
-def clean_tempfiles():
+def clean_temp_files():
     """
     Deletes all the temporary files created
 
@@ -86,7 +86,7 @@ def delete_file(directory: str, name: str) -> None:
 
 def error_format(exception: Exception, message: str = None) -> dict:
     """
-    put all informations about an error in a dictionary for better error handling when using the API.
+    put all information about an error in a dictionary for better error handling when using the API.
     You can also overwrite the provided error message
 
     :param exception: the exception to format
@@ -107,7 +107,7 @@ def error_format(exception: Exception, message: str = None) -> dict:
 
 def error_sim(exception: str, code: str, message: str, variables=dict({})) -> dict:
     """
-    Simulate an error catch, ans return a error-formatted dict in the same way as error_format does
+    Simulate an error catch, and return an error-formatted dict in the same way as error_format does
 
     :param exception: the exception name
     :param code: the exception id
@@ -119,14 +119,14 @@ def error_sim(exception: str, code: str, message: str, variables=dict({})) -> di
     return {'error': exception, 'code': code, 'message': message, 'variables': variables}
 
 
-def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[dict, int], dict]:
+def save_file(directory: str, f, name: str, error_caught=False) -> Union[tuple[dict, int], dict]:
     """
     upload a template file, and scan it.
 
     :param f: the file to save
     :param directory: the directory of the file
     :param name: the name of the file
-    :param error_catched: specify if an error has been catched
+    :param error_caught: specify if an error has been caught
     :return: a json, with the filename under which it was saved (key 'file'),
     and the scanned variables present in the template (key 'variables')
     """
@@ -152,7 +152,7 @@ def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[
     except ot.errors.UnoException as e:
         delete_file(directory, name)
         restart_soffice()
-        if error_catched:
+        if error_caught:
             return (
                 error_format(e, "Internal server error on file opening. Please checks the README file, section "
                                 "'Unsolvable problems' for more informations."),
@@ -166,14 +166,14 @@ def save_file(directory: str, f, name: str, error_catched=False) -> Union[tuple[
     return {'file': name, 'message': "Successfully uploaded", 'variables': values}
 
 
-def scan_file(directory: str, file: str, error_catched=False) -> Union[tuple[dict, int], dict]:
+def scan_file(directory: str, file: str, error_caught=False) -> Union[tuple[dict, int], dict]:
     """
     scans the specified file
 
     :param directory: the directory where the file is
     :param file: the file to scan
-    :param error_catched: specify if an error was already catched
-    :return: a json and optionaly an int which represent the status code to return
+    :param error_caught: specify if an error was already caught
+    :return: a json and optionally an int which represent the status code to return
     """
 
     try:
@@ -181,7 +181,7 @@ def scan_file(directory: str, file: str, error_catched=False) -> Union[tuple[dic
             variables = temp.variables
     except ot.errors.UnoException as e:
         restart_soffice()
-        if error_catched:
+        if error_caught:
             return (
                 error_format(e, "Internal server error on file opening. Please checks the README file, section "
                                 "'Unsolvable problems' for more informations."),
@@ -192,15 +192,15 @@ def scan_file(directory: str, file: str, error_catched=False) -> Union[tuple[dic
     return {'file': file, 'message': "Successfully scanned", 'variables': variables}
 
 
-def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tuple[dict, int], dict, Response]:
+def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tuple[dict, int], dict, Response]:
     """
     fill the specified file
 
     :param directory: the directory where the file is
     :param file: the file to fill
     :param json: the json to fill the document with
-    :param error_catched: specify if an error was already catched
-    :return: a json and optionaly an int which represent the status code to return
+    :param error_caught: specify if an error was already caught
+    :return: a json and optionally an int which represent the status code to return
     """
 
     if type(json) != list or not json:
@@ -239,7 +239,7 @@ def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tup
                 return send_file('exports/export.zip', 'export.zip')
     except ot.errors.UnoException as e:
         restart_soffice()
-        if error_catched:
+        if error_caught:
             return (
                 error_format(e, "Internal server error on file opening. Please checks the README file, section "
                                 "'Unsolvable problems' for more informations."),
@@ -249,4 +249,4 @@ def fill_file(directory: str, file: str, json, error_catched=False) -> Union[tup
             return fill_file(directory, file, json, True)
 
 
-clean_tempfiles()
+clean_temp_files()
