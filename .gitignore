@@ -12,3 +12,4 @@ uploads/
 .~lock.*#
 exports/
 /config*
+/output*.*

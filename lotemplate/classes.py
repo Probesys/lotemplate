@@ -137,7 +137,7 @@ class Template:
             self.close()
             raise errors.UnoException(
                 'connection_closed',
-                f"The previously etablished connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
+                f"The previously established connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
                 f"has been closed, or ran into an unknown error. Please restart the soffice process, and retry.",
                 dict_of(cnx.host, cnx.port)
             ) from e
@@ -445,7 +445,7 @@ class Template:
         except RuntimeException as e:
             raise errors.UnoException(
                 'connection_closed',
-                f"The previously etablished connection with the soffice process on "
+                f"The previously established connection with the soffice process on "
                 f"'{self.cnx.host}:{self.cnx.port}' has been closed, or ran into an unknown error. "
                 f"Please restart the soffice process, and retry.",
                 dict_of(self.cnx.host, self.cnx.port)

@@ -9,6 +9,6 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
 	&& useradd -d /app python
 COPY . /app
 WORKDIR /app
-Run chown python /app -R \
+RUN chown python /app -R \
        && pip install -r requirements.txt
 USER python
