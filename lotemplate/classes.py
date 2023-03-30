@@ -92,21 +92,28 @@ class IfStatement:
               )*?)          # the ? before the ) in order to be not greedy (stop on the first unescaped ")"
             \))
           ?)                # the ? before the ) in order to be not greedy (won't go until the last ")")
-          \s*(              # equality
-            \=\=|
-            \!\=
-          )\s*
-          (                 # value is anything, should escape [ and ]
-            (?:
-              \\.|.
-            )*
-          ?)                # not too greedy
+          \s*
+          (                 # catch whether
+              (?:           # for syntax == var or != var
+                  (              # equality
+                    \=\=|
+                    \!\=
+                  )\s*
+                  (                 # value is anything, should escape [ and ]
+                    (?:
+                      \\.|.
+                    )*
+                  ?)                # not too greedy
+              )
+              |
+              (IS_EMPTY|IS_NOT_EMPTY) # for syntax [if $toto IS_EMPTY] or [if $toto IS_NOT_EMPTY]
+          )
         \s*\]
     """
     # remove comments, spaces and newlines
     start_regex = re.sub(r'#.*', '', start_regex).replace("\n","").replace("\t", "").replace(" ","")
     # print(start_regex)
-    # \[\s*if\s*\$(\w+(\(((?:\\.|.)*?)\))?)\s*(\=\=|\!\=)\s*((?:\\.|.)*?)\s*\]
+    # \[\s*if\s*\$(\w+(\(((?:\\.|.)*?)\))?)\s*((?:(\=\=|\!\=)\s*((?:\\.|.)*?))|(IS_EMPTY|IS_NOT_EMPTY))\s*\]
 
     end_regex = r'\[\s*endif\s*\]'
 
@@ -114,14 +121,23 @@ class IfStatement:
         self.if_string = if_string
         match = re.search(self.start_regex, if_string, re.IGNORECASE)
         self.variable_name = match.group(1)
-        self.operator = match.group(4)
-        self.value = match.group(5)
+        if match.group(5) is not None:
+            # syntaxes like [if $foo == bar] or [if $foo != bar]
+            self.operator = match.group(5)
+            self.value = match.group(6)
+        else:
+            # syntaxes like [if $foo IS_EMPTY] or [if $foo IS_NOT_EMPTY]
+            self.operator = match.group(7)
 
     def get_if_result(self, value):
         if self.operator == '==':
             return value == self.value
         if self.operator == '!=':
             return value != self.value
+        if self.operator == 'IS_EMPTY':
+            return re.search(r'^[\s\t\n]*$', value) is not None
+        if self.operator == 'IS_NOT_EMPTY':
+            return re.search(r'^[\s\t\n]*$', value) is None
         return False
 
 
