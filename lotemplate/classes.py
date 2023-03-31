@@ -24,6 +24,8 @@ from com.sun.star.lang import IllegalArgumentException, DisposedException
 from com.sun.star.connection import NoConnectException
 from com.sun.star.uno import RuntimeException
 from com.sun.star.awt import Size
+from com.sun.star.text.ControlCharacter import PARAGRAPH_BREAK
+from com.sun.star.style.BreakType import PAGE_AFTER
 
 from . import errors
 from .utils import *
@@ -523,3 +525,19 @@ class Template:
             os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
         except FileNotFoundError:
             pass
+
+    def page_break(self) -> None:
+        """
+        Add a page break to the document
+
+        :return: None
+        """
+
+        if not self.new:
+            return
+
+        cursor = self.new.Text.createTextCursor()
+        cursor.gotoEnd(False)
+        cursor.collapseToEnd()
+        cursor.BreakType = PAGE_AFTER
+        self.new.Text.insertControlCharacter(cursor, PARAGRAPH_BREAK, False)

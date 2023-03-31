@@ -213,18 +213,29 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
 
             for elem in json:
 
-                if (type(elem) != dict or not elem.get("name") or not elem["name"] or type(elem["name"]) != str or
-                        elem.get("variables") is None or len(elem) > 2):
+                length = len(elem)
+                is_name_present = type(elem.get("name")) is str
+                is_variables_present = type(elem.get("variables")) is dict
+                is_page_break_present = type(elem.get("page_break")) is bool
+
+                if (
+                        not is_name_present
+                        or not is_variables_present
+                        or ((length > 2 and not is_page_break_present) or (length > 3 and is_page_break_present))
+                ):
                     return error_sim(
                         "JsonSyntaxError",
                         'api_invalid_instance_syntax',
                         "Each instance of the array in the json should be an object containing only 'name' - "
-                        "a non-empty string, and 'variables' - a non-empty object"), 415
+                        "a non-empty string, 'variables' - a non-empty object, and, optionally, 'page_break' - "
+                        "a boolean."), 415
 
                 try:
                     json_variables = ot.convert_to_datas_template(elem["variables"])
                     temp.search_error(json_variables)
                     temp.fill(elem["variables"])
+                    if elem.get('page_break', False):
+                        temp.page_break()
                     exports.append(temp.export("exports/" + elem["name"], should_replace=(
                         True if len(json) == 1 else False)))
                 except Exception as e:
