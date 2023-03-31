@@ -196,7 +196,7 @@ Add the dynamic variables in the last row of the table, exactly like text variab
 
 You can use if statement in order to display or to hide a part of your document.
 
-There is two possible operators : `==` or `!=`
+There is 4 possible operators : `==`, `!=`, `IS_EMPTY`, `IS_NOT_EMPTY`
 
 ```
 [if $my_var == my_value]
@@ -205,6 +205,14 @@ here you have your document
 
 [if $my_var != my_value]
 here you have your document
+[endif]
+
+[if $my_var IS_EMPTY]
+This part will be displayed if my_var is empty (empty means empty or only spaces, tabs or newlines)
+[endif]
+
+[if $my_var IS_NOT_EMPTY]
+This part will be displayed if my_var is empty (empty means empty or only spaces, tabs or newlines)
 [endif]
 ```
 
