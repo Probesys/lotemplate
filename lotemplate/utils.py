@@ -193,6 +193,17 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
         """
         return ""
 
+    @check_type
+    def get_cleaned_array(var_name: str, var_value: list) -> list:
+        """
+        clean a list variable
+
+        :param var_name: the variable name
+        :param var_value: the text value
+        :return: an empty list
+        """
+        return []
+
     json = deepcopy(json)
 
     template = {}

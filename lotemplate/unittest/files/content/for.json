@@ -1,0 +1,17 @@
+{
+  "tutu": {
+    "type": "array",
+    "value": [
+      {
+        "firstName": "toto",
+        "lastName": "string",
+        "address": {
+          "street1": "8 rue de la paix",
+          "street2": "",
+          "city": "Paris",
+          "state": "Ile de France"
+        }
+      }
+    ]
+  }
+}

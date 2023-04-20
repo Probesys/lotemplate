@@ -111,7 +111,7 @@ class IfStatement:
         \s*\]
     """
     # remove comments, spaces and newlines
-    start_regex = re.sub(r'#.*', '', start_regex).replace("\n","").replace("\t", "").replace(" ","")
+    start_regex = re.sub(r'#.*', '', start_regex).replace("\n", "").replace("\t", "").replace(" ", "")
     # print(start_regex)
     # \[\s*if\s*\$(\w+(\(((?:\\.|.)*?)\))?)\s*((?:(\=\=|\!\=)\s*((?:\\.|.)*?))|(IS_EMPTY|IS_NOT_EMPTY))\s*\]
 
@@ -140,6 +140,45 @@ class IfStatement:
             return re.search(r'^[\s\t\n]*$', value) is None
         return False
 
+
+class ForStatement:
+    """
+    Class representing an for statement in a template libreoffice
+    """
+    start_regex = r"""
+        \[\s*for\s*          # [if detection
+          \$                # var start with $
+          (\w+              # basic var name
+            (\(             # parsing of fonction var
+              ((?:          # ?: is for non capturing group : the regex inside the parenthesis must be matched but does not create the capturing group
+                \\.|.       # everything that is escaped or every simple char
+              )*?)          # the ? before the ) in order to be not greedy (stop on the first unescaped ")"
+            \))
+          ?)                # the ? before the ) in order to be not greedy (won't go until the last ")")
+        \s*\]
+    """
+    # remove comments, spaces and newlines
+    start_regex = re.sub(r'#.*', '', start_regex).replace("\n", "").replace("\t", "").replace(" ", "")
+    # print(start_regex)
+    # \[\s*for\s*\$(\w+(\(((?:\\.|.)*?)\))?)\s*\]
+    foritem_regex = r"""
+        \[\s*foritem\s*          # [foritem detection
+            (
+                \w+              # simple var of type abc
+                (?:\.\w+)*       # composite var name like abc.def
+            )
+        \s*\]
+    """
+    # print(foritem_regex)
+    # \[\s*foritem\s*((\w+)(?:\.\w+)*)\s*\]
+    forindex_regex = r'\[\s*forindex\s*\]'
+
+    end_regex = r'\[\s*endfor\s*\]'
+
+    def __init__(self, for_string):
+        self.for_string = for_string
+        match = re.search(self.start_regex, for_string, re.IGNORECASE)
+        self.variable_name = match.group(1)
 
 class Template:
 
@@ -237,7 +276,9 @@ class Template:
 
             matches = var_regexes['text'].finditer(raw_string)
             plain_vars = {
-                var[0][1:]: {'type': 'text', 'value': ''} for var in matches}
+                # var[0][1:] to remove the $ at the beginning of the var
+                var[0][1:]: {'type': 'text', 'value': ''} for var in matches
+            }
 
             text_fields_vars = {}
             for page in doc.getDrawPages():
@@ -251,6 +292,10 @@ class Template:
 
             for var in scan_table(doc, get_list=True):
                 if '$' + var in plain_vars:
+                    del plain_vars[var]
+
+            for var in scan_for(doc):
+                if var in plain_vars:
                     del plain_vars[var]
 
             return plain_vars | text_fields_vars
@@ -297,6 +342,57 @@ class Template:
             while x_found is not None:
                 scan_single_if(x_found)
                 x_found = doc.findNext(x_found.End, search)
+
+        def scan_for(doc) -> dict:
+            """
+            scan for statement. return list of vars.
+
+            We verify that
+            - there is and endfor for each for statement
+            - vars sent are lists
+            """
+
+            def scan_single_for(local_x_found) -> str:
+                """
+                scan for a single for statement
+                """
+                for_statement = ForStatement(local_x_found.getString())
+                position_in_text = len(for_statement.for_string)
+                text = local_x_found.getText()
+                cursor = text.createTextCursorByRange(local_x_found)
+                if not cursor.goRight(1, True):
+                    raise errors.TemplateError(
+                        'no_endfor_found',
+                        f"The statement {for_statement} has no endfor",
+                        dict_of(for_statement)
+                    )
+                position_in_text += 1
+                selected_string = cursor.String
+                match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
+                while match is None:
+                    if not cursor.goRight(1, True):
+                        raise errors.TemplateError(
+                            'no_endfor_found',
+                            f"The statement {for_statement} has no endfor",
+                            dict_of(for_statement)
+                        )
+                    position_in_text = position_in_text + 1
+                    selected_string = cursor.String
+                    match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
+                return for_statement.variable_name
+
+            search = doc.createSearchDescriptor()
+            search.SearchString = ForStatement.start_regex
+            search.SearchRegularExpression = True
+            search.SearchCaseSensitive = False
+            x_found = doc.findFirst(search)
+
+            for_vars = {}
+            while x_found is not None:
+                variable_name = scan_single_for(x_found)
+                for_vars[variable_name] = {'type': 'array', 'value': []}
+                x_found = doc.findNext(x_found.End, search)
+            return for_vars
 
         def scan_table(doc, get_list=False) -> Union[dict, list]:
             """
@@ -360,8 +456,9 @@ class Template:
         scan_if(self.doc)
         tables = scan_table(self.doc)
         images = scan_image(self.doc)
+        fors = scan_for(self.doc)
 
-        variables_list = list(texts.keys()) + list(tables.keys()) + list(images.keys())
+        variables_list = list(texts.keys()) + list(tables.keys()) + list(images.keys()) + list(fors.keys())
         duplicates = [variable for variable in variables_list if variables_list.count(variable) > 1]
 
         if duplicates:
@@ -376,7 +473,7 @@ class Template:
                 dict_of(first_type, second_type, variable=duplicates[0])
             )
 
-        return texts | tables | images
+        return texts | tables | images | fors
 
     def search_error(self, json_vars: dict[str, dict[str, Union[str, list[str]]]]) -> None:
         """
@@ -428,6 +525,67 @@ class Template:
         :param variables: the values to fill in the template
         :return: None
         """
+
+        def for_replace(doc, local_variables: dict[str, dict[str, Union[str, list[str]]]]) -> None:
+            """
+            Parse statements like [for $myvar]...[endfor]
+
+            We replace the for and endfor statements with the text between them, for each value in the variable.
+
+            :param doc: the document to fill
+            :param local_variables: the variables
+            :return: None
+            """
+
+            def compute_for(doc, local_x_found):
+                """
+                for one single for statement, cut and paste the content of the for
+                :param local_x_found:
+                :return:
+                """
+                for_statement = ForStatement(local_x_found.getString())
+                vars = local_variables[for_statement.variable_name]['value']
+
+                # remove the for statement from the odt
+                text = local_x_found.getText()
+                cursor = text.createTextCursorByRange(local_x_found)
+                cursor.goLeft(len(for_statement.for_string), False)
+                cursor.goRight(len(for_statement.for_string), True)
+                cursor.String = ''
+
+                # select content between for and endfor (including endfor)
+                cursor.goRight(1, True)
+                selected_string = cursor.String
+                match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
+                while match is None:
+                    cursor.goRight(1, True)
+                    selected_string = cursor.String
+                    match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
+
+                # remove the endfor from the cursor selection
+                cursor.goLeft(len(match.group(0)), True)
+
+                # copy the content between for and endfor
+
+                # loop on values of the variable
+
+                    # replace inside the selected content selected
+
+                    # paste the content
+
+                    # select the pasted content
+
+                # remove endfor
+
+            # main of for_replace
+            search = doc.createSearchDescriptor()
+            search.SearchString = ForStatement.start_regex
+            search.SearchRegularExpression = True
+            search.SearchCaseSensitive = False
+            x_found = doc.findFirst(search)
+            while x_found is not None:
+                compute_for(doc, x_found)
+                x_found = doc.findNext(x_found.End, search)
 
         def if_replace(doc, local_variables: dict[str, dict[str, Union[str, list[str]]]]) -> None:
             """
@@ -622,6 +780,8 @@ class Template:
                 f"Please restart the soffice process, and retry.",
                 dict_of(self.cnx.host, self.cnx.port)
             ) from e
+
+        for_replace(self.new, variables)
 
         if_replace(self.new, variables)
 

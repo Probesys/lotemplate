@@ -1,0 +1,8 @@
+﻿
+Tests of for statements
+
+
+[for oui]
+my paragraph
+[endfor]
+
