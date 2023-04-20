@@ -5,7 +5,7 @@ Copyright (C) 2023 Probesys
 LOTemplate Filler
 ~~~~~~~~~~~~~~~~~
 
-A module for manipulate and fill libreoffice writter-like documents with given variables
+A module for manipulate and fill libreoffice writer-like documents with given variables
 Contains the two used classes, errors raised and some utils fonctions
 """
 
