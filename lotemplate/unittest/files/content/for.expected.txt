@@ -1,0 +1,24 @@
+﻿
+Tests of for statements
+
+
+Associate number 0
+first name : perso 1 
+last name escaped by default string 1
+last name escaped html string 1
+last name not escaped string 1
+Address : 
+8 rue de la paix
+75008 Paris
+
+Associate number 1
+first name : perso 2 
+last name escaped by default lastname with < and >
+last name escaped html lastname with &lt; and &gt;
+last name not escaped lastname with < and >
+Address : 
+12 avenue Jean Jaurès
+38000 Grenoble
+
+
+End of file
