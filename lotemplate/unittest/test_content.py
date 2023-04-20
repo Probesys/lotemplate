@@ -54,6 +54,9 @@ def compare_files(name: str):
 
 class Text(unittest.TestCase):
 
+    def test_html(self):
+        self.assertTrue(compare_files('html'))
+
     def test_for(self):
         self.assertTrue(compare_files('for'))
 

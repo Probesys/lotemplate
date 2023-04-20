@@ -186,6 +186,15 @@ class ForStatement:
         match = re.search(self.start_regex, for_string, re.IGNORECASE)
         self.variable_name = match.group(1)
 
+class HtmlStatement:
+    """
+    Class representing an html statement in a template libreoffice
+    """
+    start_regex = r'\[\s*html\s*\]'
+    end_regex = r'\[\s*endhtml\s*\]'
+    def __init__(self, html_string):
+        self.html_string = html_string
+
 
 class Template:
 
@@ -401,6 +410,52 @@ class Template:
                 x_found = doc.findNext(x_found.End, search)
             return for_vars
 
+        def scan_html(doc) -> None:
+            """
+            scan html statement.
+
+            We verify that
+            - there is and endhtml for each html statement
+            """
+
+            def scan_single_html(local_x_found) -> None:
+                """
+                scan for a single for statement
+                """
+                html_statement = HtmlStatement(local_x_found.getString())
+                position_in_text = len(html_statement.html_string)
+                text = local_x_found.getText()
+                cursor = text.createTextCursorByRange(local_x_found)
+                if not cursor.goRight(1, True):
+                    raise errors.TemplateError(
+                        'no_endhtml_found',
+                        f"The statement {html_statement} has no endfor",
+                        dict_of(html_statement)
+                    )
+                position_in_text += 1
+                selected_string = cursor.String
+                match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
+                while match is None:
+                    if not cursor.goRight(1, True):
+                        raise errors.TemplateError(
+                            'no_endhtml_found',
+                            f"The statement {html_statement} has no endfor",
+                            dict_of(html_statement)
+                        )
+                    position_in_text = position_in_text + 1
+                    selected_string = cursor.String
+                    match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
+
+            search = doc.createSearchDescriptor()
+            search.SearchString = HtmlStatement.start_regex
+            search.SearchRegularExpression = True
+            search.SearchCaseSensitive = False
+            x_found = doc.findFirst(search)
+
+            while x_found is not None:
+                scan_single_html(x_found)
+                x_found = doc.findNext(x_found.End, search)
+
         def scan_table(doc, get_list=False) -> Union[dict, list]:
             """
             scan for tables in the given doc
@@ -533,6 +588,45 @@ class Template:
         :return: None
         """
 
+        def html_replace(doc) -> None:
+            """
+            Replace the content inside [html] and [endhtml] with a pasted html code inside the doc
+            """
+
+            def compute_html(doc, local_x_found):
+                html_statement = HtmlStatement(local_x_found.getString())
+                text = local_x_found.getText()
+                cursor = text.createTextCursorByRange(local_x_found)
+                cursor.goRight(1, True)
+                selected_string = cursor.String
+                match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
+                while match is None:
+                    cursor.goRight(1, True)
+                    selected_string = cursor.String
+                    match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
+                cursor.String = ''
+                html_string = re.sub(HtmlStatement.end_regex, '', selected_string, flags=re.IGNORECASE)
+                html_string = re.sub(HtmlStatement.start_regex, '', html_string, flags=re.IGNORECASE)
+                input_stream = self.cnx.ctx.ServiceManager.createInstanceWithContext("com.sun.star.io.SequenceInputStream", self.cnx.ctx)
+                input_stream.initialize((uno.ByteSequence(html_string.encode()),))
+                prop1 = PropertyValue()
+                prop1.Name = "FilterName"
+                prop1.Value = "HTML (StarWriter)"
+                prop2 = PropertyValue()
+                prop2.Name = "InputStream"
+                prop2.Value = input_stream
+                cursor.insertDocumentFromURL("private:stream", (prop1, prop2))
+
+            # main of for_replace
+            search = doc.createSearchDescriptor()
+            search.SearchString = HtmlStatement.start_regex
+            search.SearchRegularExpression = True
+            search.SearchCaseSensitive = False
+            x_found = doc.findFirst(search)
+            while x_found is not None:
+                compute_html(doc, x_found)
+                x_found = doc.findNext(x_found.End, search)
+
         def for_replace(doc, local_variables: dict[str, dict[str, Union[str, list[str]]]]) -> None:
             """
             Parse statements like [for $myvar]...[endfor]
@@ -586,10 +680,8 @@ class Template:
                 cursor.goLeft(len(match.group(0)), True)
                 template = cursor.String
                 cursor.String = ''
-                cursor.goRight(len(template), True)
+                cursor.goRight(len(match.group(0)), True)
                 cursor.String = ''
-
-                # copy the content between for and endfor
 
                 # loop on values of the variable
                 counter = 0
@@ -622,8 +714,6 @@ class Template:
 
                     # counter increment
                     counter += 1
-
-                # remove endfor
 
             # main of for_replace
             search = doc.createSearchDescriptor()
@@ -829,6 +919,9 @@ class Template:
                 dict_of(self.cnx.host, self.cnx.port)
             ) from e
 
+        ###
+        ### main calls
+        ###
         for_replace(self.new, variables)
 
         if_replace(self.new, variables)
@@ -838,6 +931,9 @@ class Template:
                 text_fill(self.new, "$" + var, details['value'])
             elif details['type'] == 'image':
                 image_fill(self.new, self.cnx.graphic_provider, "$" + var, details['value'])
+
+        html_replace(self.new)
+
         tables_fill(self.new, '$', '&')
 
     def export(self, name: str, should_replace=False) -> Union[str, None]:
