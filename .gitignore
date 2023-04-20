@@ -15,3 +15,4 @@ exports/
 /lotemplate/unittest/files/content/*.unittest.txt
 /lotemplate/unittest/files/content/*.unittest.odt
 /venv
+/output*.*
