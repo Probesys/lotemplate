@@ -218,6 +218,71 @@ This part will be displayed if my_var is empty (empty means empty or only spaces
 
 limitation : you can not have an if inside another if.
 
+### for statement
+
+You can use for statement in order to display a part of your
+document multiple times.
+
+WARNING : the for system loses the formating of the template. If you want a
+specific formating, you have to put it in an HTML statement.
+
+You have to send an array in the json file with a dict inside the array
+
+```json
+{
+  "tutu": {
+    "type": "array",
+    "value": [
+      {
+        "firstName": "perso 1",
+        "lastName": "string 1",
+        "address": {
+          "street1": "8 rue de la paix",
+          "street2": "",
+          "zip": "75008",
+          "city": "Paris",
+          "state": "Ile de France"
+        }
+      },
+      {
+        "firstName": "perso 2",
+        "lastName": "lastname with < and >",
+        "address": {
+          "street1": "12 avenue Jean Jaurès",
+          "street2": "",
+          "zip": "38000",
+          "city": "Grenoble",
+          "state": "Isère"
+        }
+      }
+    ]
+  }
+}
+```
+
+Then in your template file you can use the for like this :
+
+```
+Tests of for statements
+
+[for $tutu]
+Associate number [forindex]
+first name : [foritem firstName] 
+last name escaped by default [foritem lastName]
+last name escaped html [foritem lastName escape_html]
+last name not escaped [foritem lastName raw]
+Address : 
+[foritem address.street1]
+[foritem address.zip] [foritem address.city]
+[endfor]
+```
+
+* `[forindex]` : this is a counter beginning at 0 indicating the iteration count.
+* `[foritem firstName]` : variable firstName of the current iteration.
+* `[foritem lastName escape_html]` : variable lastName of the current iteration escaped by html.
+* `[foritem lastName raw]` : variable lastName of the current iteration not escaped.
+* `[foritem address.street1]` : variable address.street1 of the current iteration when you have a hierarchy
+
 ## Supported formats
 
 ### Import

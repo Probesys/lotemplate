@@ -167,10 +167,14 @@ class ForStatement:
                 \w+              # simple var of type abc
                 (?:\.\w+)*       # composite var name like abc.def
             )
+            (?:\s+(escape_html|raw))?   # option pour escaper le contenu de la variable
         \s*\]
     """
+    foritem_regex = re.sub(r'#.*', '', foritem_regex).replace("\n", "").replace("\t", "").replace(" ", "")
     # print(foritem_regex)
     # \[\s*foritem\s*((\w+)(?:\.\w+)*)\s*\]
+
+    # [forindex] is replaced by the counter of the loop. A string starting at 0
     forindex_regex = r'\[\s*forindex\s*\]'
 
     end_regex = r'\[\s*endfor\s*\]'
@@ -179,6 +183,7 @@ class ForStatement:
         self.for_string = for_string
         match = re.search(self.start_regex, for_string, re.IGNORECASE)
         self.variable_name = match.group(1)
+
 
 class Template:
 
@@ -543,8 +548,21 @@ class Template:
                 :param local_x_found:
                 :return:
                 """
+
+                def escape_html(s):
+                    """
+                    Replace special characters "&", "<" and ">" to HTML-safe sequences.
+                    If the optional flag quote is true, the quotation mark character (")
+                    is also translated.
+                    """
+                    s = s.replace("&", "&amp;")  # Must be done first!
+                    s = s.replace("<", "&lt;")
+                    s = s.replace(">", "&gt;")
+                    s = s.replace('"', "&quot;")
+                    return s
+
                 for_statement = ForStatement(local_x_found.getString())
-                vars = local_variables[for_statement.variable_name]['value']
+                foritem_vars = local_variables[for_statement.variable_name]['value']
 
                 # remove the for statement from the odt
                 text = local_x_found.getText()
@@ -564,16 +582,44 @@ class Template:
 
                 # remove the endfor from the cursor selection
                 cursor.goLeft(len(match.group(0)), True)
+                template = cursor.String
+                cursor.String = ''
+                cursor.goRight(len(template), True)
+                cursor.String = ''
 
                 # copy the content between for and endfor
 
                 # loop on values of the variable
+                counter = 0
+                for foritem_var in foritem_vars:
+                    # search [forindex] and remplace by my counter
+                    content = re.sub(ForStatement.forindex_regex, str(counter), template, flags=re.IGNORECASE)
 
                     # replace inside the selected content selected
+                    for match in re.finditer(ForStatement.foritem_regex, content, re.IGNORECASE):
+                        # get the variable string
+                        var_str = match.group(1)
+                        # get the escaping
+                        escaping = 'raw'
+                        if match.group(2) is not None:
+                            escaping = match.group(2)
+                        # get separate the var_name by "." to get the value in the dict
+                        var_name_hierarchy = var_str.split('.')
+                        # get the variable value from the hierarchy
+                        value = foritem_var
+                        for var_name in var_name_hierarchy:
+                            value = value[var_name]
+                        # escape the value
+                        if escaping == 'escape_html':
+                            value = escape_html(value)
+                        # replace the variable by its value
+                        content = content.replace(match.group(0), value)
 
                     # paste the content
+                    text.insertString(cursor, content, False)
 
-                    # select the pasted content
+                    # counter increment
+                    counter += 1
 
                 # remove endfor
 
