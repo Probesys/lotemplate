@@ -97,13 +97,14 @@ def error_format(exception: Exception, message: str = None) -> dict:
     # I get more info on the exception
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    exception_message = str(exception)+' ; '+exc_type.__name__ + " in " + fname + " at line " + str(exc_tb.tb_lineno)
 
     formatted = (
         {
             'error': type(exception).__name__,
             'code': exception.code if isinstance(exception, ot.errors.LotemplateError) else type(exception).__name__,
             # 'message': message or str(exception),
-            'message': message or exc_type.__name__ + " in " + fname + " at line " + str(exc_tb.tb_lineno),
+            'message': message or exception_message,
             'variables': exception.infos if isinstance(exception, ot.errors.LotemplateError) else {}
         }
     )
