@@ -282,10 +282,13 @@ class Template:
             raw_string = doc.getText().getString()
 
             matches = var_regexes['text'].finditer(raw_string)
-            plain_vars = {
-                # var[0][1:] to remove the $ at the beginning of the var
-                var[0][1:]: {'type': 'text', 'value': ''} for var in matches
-            }
+            plain_vars = {}
+            for var in matches:
+                key_name = var[0][1:]
+                # add to plain_vars if it doesn't matche ForStatement.foritem_regex
+                my_match = re.match(ForStatement.forindex_regex, key_name)
+                if not re.search(ForStatement.forindex_regex, key_name, re.IGNORECASE):
+                    plain_vars[key_name] = {'type': 'text', 'value': ''}
 
             text_fields_vars = {}
             for page in doc.getDrawPages():
