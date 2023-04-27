@@ -54,6 +54,12 @@ class Text(unittest.TestCase):
         )
         doc.close()
 
+    def test_for_variable(self):
+        self.assertEqual(
+            {"tutu": {"type": "array", "value": []}},
+            (doc := ot.Template("lotemplate/unittest/files/templates/for.odt", cnx, False)).scan()
+        )
+        doc.close()
 
 class Images(unittest.TestCase):
 

@@ -710,7 +710,7 @@ class Template:
                         if escaping == 'escape_html':
                             value = escape_html(value)
                         # replace the variable by its value
-                        content = content.replace(match.group(0), value)
+                        content = content.replace(match.group(0), str(value))
 
                     # paste the content
                     text.insertString(cursor, content, False)
