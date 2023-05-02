@@ -337,7 +337,7 @@ class Template:
                     raise errors.TemplateError(
                         'no_endif_found',
                         f"The statement {if_statement.if_string} has no endif",
-                        dict_of(if_statement)
+                        dict_of(if_statement.if_string)
                     )
                 position_in_text += 1
                 selected_string = cursor.String
@@ -347,7 +347,7 @@ class Template:
                         raise errors.TemplateError(
                             'no_endif_found',
                             f"The statement {if_statement.if_string} has no endif",
-                            dict_of(if_statement)
+                            dict_of(if_statement.if_string)
                         )
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
@@ -383,7 +383,7 @@ class Template:
                     raise errors.TemplateError(
                         'no_endfor_found',
                         f"The statement {for_statement.for_string} has no endfor",
-                        dict_of(for_statement)
+                        dict_of(for_statement.for_string)
                     )
                 position_in_text += 1
                 selected_string = cursor.String
@@ -393,7 +393,7 @@ class Template:
                         raise errors.TemplateError(
                             'no_endfor_found',
                             f"The statement {for_statement.for_string} has no endfor",
-                            dict_of(for_statement)
+                            dict_of(for_statement.for_string)
                         )
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
@@ -433,7 +433,7 @@ class Template:
                     raise errors.TemplateError(
                         'no_endhtml_found',
                         f"The statement {html_statement.html_string} has no endhtml",
-                        dict_of(html_statement)
+                        dict_of(html_statement.html_string)
                     )
                 position_in_text += 1
                 selected_string = cursor.String
@@ -443,7 +443,7 @@ class Template:
                         raise errors.TemplateError(
                             'no_endhtml_found',
                             f"The statement {html_statement.html_string} has no endhtml",
-                            dict_of(html_statement)
+                            dict_of(html_statement.html_string)
                         )
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
