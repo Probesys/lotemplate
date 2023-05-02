@@ -336,7 +336,7 @@ class Template:
                 if not cursor.goRight(1, True):
                     raise errors.TemplateError(
                         'no_endif_found',
-                        f"The statement {if_statement} has no endif",
+                        f"The statement {if_statement.if_string} has no endif",
                         dict_of(if_statement)
                     )
                 position_in_text += 1
@@ -346,7 +346,7 @@ class Template:
                     if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endif_found',
-                            f"The statement {if_statement} has no endif",
+                            f"The statement {if_statement.if_string} has no endif",
                             dict_of(if_statement)
                         )
                     position_in_text = position_in_text + 1
@@ -382,7 +382,7 @@ class Template:
                 if not cursor.goRight(1, True):
                     raise errors.TemplateError(
                         'no_endfor_found',
-                        f"The statement {for_statement} has no endfor",
+                        f"The statement {for_statement.for_string} has no endfor",
                         dict_of(for_statement)
                     )
                 position_in_text += 1
@@ -392,7 +392,7 @@ class Template:
                     if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endfor_found',
-                            f"The statement {for_statement} has no endfor",
+                            f"The statement {for_statement.for_string} has no endfor",
                             dict_of(for_statement)
                         )
                     position_in_text = position_in_text + 1
@@ -432,7 +432,7 @@ class Template:
                 if not cursor.goRight(1, True):
                     raise errors.TemplateError(
                         'no_endhtml_found',
-                        f"The statement {html_statement} has no endfor",
+                        f"The statement {html_statement.html_string} has no endhtml",
                         dict_of(html_statement)
                     )
                 position_in_text += 1
@@ -442,7 +442,7 @@ class Template:
                     if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endhtml_found',
-                            f"The statement {html_statement} has no endfor",
+                            f"The statement {html_statement.html_string} has no endhtml",
                             dict_of(html_statement)
                         )
                     position_in_text = position_in_text + 1
