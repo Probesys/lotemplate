@@ -182,6 +182,54 @@ to fill it.
 
 Put `$variable` in the document is enough to add the variable 'variable'.
 
+A variable name is only composed by chars, letters or underscores.
+
+You can also use "function variables". It is exactly the same as simple variables
+but with a syntax that allows you a more flexible variable name :
+
+examples :
+
+```
+# simple variable
+$my_var
+$MyVar99_2020
+
+# basic function variable
+$my_var(firstName)
+$my_var(address.city)
+
+# you have to escape parenthesis inside the parameter in the
+# variable name with a backslash
+$my_var(firstName\(robert\))
+```
+
+Then in the json, function variable are working exactly like simple variables.
+
+```json
+{
+  "my_var": {
+    "type": "text",
+    "value": "my value"
+  },
+  "MyVar99_2020": {
+    "type": "text",
+    "value": "my value"
+  },
+  "my_var(firstName)": {
+    "type": "text",
+    "value": "my value"
+  },
+  "my_var(address.city)": {
+    "type": "text",
+    "value": "my value"
+  },
+  "my_var(firstName\\(robert\\))": {
+    "type": "text",
+    "value": "my value"
+  }
+}
+```
+
 ### image variables
 
 Add any image in the document, and put in the title of the alt text of the image
@@ -217,6 +265,76 @@ This part will be displayed if my_var is empty (empty means empty or only spaces
 ```
 
 limitation : you can not have an if inside another if.
+
+### for statement
+
+You can use for statement in order to display a part of your
+document multiple times.
+
+WARNING : the for system loses the formating of the template. If you want a
+specific formating, you have to put it in an HTML statement.
+
+You have to send an array in the json file with a dict inside the array
+
+```json
+{
+  "tutu": {
+    "type": "array",
+    "value": [
+      {
+        "firstName": "perso 1",
+        "lastName": "string 1",
+        "address": {
+          "street1": "8 rue de la paix",
+          "street2": "",
+          "zip": "75008",
+          "city": "Paris",
+          "state": "Ile de France"
+        }
+      },
+      {
+        "firstName": "perso 2",
+        "lastName": "lastname with < and >",
+        "address": {
+          "street1": "12 avenue Jean Jaurès",
+          "street2": "",
+          "zip": "38000",
+          "city": "Grenoble",
+          "state": "Isère"
+        }
+      }
+    ]
+  }
+}
+```
+
+Then in your template file you can use the for like this :
+
+```
+Tests of for statements
+
+[for $tutu]
+Associate number [forindex]
+first name : [foritem firstName] 
+last name escaped by default [foritem lastName]
+last name escaped html [foritem lastName escape_html]
+last name not escaped [foritem lastName raw]
+Address : 
+[foritem address.street1]
+[foritem address.zip] [foritem address.city]
+[endfor]
+```
+
+* `[forindex]` : this is a counter beginning at 0 indicating the iteration count.
+* `[foritem firstName]` : variable firstName of the current iteration.
+* `[foritem lastName escape_html]` : variable lastName of the current iteration escaped by html.
+* `[foritem lastName raw]` : variable lastName of the current iteration not escaped.
+* `[foritem address.street1]` : variable address.street1 of the current iteration when you have a hierarchy
+
+Note : If you are using `[forindex]` inside a variable name, the variable
+is excluded from the parsing of the template. It allows you to create a
+dynamic variable name inside a for loop. Ex : `$my_var(people.[forindex].name)` is
+excluded from the variable parsing.
 
 ## Supported formats
 

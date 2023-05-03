@@ -41,6 +41,10 @@ def compare_files(name: str):
     if os.path.isfile(get_filename('unittest.txt')):
         os.remove(get_filename('unittest.txt'))
     temp.export(get_filename('unittest.txt'), True)
+    # temp.close()
+    if os.path.isfile(get_filename('unittest.odt')):
+        os.remove(get_filename('unittest.odt'))
+    temp.export(get_filename('unittest.odt'), True)
     temp.close()
     response = filecmp.cmp(get_filename('unittest.txt'), get_filename('expected.txt'))
     # if os.path.isfile(get_filename('unittest.txt')):
@@ -49,6 +53,9 @@ def compare_files(name: str):
 
 
 class Text(unittest.TestCase):
+
+    def test_for(self):
+        self.assertTrue(compare_files('for'))
 
     def test_vars(self):
         self.assertTrue(compare_files('text_vars'))
