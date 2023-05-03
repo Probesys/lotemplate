@@ -336,6 +336,106 @@ is excluded from the parsing of the template. It allows you to create a
 dynamic variable name inside a for loop. Ex : `$my_var(people.[forindex].name)` is
 excluded from the variable parsing.
 
+### html statement
+
+You can use html statement in order to display a part of your document with a specific formating.
+
+Here is some examples that ca be use inside an odt template
+
+```
+[html]
+<table>
+<tr>
+  <td>First Name</td>
+  <td>Last Name</td>
+</tr>
+<tr>
+  <td>First Name</td>
+  <td>Last Name</td>
+</tr>
+</table>
+[endhtml]
+```
+
+Then all the html content is interpreted and pasted as html. It is then rendered
+as a formated text (a table in this example) inside the document.
+
+You can also display a variable that contains an html content inside an html statement
+
+```
+[html]
+$my_html_variable
+[endhtml]
+```
+
+with the associated json :
+
+```json
+{
+  "tutu": {
+    "type": "text",
+    "value": "my <strong>html formated</strong> content"
+  }
+}
+```
+
+As the for statement removes formatting, you can use the html statement combined with the
+for statement to display a table with a specific formating.
+
+Let's see an example with the following json :
+
+```json
+{
+  "tutu": {
+    "type": "array",
+    "value": [
+      {
+        "firstName": "perso 1",
+        "lastName": "string 1",
+        "address": {
+          "street1": "8 rue de la paix",
+          "street2": "",
+          "zip": "75008",
+          "city": "Paris",
+          "state": "Ile de France"
+        }
+      },
+      {
+        "firstName": "perso 2",
+        "lastName": "lastname with < and >",
+        "address": {
+          "street1": "12 avenue Jean Jaurès",
+          "street2": "",
+          "zip": "38000",
+          "city": "Grenoble",
+          "state": "Isère"
+        }
+      }
+    ]
+  }
+}
+```
+
+and the odt template :
+
+```
+[html]
+<table>
+<tr>
+  <td>First Name</td>
+  <td>Last Name</td>
+</tr>
+[for $tutu]
+<tr>
+  <td>[foritem firstName escape_html]</td>
+  <td>[foritem lastName escape_html]</td>
+</tr>
+[endfor]
+</table>
+[endhtml]
+```
+
+
 ## Supported formats
 
 ### Import
