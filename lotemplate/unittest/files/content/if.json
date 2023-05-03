@@ -1,0 +1,18 @@
+{
+  "tutu": {
+    "type": "text",
+    "value": "oui"
+  },
+  "tata": {
+		"type": "text",
+		"value": "foo"
+  },
+  "my_func(toto)": {
+		"type": "text",
+		"value": "my_func_value"
+  },
+  "odoo(status)": {
+    "type": "text",
+    "value": "SARL"
+  }
+}

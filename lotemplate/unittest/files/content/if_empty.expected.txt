@@ -1,0 +1,10 @@
+﻿
+Tests of if statements for empty strings
+
+this content should be displayed ; 
+
+
+ ; this one should be displayed
+
+this content should be displayed because the var contains only spaces and tabs ; 
+

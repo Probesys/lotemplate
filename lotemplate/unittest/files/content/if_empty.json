@@ -1,0 +1,14 @@
+{
+  "empty_var": {
+    "type": "text",
+    "value": ""
+  },
+  "not_empty": {
+    "type": "text",
+    "value": "foo"
+  },
+  "space_var": {
+    "type": "text",
+    "value": "  \n   \t \t "
+  }
+}
