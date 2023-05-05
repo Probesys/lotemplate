@@ -610,6 +610,10 @@ class Template:
                 cursor.String = ''
                 html_string = re.sub(HtmlStatement.end_regex, '', selected_string, flags=re.IGNORECASE)
                 html_string = re.sub(HtmlStatement.start_regex, '', html_string, flags=re.IGNORECASE)
+                # horrible hack : there is a bug with the "paste HTML" function of libreoffice, so we have to add
+                # a &nbsp; at the beginning of the string to make it work. Without that, the first element of a list
+                # <ul><li>...</li></ul> is displayed without the bullet point. This is the less visible workaround I found.
+                html_string = '&nbsp;'+html_string
                 input_stream = self.cnx.ctx.ServiceManager.createInstanceWithContext("com.sun.star.io.SequenceInputStream", self.cnx.ctx)
                 input_stream.initialize((uno.ByteSequence(html_string.encode()),))
                 prop1 = PropertyValue()
