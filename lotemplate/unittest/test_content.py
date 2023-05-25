@@ -66,6 +66,9 @@ class Text(unittest.TestCase):
     def test_if(self):
         self.assertTrue(compare_files('if'))
 
+    def test_if_recursive(self):
+        self.assertTrue(compare_files('if_recursive'))
+
     def test_if_empty(self):
         self.assertTrue(compare_files('if_empty'))
 

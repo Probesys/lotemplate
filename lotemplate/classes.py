@@ -750,34 +750,44 @@ class Template:
                 """
                 if_statement = IfStatement(local_x_found.getString())
                 if_result = if_statement.get_if_result(local_variables[if_statement.variable_name]['value'])
-                if not if_result:
-                    # le if n'est pas vérifié => on efface le paragraphe avec le if
-                    text = local_x_found.getText()
-                    cursor = text.createTextCursorByRange(local_x_found)
-                    cursor.goLeft(len(if_statement.if_string), False)
-                    cursor.goRight(len(if_statement.if_string), True)
-                    cursor.goRight(1, True)
-                    selected_string = cursor.String
-                    match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-                    while match is None:
-                        cursor.goRight(1, True)
-                        selected_string = cursor.String
-                        match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-                    cursor.String = ''
-                elif if_result:
-                    # the if is verified. We remove the statement and the endif but we keep the content
-                    position_in_text = len(if_statement.if_string)
-                    text = local_x_found.getText()
-                    cursor = text.createTextCursorByRange(local_x_found)
+                position_in_text = len(if_statement.if_string)
+                text = local_x_found.getText()
+                cursor = text.createTextCursorByRange(local_x_found)
+                # we are crawling the text char by char to find the endif or a new if
+                while True:
                     cursor.goRight(1, True)
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
-                    match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-                    while match is None:
-                        cursor.goRight(1, True)
-                        position_in_text += 1
+                    # we remove the "if statement" inside the selected_string and we search for a new if
+                    newstr = selected_string[len(if_statement.if_string):]
+                    match = re.search(IfStatement.start_regex, newstr, re.IGNORECASE)
+                    # hierarchical if management (recursive)
+                    if match is not None:
+                        # we are selecting only the part after the current if statement
+                        cursor.goLeft(len(match.group(0)), False)
+                        cursor.goRight(len(match.group(0)), True)
+                        # we are calling recursively the function
+                        compute_if(cursor)
+                        # we are selecting again the current if statement (and only it and we are
+                        # starting the crawling again)
+                        cursor = text.createTextCursorByRange(local_x_found)
                         selected_string = cursor.String
-                        match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
+                        position_in_text = len(selected_string)
+                    # try to find the endif
+                    match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
+                    if match is not None:
+                        break
+
+                cursorStr = cursor.String
+                matchStr = match.group(0)
+
+                if not if_result:
+                    # if the if statement is not verified, we remove the paragraph with the if
+                    cursor.goLeft(position_in_text, False)
+                    cursor.goRight(position_in_text, True)
+                    cursor.String = ''
+                elif if_result:
+                    # the if is verified. We remove the statement and the endif but we keep the content
                     cursor.goLeft(len(match.group(0)), False)
                     cursor.goRight(len(match.group(0)), True)
                     position_in_text -= len(match.group(0))
