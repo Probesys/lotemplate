@@ -264,7 +264,18 @@ This part will be displayed if my_var is empty (empty means empty or only spaces
 [endif]
 ```
 
-limitation : you can not have an if inside another if.
+You can put an if statement inside another if statement
+
+```
+[if $foo == my_value]
+[if $bar == my_value2]
+here you have your document
+[endif]
+[if $bar == my_value3]
+here you have your document
+[endif]
+[endif]
+```
 
 ### for statement
 
@@ -505,3 +516,11 @@ For trying to fix these problems, you can try:
 - key system for each institution for security
 - handle bulleted lists using table like variables
 - use variable formatting instead of the one of the character before
+
+## Versions :
+
+- v1.1.0, 2023-05-23 : recursive if statement
+- v1.0.1, 2023-05-05 : workaround, fix in html formatting
+- v1.0.0, 2023-05-03 : if statement, for statement, html statement
+- not numbered : about march 2023
+first version
