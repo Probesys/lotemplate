@@ -778,9 +778,6 @@ class Template:
                     if match is not None:
                         break
 
-                cursorStr = cursor.String
-                matchStr = match.group(0)
-
                 if not if_result:
                     # if the if statement is not verified, we remove the paragraph with the if
                     cursor.goLeft(position_in_text, False)

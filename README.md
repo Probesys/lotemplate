@@ -522,5 +522,4 @@ For trying to fix these problems, you can try:
 - v1.1.0, 2023-05-23 : recursive if statement
 - v1.0.1, 2023-05-05 : workaround, fix in html formatting
 - v1.0.0, 2023-05-03 : if statement, for statement, html statement
-- not numbered : about march 2023
-first version
+- not numbered : about may 2022 : first version
