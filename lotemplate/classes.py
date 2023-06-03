@@ -664,29 +664,58 @@ class Template:
                     s = s.replace('"', "&quot;")
                     return s
 
+                def getForitemValue(match_var_name, match_escaping, foritem_var):
+                    """
+                    we are in a for loop on values of an array.
+
+                    a regex just detected [foritem match_var_name match_escaping]
+
+                    mathch escaping, can exist or not. If it exists, it can be raw or escape_html
+
+                    example:
+
+                    :param match_var_name:
+                    :param match_escaping:
+                    :return:
+                    """
+                    # get separate the var_name by "." to get the value in the dict
+                    var_name_hierarchy = match_var_name.split('.')
+                    # get the variable value from the hierarchy
+                    value = foritem_var
+                    for var_name in var_name_hierarchy:
+                        value = value[var_name]
+
+                    # get the escaping
+                    escaping = 'raw'
+                    if match_escaping is not None:
+                        escaping = match_escaping
+                    # escape the value
+                    if escaping == 'escape_html':
+                        value = escape_html(value)
+                    return str(value)
+
                 for_statement = ForStatement(local_x_found.getString())
                 foritem_vars = local_variables[for_statement.variable_name]['value']
 
                 # remove the for statement from the odt
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
-                cursor.goLeft(len(for_statement.for_string), False)
-                cursor.goRight(len(for_statement.for_string), True)
                 cursor.String = ''
 
                 # select content between for and endfor (including endfor)
-                cursor.goRight(1, True)
-                selected_string = cursor.String
-                match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
-                while match is None:
+                while True:
                     cursor.goRight(1, True)
                     selected_string = cursor.String
                     match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
+                    if match is not None:
+                        break
 
-                # remove the endfor from the cursor selection
+                # get the content between the for and the endfor
                 cursor.goLeft(len(match.group(0)), True)
                 template = cursor.String
+                # remove the content from the file
                 cursor.String = ''
+                # remove the endfor at the end
                 cursor.goRight(len(match.group(0)), True)
                 cursor.String = ''
 
@@ -695,26 +724,16 @@ class Template:
                 for foritem_var in foritem_vars:
                     # search [forindex] and remplace by my counter
                     content = re.sub(ForStatement.forindex_regex, str(counter), template, flags=re.IGNORECASE)
+                    # TODO : parse if inside for before managing foritem replacements
 
                     # replace inside the selected content selected
                     for match in re.finditer(ForStatement.foritem_regex, content, re.IGNORECASE):
-                        # get the variable string
-                        var_str = match.group(1)
-                        # get the escaping
-                        escaping = 'raw'
-                        if match.group(2) is not None:
-                            escaping = match.group(2)
-                        # get separate the var_name by "." to get the value in the dict
-                        var_name_hierarchy = var_str.split('.')
-                        # get the variable value from the hierarchy
-                        value = foritem_var
-                        for var_name in var_name_hierarchy:
-                            value = value[var_name]
-                        # escape the value
-                        if escaping == 'escape_html':
-                            value = escape_html(value)
+                        getForitemValue(match.group(1), match.group(2), foritem_var)
                         # replace the variable by its value
-                        content = content.replace(match.group(0), str(value))
+                        content = content.replace(
+                            match.group(0),
+                            getForitemValue(match.group(1), match.group(2), foritem_var)
+                        )
 
                     # paste the content
                     text.insertString(cursor, content, False)
