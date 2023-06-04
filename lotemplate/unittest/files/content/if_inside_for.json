@@ -38,5 +38,9 @@
         }
       }
     ]
+  },
+  "outsidefor": {
+    "type": "text",
+    "value": "foo"
   }
 }

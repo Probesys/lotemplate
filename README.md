@@ -342,6 +342,31 @@ Address :
 * `[foritem lastName raw]` : variable lastName of the current iteration not escaped.
 * `[foritem address.street1]` : variable address.street1 of the current iteration when you have a hierarchy
 
+Note : you can use if inside for statements
+
+Here we display only the people living in Grenoble
+```
+[for $tutu]
+[if [foritem address.city] == Grenoble]
+first name : [foritem firstName] 
+last name : [foritem lastName]
+Address : 
+[foritem address.street1]
+[foritem address.zip] [foritem address.city]
+[endif]
+[endfor]
+```
+
+Here we display only the first element of the array
+```
+[for $tutu]
+[if [forindex] == 0]
+first name : [foritem firstName] 
+last name : [foritem lastName]
+[endif]
+[endfor]
+```
+
 Note : If you are using `[forindex]` inside a variable name, the variable
 is excluded from the parsing of the template. It allows you to create a
 dynamic variable name inside a for loop. Ex : `$my_var(people.[forindex].name)` is
@@ -519,6 +544,7 @@ For trying to fix these problems, you can try:
 
 ## Versions :
 
+- v1.2.0, 2023-06-04 : if statements inside for
 - v1.1.0, 2023-05-23 : recursive if statement
 - v1.0.1, 2023-05-05 : workaround, fix in html formatting
 - v1.0.0, 2023-05-03 : if statement, for statement, html statement

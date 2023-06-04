@@ -75,5 +75,5 @@ class Text(unittest.TestCase):
     def test_if_recursive(self):
         self.assertTrue(compare_files('if_recursive'))
 
-#    def test_if_inside_for(self):
-#        self.assertTrue(compare_files('if_inside_for'))
+    def test_if_inside_for(self):
+        self.assertTrue(compare_files('if_inside_for'))
