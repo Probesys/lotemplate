@@ -16,8 +16,17 @@ For Docker use of the API, you can skip this step.
 
 - LibreOffice (the console-line version will be enough)
 - python3.8 or higher
+- python3-uno
 - some python packages specified in [requirement.txt](requirements.txt) that you can install with
   `pip install -r requirements.txt`. `Flask` and `Werkzeug` are optional, as they are used only for the API.
+
+```bash
+# on debian bullseye, you can use these commands
+echo 'deb http://deb.debian.org/debian bullseye-backports main' > /etc/apt/sources.list.d/backports.list
+apt update
+apt -y -t bullseye-backports install bash python3 python3-uno python3-pip libreoffice-nogui
+pip install -r requirements.txt
+```
 
 ## Use the API
 
