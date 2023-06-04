@@ -42,5 +42,17 @@
   "outsidefor": {
     "type": "text",
     "value": "foo"
+  },
+  "odoo(tutu.0.city)": {
+    "type": "text",
+    "value": "Paris"
+  },
+  "odoo(tutu.1.city)": {
+    "type": "text",
+    "value": "Grenoble"
+  },
+  "odoo(tutu.2.city)": {
+    "type": "text",
+    "value": "Grenoble"
   }
 }

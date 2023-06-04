@@ -319,7 +319,6 @@ class Template:
             for var in matches:
                 key_name = var[0][1:]
                 # add to plain_vars if it doesn't matche ForStatement.foritem_regex
-                my_match = re.match(ForStatement.forindex_regex, key_name)
                 if not re.search(ForStatement.forindex_regex, key_name, re.IGNORECASE):
                     plain_vars[key_name] = {'type': 'text', 'value': ''}
 
@@ -357,16 +356,7 @@ class Template:
                 position_in_text = len(if_statement.if_string)
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endif_found',
-                        f"The statement {if_statement.if_string} has no endif",
-                        dict_of(if_statement.if_string)
-                    )
-                position_in_text += 1
-                selected_string = cursor.String
-                match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-                while match is None:
+                while True:
                     if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endif_found',
@@ -376,7 +366,8 @@ class Template:
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
                     match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-
+                    if match is not None:
+                        break
             search = doc.createSearchDescriptor()
             search.SearchString = IfStatement.start_regex
             search.SearchRegularExpression = True
@@ -403,16 +394,7 @@ class Template:
                 position_in_text = len(for_statement.for_string)
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endfor_found',
-                        f"The statement {for_statement.for_string} has no endfor",
-                        dict_of(for_statement.for_string)
-                    )
-                position_in_text += 1
-                selected_string = cursor.String
-                match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
-                while match is None:
+                while True:
                     if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endfor_found',
@@ -422,6 +404,8 @@ class Template:
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
                     match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
+                    if match is not None:
+                        break
                 return for_statement.variable_name
 
             search = doc.createSearchDescriptor()
@@ -453,16 +437,7 @@ class Template:
                 position_in_text = len(html_statement.html_string)
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endhtml_found',
-                        f"The statement {html_statement.html_string} has no endhtml",
-                        dict_of(html_statement.html_string)
-                    )
-                position_in_text += 1
-                selected_string = cursor.String
-                match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
-                while match is None:
+                while True:
                     if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endhtml_found',
@@ -472,6 +447,8 @@ class Template:
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
                     match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
+                    if match is not None:
+                        break
 
             search = doc.createSearchDescriptor()
             search.SearchString = HtmlStatement.start_regex
@@ -584,15 +561,7 @@ class Template:
                 dict(variable=json_missing[0])
             )
 
-        template_missing = [key for key in set(json_vars) - set(self.variables)]
-        if template_missing:
-            raise errors.JsonComparaisonError(
-                'unknown_variable',
-                f"The variable {template_missing[0]!r}, present in the json, isn't present in the template.",
-                dict(variable=template_missing[0])
-            )
-
-        json_incorrect = [key for key in json_vars if json_vars[key]['type'] != self.variables[key]['type']]
+        json_incorrect = [key for key in self.variables if json_vars[key]['type'] != self.variables[key]['type']]
         if json_incorrect:
             raise errors.JsonComparaisonError(
                 'incorrect_value_type',
@@ -602,6 +571,11 @@ class Template:
                 dict(variable=json_incorrect[0], actual_variable_type=json_vars[json_incorrect[0]]['type'],
                      expected_variable_type=self.variables[json_incorrect[0]]['type'])
             )
+
+        template_missing = [key for key in set(json_vars) - set(self.variables)]
+        json_vars_without_template_missing = {key: json_vars[key] for key in json_vars if key not in template_missing}
+        if json_vars_without_template_missing == self.variables:
+            return
 
         raise errors.JsonComparaisonError(
             'unknown_reason',
