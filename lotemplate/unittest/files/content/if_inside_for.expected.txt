@@ -15,6 +15,8 @@ before_should display_after
 before__after
 
 
+
+
 Associate number 1
 first name : perso 2 lastname with < and >
 
@@ -26,6 +28,8 @@ Address :
 inside for :
 before_should display_after
 before__after
+
+**IN GRENOBLE**
 
 
 Associate number 2
@@ -39,6 +43,8 @@ Address :
 inside for :
 before_should display_after
 before__after
+
+**IN GRENOBLE**
 
 
 

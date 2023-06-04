@@ -736,7 +736,8 @@ class Template:
                     # get value associated to the if statement
                     value = None
                     if if_statement.variable_name is not None:
-                        value = local_variables[if_statement.variable_name]['value']
+                        computed_variable_name = re.sub(ForStatement.forindex_regex, forindex, if_statement.variable_name)
+                        value = local_variables[computed_variable_name]['value']
                     if if_statement.foritem_name is not None:
                         value = getForitemValue(if_statement.foritem_name, if_statement.foritem_escaping, foritem_var)
                     if if_statement.forindex is not None:
