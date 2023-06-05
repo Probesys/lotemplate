@@ -16,8 +16,17 @@ For Docker use of the API, you can skip this step.
 
 - LibreOffice (the console-line version will be enough)
 - python3.8 or higher
+- python3-uno
 - some python packages specified in [requirement.txt](requirements.txt) that you can install with
   `pip install -r requirements.txt`. `Flask` and `Werkzeug` are optional, as they are used only for the API.
+
+```bash
+# on debian bullseye, you can use these commands
+echo 'deb http://deb.debian.org/debian bullseye-backports main' > /etc/apt/sources.list.d/backports.list
+apt update
+apt -y -t bullseye-backports install bash python3 python3-uno python3-pip libreoffice-nogui
+pip install -r requirements.txt
+```
 
 ## Use the API
 
@@ -342,6 +351,31 @@ Address :
 * `[foritem lastName raw]` : variable lastName of the current iteration not escaped.
 * `[foritem address.street1]` : variable address.street1 of the current iteration when you have a hierarchy
 
+Note : you can use if inside for statements
+
+Here we display only the people living in Grenoble
+```
+[for $tutu]
+[if [foritem address.city] == Grenoble]
+first name : [foritem firstName] 
+last name : [foritem lastName]
+Address : 
+[foritem address.street1]
+[foritem address.zip] [foritem address.city]
+[endif]
+[endfor]
+```
+
+Here we display only the first element of the array
+```
+[for $tutu]
+[if [forindex] == 0]
+first name : [foritem firstName] 
+last name : [foritem lastName]
+[endif]
+[endfor]
+```
+
 Note : If you are using `[forindex]` inside a variable name, the variable
 is excluded from the parsing of the template. It allows you to create a
 dynamic variable name inside a for loop. Ex : `$my_var(people.[forindex].name)` is
@@ -519,6 +553,7 @@ For trying to fix these problems, you can try:
 
 ## Versions :
 
+- v1.2.0, 2023-06-04 : if statements inside for
 - v1.1.0, 2023-05-23 : recursive if statement
 - v1.0.1, 2023-05-05 : workaround, fix in html formatting
 - v1.0.0, 2023-05-03 : if statement, for statement, html statement

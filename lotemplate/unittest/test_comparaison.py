@@ -25,8 +25,10 @@ class Text(unittest.TestCase):
         self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/text_vars_valid.json"))
 
     def test_invalid_supplement_variable(self):
-        with self.assertRaises(ot.errors.JsonComparaisonError):
-            self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/text_vars_invalid_variable.json"))
+        """
+        Check that there is no exception anymore where there is an unknown variable in the json
+        """
+        self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/text_vars_invalid_variable.json"))
 
     def test_invalid_missing_variable(self):
         with self.assertRaises(ot.errors.JsonComparaisonError):
@@ -60,9 +62,11 @@ class Tables(unittest.TestCase):
                 "lotemplate/unittest/files/comparaison/two_row_tab_varied_invalid_missing_argument_all_rows.json"))
 
     def test_invalid_unknown_variable(self):
-        with self.assertRaises(ot.errors.JsonComparaisonError):
-            self.temp.search_error(to_data(
-                "lotemplate/unittest/files/comparaison/two_row_tab_varied_invalid_unknown_argument.json"))
+        """
+        Check that there is no exception anymore where there is an unknown variable in the json
+        """
+        self.temp.search_error(to_data(
+            "lotemplate/unittest/files/comparaison/two_row_tab_varied_invalid_unknown_argument.json"))
 
     temp.close()
 
@@ -75,8 +79,10 @@ class Images(unittest.TestCase):
         self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/img_vars_valid.json"))
 
     def test_invalid_unknown_variable(self):
-        with self.assertRaises(ot.errors.JsonComparaisonError):
-            self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/img_vars_invalid_other_image.json"))
+        """
+        Check that there is no exception anymore where there is an unknown variable in the json
+        """
+        self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/img_vars_invalid_other_image.json"))
 
     temp.close()
 

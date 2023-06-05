@@ -86,14 +86,30 @@ class IfStatement:
     """
     start_regex = r"""
         \[\s*if\s*          # [if detection
-          \$                # var start with $
-          (\w+              # basic var name
-            (\(             # parsing of fonction var
-              ((?:          # ?: is for non capturing group : the regex inside the parenthesis must be matched but does not create the capturing group
-                \\.|.       # everything that is escaped or every simple char
-              )*?)          # the ? before the ) in order to be not greedy (stop on the first unescaped ")"
-            \))
-          ?)                # the ? before the ) in order to be not greedy (won't go until the last ")")
+          (?:
+            (?:                 # parsing of var
+              \$                # var start with $
+              (\w+              # basic var name
+                (\(             # parsing of fonction var
+                  ((?:          # ?: is for non capturing group : the regex inside the parenthesis must be matched but does not create the capturing group
+                    \\.|.       # everything that is escaped or every simple char
+                  )*?)          # the ? before the ) in order to be not greedy (stop on the first unescaped ")"
+                \))
+              ?)                # the ? before the ) in order to be not greedy (won't go until the last ")")
+            )
+            |
+            (?:                 # parsing of foritem
+                \[\s*foritem\s*          # [foritem detection
+                    (
+                        \w+              # simple var of type abc
+                        (?:\.\w+)*       # composite var name like abc.def
+                    )
+                    (?:\s+(escape_html|raw))?   # option pour escaper le contenu de la variable
+                \s*\]
+            )
+            |
+            (\[\s*forindex\s*\]) # parsing of forindex
+          )
           \s*
           (                 # catch whether
               (?:           # for syntax == var or != var
@@ -122,14 +138,22 @@ class IfStatement:
     def __init__(self, if_string):
         self.if_string = if_string
         match = re.search(self.start_regex, if_string, re.IGNORECASE)
+
+        # for standard if outside for statements
         self.variable_name = match.group(1)
-        if match.group(5) is not None:
+        # foritem parsing is used by if statements inside for statements if we want to check the value of a foritem value.
+        self.foritem_name = match.group(4)
+        self.foritem_escaping = match.group(5)
+        # forindex parsing
+        self.forindex = match.group(6)
+
+        if match.group(8) is not None:
             # syntaxes like [if $foo == bar] or [if $foo != bar]
-            self.operator = match.group(5)
-            self.value = match.group(6)
+            self.operator = match.group(8)
+            self.value = match.group(9)
         else:
             # syntaxes like [if $foo IS_EMPTY] or [if $foo IS_NOT_EMPTY]
-            self.operator = match.group(7)
+            self.operator = match.group(10)
 
     def get_if_result(self, value):
         if self.operator == '==':
@@ -295,7 +319,6 @@ class Template:
             for var in matches:
                 key_name = var[0][1:]
                 # add to plain_vars if it doesn't matche ForStatement.foritem_regex
-                my_match = re.match(ForStatement.forindex_regex, key_name)
                 if not re.search(ForStatement.forindex_regex, key_name, re.IGNORECASE):
                     plain_vars[key_name] = {'type': 'text', 'value': ''}
 
@@ -333,16 +356,7 @@ class Template:
                 position_in_text = len(if_statement.if_string)
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endif_found',
-                        f"The statement {if_statement.if_string} has no endif",
-                        dict_of(if_statement.if_string)
-                    )
-                position_in_text += 1
-                selected_string = cursor.String
-                match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-                while match is None:
+                while True:
                     if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endif_found',
@@ -352,7 +366,8 @@ class Template:
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
                     match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-
+                    if match is not None:
+                        break
             search = doc.createSearchDescriptor()
             search.SearchString = IfStatement.start_regex
             search.SearchRegularExpression = True
@@ -379,16 +394,7 @@ class Template:
                 position_in_text = len(for_statement.for_string)
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endfor_found',
-                        f"The statement {for_statement.for_string} has no endfor",
-                        dict_of(for_statement.for_string)
-                    )
-                position_in_text += 1
-                selected_string = cursor.String
-                match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
-                while match is None:
+                while True:
                     if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endfor_found',
@@ -398,6 +404,8 @@ class Template:
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
                     match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
+                    if match is not None:
+                        break
                 return for_statement.variable_name
 
             search = doc.createSearchDescriptor()
@@ -429,16 +437,7 @@ class Template:
                 position_in_text = len(html_statement.html_string)
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endhtml_found',
-                        f"The statement {html_statement.html_string} has no endhtml",
-                        dict_of(html_statement.html_string)
-                    )
-                position_in_text += 1
-                selected_string = cursor.String
-                match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
-                while match is None:
+                while True:
                     if not cursor.goRight(1, True):
                         raise errors.TemplateError(
                             'no_endhtml_found',
@@ -448,6 +447,8 @@ class Template:
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
                     match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
+                    if match is not None:
+                        break
 
             search = doc.createSearchDescriptor()
             search.SearchString = HtmlStatement.start_regex
@@ -560,15 +561,7 @@ class Template:
                 dict(variable=json_missing[0])
             )
 
-        template_missing = [key for key in set(json_vars) - set(self.variables)]
-        if template_missing:
-            raise errors.JsonComparaisonError(
-                'unknown_variable',
-                f"The variable {template_missing[0]!r}, present in the json, isn't present in the template.",
-                dict(variable=template_missing[0])
-            )
-
-        json_incorrect = [key for key in json_vars if json_vars[key]['type'] != self.variables[key]['type']]
+        json_incorrect = [key for key in self.variables if json_vars[key]['type'] != self.variables[key]['type']]
         if json_incorrect:
             raise errors.JsonComparaisonError(
                 'incorrect_value_type',
@@ -578,6 +571,11 @@ class Template:
                 dict(variable=json_incorrect[0], actual_variable_type=json_vars[json_incorrect[0]]['type'],
                      expected_variable_type=self.variables[json_incorrect[0]]['type'])
             )
+
+        template_missing = [key for key in set(json_vars) - set(self.variables)]
+        json_vars_without_template_missing = {key: json_vars[key] for key in json_vars if key not in template_missing}
+        if json_vars_without_template_missing == self.variables:
+            return
 
         raise errors.JsonComparaisonError(
             'unknown_reason',
@@ -600,13 +598,12 @@ class Template:
                 html_statement = HtmlStatement(local_x_found.getString())
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
-                cursor.goRight(1, True)
-                selected_string = cursor.String
-                match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
-                while match is None:
+                while True:
                     cursor.goRight(1, True)
                     selected_string = cursor.String
                     match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
+                    if match is not None:
+                        break
                 cursor.String = ''
                 html_string = re.sub(HtmlStatement.end_regex, '', selected_string, flags=re.IGNORECASE)
                 html_string = re.sub(HtmlStatement.start_regex, '', html_string, flags=re.IGNORECASE)
@@ -664,57 +661,141 @@ class Template:
                     s = s.replace('"', "&quot;")
                     return s
 
+                def getForitemValue(match_var_name, match_escaping, foritem_var):
+                    """
+                    we are in a for loop on values of an array.
+
+                    a regex just detected [foritem match_var_name match_escaping]
+
+                    mathch escaping, can exist or not. If it exists, it can be raw or escape_html
+
+                    :param match_var_name:
+                    :param match_escaping:
+                    :return:
+                    """
+                    # get separate the var_name by "." to get the value in the dict
+                    var_name_hierarchy = match_var_name.split('.')
+                    # get the variable value from the hierarchy
+                    value = foritem_var
+                    for var_name in var_name_hierarchy:
+                        value = value[var_name]
+
+                    # get the escaping
+                    escaping = 'raw'
+                    if match_escaping is not None:
+                        escaping = match_escaping
+                    # escape the value
+                    if escaping == 'escape_html':
+                        value = escape_html(value)
+                    return str(value)
+
+                def manage_if_inside_for(content, local_variables, foritem_var, forindex):
+                    """
+                    manage the if statements inside a for loop.
+
+                    It uses a recursive approach : we search an if statement inside the content string. Then we create a
+                    subcontent with the content after the if statement and call the function again on this substring.
+
+                    With this recursive call, the process begins with the last if statement and update the content for
+                    the previous call.
+
+                    :param content:
+                    :param local_variables:
+                    :param foritem_var:
+                    :return:
+                    """
+                    # look for the first if statement
+                    match_if = re.search(IfStatement.start_regex, content, re.IGNORECASE)
+                    if match_if is None:
+                        return content
+
+                    # get content before the if statement and call recursively the function
+                    subcontent = content[match_if.end():]
+                    subcontent = manage_if_inside_for(subcontent, local_variables, foritem_var, forindex)
+
+                    # update the content with the result of the recursive call
+                    content = content[:match_if.end()] + subcontent
+
+                    # get the if statement values
+                    if_statement = IfStatement(match_if.group(0))
+
+                    # precontent is the content before the if statement
+                    precontent = content[:match_if.start()]
+                    postcontent = content[match_if.start():]
+                    match_if_postcontent = re.search(IfStatement.start_regex, postcontent, re.IGNORECASE)
+
+                    # if no endif => throw error
+                    match_endif_postcontent = re.search(IfStatement.end_regex, postcontent, re.IGNORECASE)
+                    if match_endif_postcontent is None:
+                        raise errors.TemplateError(
+                            'no_endif_found',
+                            f"The statement {if_statement.if_string} has no endif",
+                            dict_of(if_statement.if_string)
+                        )
+
+                    # get value associated to the if statement
+                    value = None
+                    if if_statement.variable_name is not None:
+                        computed_variable_name = re.sub(ForStatement.forindex_regex, forindex, if_statement.variable_name)
+                        value = local_variables[computed_variable_name]['value']
+                    if if_statement.foritem_name is not None:
+                        value = getForitemValue(if_statement.foritem_name, if_statement.foritem_escaping, foritem_var)
+                    if if_statement.forindex is not None:
+                        value = forindex
+                    if_result = if_statement.get_if_result(value)
+
+                    if if_result:
+                        postcontent = postcontent[:match_endif_postcontent.start()] + postcontent[match_endif_postcontent.end():]
+                        postcontent = postcontent[:match_if_postcontent.start()] + postcontent[match_if_postcontent.end():]
+                    if not if_result:
+                        postcontent = postcontent[:match_if_postcontent.start()] + postcontent[match_endif_postcontent.end():]
+
+                    return precontent + postcontent
+
+
                 for_statement = ForStatement(local_x_found.getString())
                 foritem_vars = local_variables[for_statement.variable_name]['value']
 
                 # remove the for statement from the odt
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
-                cursor.goLeft(len(for_statement.for_string), False)
-                cursor.goRight(len(for_statement.for_string), True)
                 cursor.String = ''
 
                 # select content between for and endfor (including endfor)
-                cursor.goRight(1, True)
-                selected_string = cursor.String
-                match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
-                while match is None:
+                while True:
                     cursor.goRight(1, True)
                     selected_string = cursor.String
                     match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
+                    if match is not None:
+                        break
 
-                # remove the endfor from the cursor selection
+                # get the content between the for and the endfor
                 cursor.goLeft(len(match.group(0)), True)
                 template = cursor.String
+                # remove the content from the file
                 cursor.String = ''
+                # remove the endfor at the end
                 cursor.goRight(len(match.group(0)), True)
                 cursor.String = ''
 
                 # loop on values of the variable
                 counter = 0
                 for foritem_var in foritem_vars:
+                    content = template
+                    # parse if inside for before managing foritem replacements
+                    content = manage_if_inside_for(content, local_variables, foritem_var, str(counter))
+
                     # search [forindex] and remplace by my counter
-                    content = re.sub(ForStatement.forindex_regex, str(counter), template, flags=re.IGNORECASE)
+                    content = re.sub(ForStatement.forindex_regex, str(counter), content, flags=re.IGNORECASE)
 
                     # replace inside the selected content selected
                     for match in re.finditer(ForStatement.foritem_regex, content, re.IGNORECASE):
-                        # get the variable string
-                        var_str = match.group(1)
-                        # get the escaping
-                        escaping = 'raw'
-                        if match.group(2) is not None:
-                            escaping = match.group(2)
-                        # get separate the var_name by "." to get the value in the dict
-                        var_name_hierarchy = var_str.split('.')
-                        # get the variable value from the hierarchy
-                        value = foritem_var
-                        for var_name in var_name_hierarchy:
-                            value = value[var_name]
-                        # escape the value
-                        if escaping == 'escape_html':
-                            value = escape_html(value)
+                        getForitemValue(match.group(1), match.group(2), foritem_var)
                         # replace the variable by its value
-                        content = content.replace(match.group(0), str(value))
+                        content = content.replace(
+                            match.group(0),
+                            getForitemValue(match.group(1), match.group(2), foritem_var)
+                        )
 
                     # paste the content
                     text.insertString(cursor, content, False)

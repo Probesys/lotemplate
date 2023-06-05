@@ -1,0 +1,58 @@
+{
+  "tutu": {
+    "type": "array",
+    "value": [
+      {
+        "type": "person",
+        "firstName": "perso 1",
+        "lastName": "string 1",
+        "address": {
+          "street1": "8 rue de la paix",
+          "street2": "",
+          "zip": "75008",
+          "city": "Paris",
+          "state": "Ile de France"
+        }
+      },
+      {
+        "type": "person",
+        "firstName": "perso 2",
+        "lastName": "lastname with < and >",
+        "address": {
+          "street1": "12 avenue Jean Jaurès",
+          "street2": "",
+          "zip": "38000",
+          "city": "Grenoble",
+          "state": "Isère"
+        }
+      },
+      {
+        "type": "company",
+        "name": "my_company",
+        "address": {
+          "street1": "12 avenue Gambetta",
+          "street2": "",
+          "zip": "38000",
+          "city": "Grenoble",
+          "state": "Isère"
+        }
+      }
+    ]
+  },
+  "outsidefor": {
+    "type": "text",
+    "value": "foo"
+  },
+  "odoo(tutu.0.city)": {
+    "type": "text",
+    "value": "Paris"
+  },
+  "odoo(tutu.1.city)": {
+    "type": "text",
+    "value": "Grenoble"
+  },
+  "odoo(tutu.2.city)": {
+    "type": "text",
+    "value": "Grenoble"
+  }
+}

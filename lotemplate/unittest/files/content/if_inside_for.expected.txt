@@ -1,0 +1,65 @@
+﻿
+Tests of if inside for statements
+
+
+Associate number 0
+first name : perso 1 string 1
+
+
+Address : 
+8 rue de la paix
+75008 Paris
+
+inside for :
+before_should display_after
+before__after
+
+
+
+
+Associate number 1
+first name : perso 2 lastname with < and >
+
+
+Address : 
+12 avenue Jean Jaurès
+38000 Grenoble
+
+inside for :
+before_should display_after
+before__after
+
+**IN GRENOBLE**
+
+
+Associate number 2
+
+company name : my_company
+
+Address : 
+12 avenue Gambetta
+38000 Grenoble
+
+inside for :
+before_should display_after
+before__after
+
+**IN GRENOBLE**
+
+
+
+outside for
+
+before_should display_after
+before__after
+
+Test if on the forindex
+
+Associate number 1
+first name : perso 2 lastname with < and >
+
+Address : 
+12 avenue Jean Jaurès
+38000 Grenoble
+
+End of file
