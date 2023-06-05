@@ -16,4 +16,4 @@ jobs:
       run: docker compose build
         
     - name: test
-      run: make tests
+      run: DOCKER_BUILDKIT=1 make tests
