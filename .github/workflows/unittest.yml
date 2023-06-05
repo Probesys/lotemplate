@@ -5,7 +5,7 @@ on:
 
 jobs:
   lotemplate:
-    runs-on: bullseye
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
