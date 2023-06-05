@@ -16,7 +16,7 @@ jobs:
       run: docker compose build
 
     - name: chown
-      run: chmod a+rwX .
+      run: chmod a+rwX -R .
 
     - name: test
       run: make tests
