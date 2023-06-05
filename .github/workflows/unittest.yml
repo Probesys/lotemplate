@@ -6,6 +6,7 @@ on:
 jobs:
   lotemplate:
     runs-on: ubuntu-latest
+    container: probesys38/lotemplate
 
     steps:
     - name: Checkout
