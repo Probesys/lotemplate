@@ -552,8 +552,8 @@ For trying to fix these problems, you can try:
 - use variable formatting instead of the one of the character before
 
 ## Versions :
-
-- v1.2.1, 2023-06-09 : bugfix html statement scan missing
+- v1.2.2, 2023-06-09 : bugfix html statement scan missing
+- v1.2.1, 2023-06-05 : little fix for CI
 - v1.2.0, 2023-06-04 : if statements inside for
 - v1.1.0, 2023-05-23 : recursive if statement
 - v1.0.1, 2023-05-05 : workaround, fix in html formatting
