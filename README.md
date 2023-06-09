@@ -553,6 +553,7 @@ For trying to fix these problems, you can try:
 
 ## Versions :
 
+- v1.2.1, 2023-06-09 : bugfix html statement scan missing
 - v1.2.0, 2023-06-04 : if statements inside for
 - v1.1.0, 2023-05-23 : recursive if statement
 - v1.0.1, 2023-05-05 : workaround, fix in html formatting
