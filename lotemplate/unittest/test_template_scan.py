@@ -257,6 +257,12 @@ class OtherFormats(unittest.TestCase):
         )
         doc.close()
 
+    def test_html_without_endhtml(self):
+        with self.assertRaises(ot.errors.TemplateError):
+            (doc := ot.Template("lotemplate/unittest/files/templates/html_without_endhtml.odt", cnx, False)).scan()
+            doc.close()
+
+
     def test_rtf(self):
         self.assertEqual(
             {
