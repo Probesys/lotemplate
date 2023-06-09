@@ -523,6 +523,7 @@ class Template:
         tables = scan_table(self.doc)
         images = scan_image(self.doc)
         fors = scan_for(self.doc)
+        scan_html(self.doc)
 
         variables_list = list(texts.keys()) + list(tables.keys()) + list(images.keys()) + list(fors.keys())
         duplicates = [variable for variable in variables_list if variables_list.count(variable) > 1]
