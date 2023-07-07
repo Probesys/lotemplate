@@ -837,7 +837,12 @@ class Template:
                 cursor = text.createTextCursorByRange(local_x_found)
                 # we are crawling the text char by char to find the endif or a new if
                 while True:
-                    cursor.goRight(1, True)
+                    if not cursor.goRight(1, True):
+                        raise errors.TemplateError(
+                            'no_endif_found',
+                            f"The statement {if_statement.if_string} has no endif",
+                            dict_of(if_statement.if_string)
+                        )
                     position_in_text = position_in_text + 1
                     selected_string = cursor.String
                     # we remove the "if statement" inside the selected_string and we search for a new if
