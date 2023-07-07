@@ -34,7 +34,18 @@ def compare_files(name: str):
     def get_filename(ext: str):
         return base_path + '/' + name + '.' + ext
 
-    temp = ot.Template(get_filename('odt'), cnx, True)
+    temp = None
+    if os.path.isfile(get_filename('odt')):
+        temp = ot.Template(get_filename('odt'), cnx, True)
+    if os.path.isfile(get_filename('docx')):
+        temp = ot.Template(get_filename('docx'), cnx, True)
+
+    if temp is None:
+        if name == 'debug':
+            return True
+        else:
+            raise FileNotFoundError('No file found for ' + name)
+
     temp.search_error(to_data(get_filename('json')))
     temp.fill(file_to_dict(get_filename('json')))
 
@@ -77,3 +88,6 @@ class Text(unittest.TestCase):
 
     def test_if_inside_for(self):
         self.assertTrue(compare_files('if_inside_for'))
+
+    def test_debug(self):
+        self.assertTrue(compare_files('debug'))
