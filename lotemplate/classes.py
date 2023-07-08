@@ -347,35 +347,57 @@ class Template:
             scan for if statement. No return. We just verify that there is
             and endif for each if statement
             """
+            def compute_if(x_found, x_found_endif):
+                """
+                Compute the if statement.
+                """
+                if_text = x_found.getText()
+                endif_text = x_found_endif.getText()
+                if_cursor = if_text.createTextCursorByRange(x_found)
+                endif_cursor = endif_text.createTextCursorByRange(x_found_endif)
+                content_cursor = if_text.createTextCursorByRange(x_found.End)
+                content_cursor.gotoRange(x_found_endif.Start, True)
 
-            def scan_single_if(local_x_found):
+                if_cursor.String = ''
+                endif_cursor.String = ''
+                content_cursor.String = ''
+
+            def find_if_to_compute(doc, search, x_found):
                 """
-                scan for a single if statement
+                Find the if statement to compute.
                 """
-                if_statement = IfStatement(local_x_found.getString())
-                position_in_text = len(if_statement.if_string)
-                text = local_x_found.getText()
-                cursor = text.createTextCursorByRange(local_x_found)
+                if x_found is None:
+                    return None;
                 while True:
-                    if not cursor.goRight(1, True):
-                        raise errors.TemplateError(
-                            'no_endif_found',
-                            f"The statement {if_statement.if_string} has no endif",
-                            dict_of(if_statement.if_string)
-                        )
-                    position_in_text = position_in_text + 1
-                    selected_string = cursor.String
-                    match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-                    if match is not None:
+                    x_found_after = doc.findNext(x_found.End, search)
+                    if x_found_after is not None:
+                        find_if_to_compute(doc, search, x_found_after)
+                    else:
                         break
+
+                endif_search = doc.createSearchDescriptor()
+                endif_search.SearchString = IfStatement.end_regex
+                endif_search.SearchRegularExpression = True
+                endif_search.SearchCaseSensitive = False
+
+                x_found_endif = doc.findNext(x_found.End, endif_search)
+                if x_found_endif is None:
+                    cursor = x_found.getText().createTextCursorByRange(x_found)
+                    raise errors.TemplateError(
+                        'no_endif_found',
+                        f"The statement {cursor.String} has no endif",
+                        dict_of(cursor.String)
+                    )
+                compute_if(x_found, x_found_endif)
+
+
+            # main of if_replace
             search = doc.createSearchDescriptor()
             search.SearchString = IfStatement.start_regex
             search.SearchRegularExpression = True
             search.SearchCaseSensitive = False
             x_found = doc.findFirst(search)
-            while x_found is not None:
-                scan_single_if(x_found)
-                x_found = doc.findNext(x_found.End, search)
+            find_if_to_compute(doc, search, x_found)
 
         def scan_for(doc) -> dict:
             """
@@ -826,54 +848,57 @@ class Template:
             :return: None
             """
 
-            def compute_if(local_x_found):
+            def compute_if(x_found, x_found_endif):
                 """
                 Compute the if statement.
                 """
-                if_statement = IfStatement(local_x_found.getString())
+                if_text = x_found.getText()
+                endif_text = x_found_endif.getText()
+                if_cursor = if_text.createTextCursorByRange(x_found)
+                endif_cursor = endif_text.createTextCursorByRange(x_found_endif)
+                content_cursor = if_text.createTextCursorByRange(x_found.End)
+                content_cursor.gotoRange(x_found_endif.Start, True)
+                if_statement = IfStatement(if_cursor.String)
                 if_result = if_statement.get_if_result(local_variables[if_statement.variable_name]['value'])
-                position_in_text = len(if_statement.if_string)
-                text = local_x_found.getText()
-                cursor = text.createTextCursorByRange(local_x_found)
-                # we are crawling the text char by char to find the endif or a new if
-                while True:
-                    cursor.goRight(1, True)
-                    position_in_text = position_in_text + 1
-                    selected_string = cursor.String
-                    # we remove the "if statement" inside the selected_string and we search for a new if
-                    newstr = selected_string[len(if_statement.if_string):]
-                    match = re.search(IfStatement.start_regex, newstr, re.IGNORECASE)
-                    # hierarchical if management (recursive)
-                    if match is not None:
-                        # we are selecting only the part after the current if statement
-                        cursor.goLeft(len(match.group(0)), False)
-                        cursor.goRight(len(match.group(0)), True)
-                        # we are calling recursively the function
-                        compute_if(cursor)
-                        # we are selecting again the current if statement (and only it and we are
-                        # starting the crawling again)
-                        cursor = text.createTextCursorByRange(local_x_found)
-                        selected_string = cursor.String
-                        position_in_text = len(selected_string)
-                    # try to find the endif
-                    match = re.search(IfStatement.end_regex, selected_string, re.IGNORECASE)
-                    if match is not None:
-                        break
 
                 if not if_result:
                     # if the if statement is not verified, we remove the paragraph with the if
-                    cursor.goLeft(position_in_text, False)
-                    cursor.goRight(position_in_text, True)
-                    cursor.String = ''
+                    if_cursor.String = ''
+                    endif_cursor.String = ''
+                    content_cursor.String = ''
                 elif if_result:
-                    # the if is verified. We remove the statement and the endif but we keep the content
-                    cursor.goLeft(len(match.group(0)), False)
-                    cursor.goRight(len(match.group(0)), True)
-                    position_in_text -= len(match.group(0))
-                    cursor.String = ''
-                    cursor.goLeft(position_in_text, False)
-                    cursor.goRight(len(if_statement.if_string), True)
-                    cursor.String = ''
+                    # if the if statement is verified, we remove the if and endif statements
+                    if_cursor.String = ''
+                    endif_cursor.String = ''
+
+            def find_if_to_compute(doc, search, x_found):
+                """
+                Find the if statement to compute.
+                """
+                if x_found is None:
+                    return None;
+                while True:
+                    x_found_after = doc.findNext(x_found.End, search)
+                    if x_found_after is not None:
+                        find_if_to_compute(doc, search, x_found_after)
+                    else:
+                        break
+
+                endif_search = doc.createSearchDescriptor()
+                endif_search.SearchString = IfStatement.end_regex
+                endif_search.SearchRegularExpression = True
+                endif_search.SearchCaseSensitive = False
+
+                x_found_endif = doc.findNext(x_found.End, endif_search)
+                if x_found_endif is None:
+                    cursor = x_found.getText().createTextCursorByRange(x_found)
+                    raise errors.TemplateError(
+                        'no_endif_found',
+                        f"The statement {cursor.String} has no endif",
+                        dict_of(cursor.String)
+                    )
+                compute_if(x_found, x_found_endif)
+
 
             # main of if_replace
             search = doc.createSearchDescriptor()
@@ -881,9 +906,7 @@ class Template:
             search.SearchRegularExpression = True
             search.SearchCaseSensitive = False
             x_found = doc.findFirst(search)
-            while x_found is not None:
-                compute_if(x_found)
-                x_found = doc.findNext(x_found.End, search)
+            find_if_to_compute(doc, search, x_found)
 
         def text_fill(doc, variable: str, value: str) -> None:
             """
