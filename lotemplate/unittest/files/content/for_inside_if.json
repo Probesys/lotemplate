@@ -1,0 +1,33 @@
+{
+  "tata": {
+    "type": "text",
+    "value": "YES"
+  },
+  "tutu": {
+    "type": "array",
+    "value": [
+      {
+        "firstName": "perso 1",
+        "lastName": "string 1",
+        "address": {
+          "street1": "8 rue de la paix",
+          "street2": "",
+          "zip": "75008",
+          "city": "Paris",
+          "state": "Ile de France"
+        }
+      },
+      {
+        "firstName": "perso 2",
+        "lastName": "lastname with < and >",
+        "address": {
+          "street1": "12 avenue Jean Jaurès",
+          "street2": "",
+          "zip": "38000",
+          "city": "Grenoble",
+          "state": "Isère"
+        }
+      }
+    ]
+  }
+}
