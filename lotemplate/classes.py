@@ -237,6 +237,45 @@ class Template:
     def __getitem__(self, item):
         return self.variables[item] if self.variables else None
 
+    def open_doc_from_url(self):
+        try:
+            doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
+        except DisposedException as e:
+            self.close()
+            raise errors.UnoException(
+                'bridge_exception',
+                f"The connection bridge on '{self.cnx.host}:{self.cnx.port}' crashed on file opening."
+                f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
+                f"it, please read the README file, section 'Unsolvable Problems'.",
+                dict_of(self.cnx.host, self.cnx.port)
+            ) from e
+        except IllegalArgumentException:
+            self.close()
+            raise errors.FileNotFoundError(
+                'file_not_found',
+                f"the given file does not exist or has not been found (file {self.file_path!r})",
+                dict_of(self.file_path)
+            ) from None
+        except RuntimeException as e:
+            self.close()
+            raise errors.UnoException(
+                'connection_closed',
+                f"The previously established connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
+                f"has been closed, or ran into an unknown error. Please restart the soffice process, and retry.",
+                dict_of(self.cnx.host, self.cnx.port)
+            ) from e
+
+        if not doc or not doc.supportsService('com.sun.star.text.GenericTextDocument'):
+            self.close()
+            raise errors.TemplateError(
+                'invalid_format',
+                f"The given format ({self.file_name.split('.')[-1]!r}) is invalid, or the file is already open by "
+                f"an other process (accepted formats: ODT, OTT, DOC, DOCX, HTML, RTF or TXT)",
+                dict(format=self.file_name.split('.')[-1])
+            )
+        return doc
+
+
     def __init__(self, file_path: str, cnx: Connexion, should_scan: bool):
         """
         An object representing a LibreOffice/OpenOffice template that you can fill, scan, export and more
@@ -258,41 +297,7 @@ class Template:
             os.remove(self.file_dir + "/.~lock." + self.file_name + "#")
         except FileNotFoundError:
             pass
-        try:
-            self.doc = self.cnx.desktop.loadComponentFromURL(self.file_url, "_blank", 0, ())
-        except DisposedException as e:
-            self.close()
-            raise errors.UnoException(
-                'bridge_exception',
-                f"The connection bridge on '{self.cnx.host}:{self.cnx.port}' crashed on file opening."
-                f"Please restart the soffice process. For more informations on what caused this bug and how to avoid "
-                f"it, please read the README file, section 'Unsolvable Problems'.",
-                dict_of(cnx.host, cnx.port)
-            ) from e
-        except IllegalArgumentException:
-            self.close()
-            raise errors.FileNotFoundError(
-                'file_not_found',
-                f"the given file does not exist or has not been found (file {file_path!r})",
-                dict_of(file_path)
-            ) from None
-        except RuntimeException as e:
-            self.close()
-            raise errors.UnoException(
-                'connection_closed',
-                f"The previously established connection with the soffice process on '{self.cnx.host}:{self.cnx.port}' "
-                f"has been closed, or ran into an unknown error. Please restart the soffice process, and retry.",
-                dict_of(cnx.host, cnx.port)
-            ) from e
-
-        if not self.doc or not self.doc.supportsService('com.sun.star.text.GenericTextDocument'):
-            self.close()
-            raise errors.TemplateError(
-                'invalid_format',
-                f"The given format ({self.file_name.split('.')[-1]!r}) is invalid, or the file is already open by "
-                f"an other process (accepted formats: ODT, OTT, DOC, DOCX, HTML, RTF or TXT)",
-                dict(format=self.file_name.split('.')[-1])
-            )
+        self.doc = self.open_doc_from_url()
         self.variables = self.scan(should_close=True) if should_scan else None
 
     def scan(self, **kwargs) -> dict[str: dict[str, Union[str, list[str]]]]:
@@ -342,7 +347,7 @@ class Template:
 
             return plain_vars | text_fields_vars
 
-        def scan_if(doc) -> None:
+        def scan_if() -> None:
             """
             scan for if statement. No return. We just verify that there is
             and endif for each if statement
@@ -367,7 +372,7 @@ class Template:
                 Find the if statement to compute.
                 """
                 if x_found is None:
-                    return None;
+                    return None
                 while True:
                     x_found_after = doc.findNext(x_found.End, search)
                     if x_found_after is not None:
@@ -392,12 +397,14 @@ class Template:
 
 
             # main of if_replace
+            doc = self.open_doc_from_url()
             search = doc.createSearchDescriptor()
             search.SearchString = IfStatement.start_regex
             search.SearchRegularExpression = True
             search.SearchCaseSensitive = False
             x_found = doc.findFirst(search)
             find_if_to_compute(doc, search, x_found)
+            doc.dispose()
 
         def scan_for(doc) -> dict:
             """
@@ -541,7 +548,8 @@ class Template:
             }
 
         texts = scan_text(self.doc)
-        scan_if(self.doc)
+        # we use another document for if statement scanning because it modifies the file
+        scan_if()
         tables = scan_table(self.doc)
         images = scan_image(self.doc)
         fors = scan_for(self.doc)
