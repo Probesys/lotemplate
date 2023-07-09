@@ -71,6 +71,9 @@ class Text(unittest.TestCase):
     def test_for(self):
         self.assertTrue(compare_files('for'))
 
+    def test_for_inside_if(self):
+        self.assertTrue(compare_files('for_inside_if'))
+
     def test_vars(self):
         self.assertTrue(compare_files('text_vars'))
 

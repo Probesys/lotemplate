@@ -276,6 +276,25 @@ class OtherFormats(unittest.TestCase):
         )
         doc.close()
 
+    def test_for_inside_if(self):
+        doc = ot.Template("lotemplate/unittest/files/content/for_inside_if.odt", cnx, False)
+        self.assertEqual(
+            {
+                'tata': {'type': 'text', 'value': ''},
+                'tutu': {'type': 'array', 'value': []}
+            },
+            doc.scan()
+        )
+        # this is run twice to check if mutable scan_if can be run twice
+        self.assertEqual(
+            {
+                'tata': {'type': 'text', 'value': ''},
+                'tutu': {'type': 'array', 'value': []}
+            },
+            doc.scan()
+        )
+        doc.close()
+
     def test_invalid(self):
         with self.assertRaises(ot.errors.TemplateError):
             (doc := ot.Template("lotemplate/unittest/files/templates/invalid_format.jpg", cnx, False)).scan()
