@@ -68,6 +68,10 @@ class Text(unittest.TestCase):
     def test_html(self):
         self.assertTrue(compare_files('html'))
 
+    def test_html_missing_endhtml(self):
+        with self.assertRaises(ot.errors.TemplateError):
+            self.assertTrue(compare_files('html_missing_endhtml'))
+
     def test_for(self):
         self.assertTrue(compare_files('for'))
 
