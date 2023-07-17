@@ -552,6 +552,7 @@ For trying to fix these problems, you can try:
 - use variable formatting instead of the one of the character before
 
 ## Versions :
+- v1.2.5, 2023-07-17 : temporary fix for detecting endhtml and endfor
 - v1.2.4, 2023-07-09 : fix major bug in if statement scanning
 - v1.2.3, 2023-07-07 : no endif detection, performance improvement in if statement
 - v1.2.2, 2023-06-09 : bugfix html statement scan missing
