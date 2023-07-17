@@ -630,7 +630,13 @@ class Template:
                 text = local_x_found.getText()
                 cursor = text.createTextCursorByRange(local_x_found)
                 while True:
-                    cursor.goRight(1, True)
+                    if not cursor.goRight(1, True):
+                        raise errors.TemplateError(
+                            'no_endhtml_found',
+                            f"The statement [html] has no endhtml",
+                            dict_of(html_statement.html_string)
+                        )
+
                     selected_string = cursor.String
                     match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
                     if match is not None:
@@ -794,7 +800,12 @@ class Template:
 
                 # select content between for and endfor (including endfor)
                 while True:
-                    cursor.goRight(1, True)
+                    if not cursor.goRight(1, True):
+                        raise errors.TemplateError(
+                            'no_endfor_found',
+                            f"The statement {for_statement.for_string} has no endif",
+                            dict_of(for_statement.for_string)
+                        )
                     selected_string = cursor.String
                     match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
                     if match is not None:
