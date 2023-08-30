@@ -239,6 +239,24 @@ Then in the json, function variable are working exactly like simple variables.
 }
 ```
 
+### html variables
+
+Html variables are exactly like text variables, but the html is interpreted when
+the variable is replaced in the document.
+
+To declare a variable as an html variable, we only have to change the type in the json and send "html" instead of "text".
+
+```json
+{
+  "my_var": {
+    "type": "html",
+    "value": "my value with <strong>html formatting</strong>"
+  }
+}
+```
+
+Limitation : Html is not interpreted into "shape content". For example for a text associated to a rectangle inserted into the document.
+
 ### image variables
 
 Add any image in the document, and put in the title of the alt text of the image
@@ -253,15 +271,40 @@ Add the dynamic variables in the last row of the table, exactly like text variab
 
 You can use if statement in order to display or to hide a part of your document.
 
-There is 4 possible operators : `==`, `!=`, `IS_EMPTY`, `IS_NOT_EMPTY`
+There is many operators : 
+
+* `==` : test if the var is equal to the value (case-insensitive)
+* `!=` : test if the var is not equal to the value (case-insensitive)
+* `===` : test if the var is equal to the value (case-sensitive)
+* `!==` : test if the var is not equal to the value (case-sensitive)
+* `IS_EMPTY` : check if the var is empty (empty means empty or only spaces, tabs or newlines)
+* `IS_NOT_EMPTY` : check if the var is not empty (empty means empty or only spaces, tabs or newlines)
+* `CONTAINS` : check if the var contains the value (case-insensitive)
+* `NOT_CONTAINS` : check if the var does not contain the value (case-insensitive)
 
 ```
 [if $my_var == my_value]
-here you have your document
+$my_var equals my_value (case insensitive)
+[endif]
+
+[if $my_var === my_value]
+$my_var equals my_value (case sensitive)
 [endif]
 
 [if $my_var != my_value]
-here you have your document
+$my_var does not equals my_value (case insensitive)
+[endif]
+
+[if $my_var !== my_value]
+$my_var does not equals my_value (case sensitive)
+[endif]
+
+[if $my_var CONTAINS y_VAl]
+This part will be displayed if $my_var contains y_VAl (case insensitive)
+[endif]
+
+[if $my_var NOT_CONTAINS dlfksqjqm]
+This part will be displayed if $my_var does not contain dlfksqjqm
 [endif]
 
 [if $my_var IS_EMPTY]
@@ -552,6 +595,9 @@ For trying to fix these problems, you can try:
 - use variable formatting instead of the one of the character before
 
 ## Versions :
+- v1.2.6, 2023-08-30 :
+  - new comparators for if statements : ===, !==, CONTAINS, NOT_CONTAINS
+  - variables of type "html" are now supported and copied as HTML
 - v1.2.5, 2023-07-17 : temporary fix for detecting endhtml and endfor
 - v1.2.4, 2023-07-09 : fix major bug in if statement scanning
 - v1.2.3, 2023-07-07 : no endif detection, performance improvement in if statement

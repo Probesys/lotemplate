@@ -87,6 +87,9 @@ class Text(unittest.TestCase):
     def test_if_empty(self):
         self.assertTrue(compare_files('if_empty'))
 
+    def test_if_contains(self):
+        self.assertTrue(compare_files('if_contains'))
+
     def test_function_variable(self):
         self.assertTrue(compare_files('function_variable'))
 
@@ -95,6 +98,9 @@ class Text(unittest.TestCase):
 
     def test_if_inside_for(self):
         self.assertTrue(compare_files('if_inside_for'))
+
+    def test_html_vars(self):
+        self.assertTrue(compare_files('html_vars'))
 
     def test_debug(self):
         self.assertTrue(compare_files('debug'))
