@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
+      target: prod
     volumes:
       - ./:/app/
     ports:

@@ -50,6 +50,21 @@ or, for Docker deployment:
 docker-compose up
 ```
 
+# Docker for dev when your uid is not 1000
+
+for this we use fixuid (https://github.com/boxboat/fixuid)
+
+you have to define two env variable MY_UID and MY_GID with your uid and gid
+copy docker-compose.override.yml.example to docker-compose.override.yml
+
+```shell
+export MY_UID=$(id -u)
+export MY_GID=$(id -g)
+cp docker-compose.override.yml.example docker-compose.override.yml
+docker-compose up
+```
+
+
 ### Quick start with the API
 
 ```bash

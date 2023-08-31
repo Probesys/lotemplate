@@ -20,3 +20,5 @@ exports/
 /lotemplate/unittest/files/content/*.unittest.odt
 /venv
 /output*.*
+.fontconfig/
+docker-compose.override.yml
