@@ -610,6 +610,8 @@ For trying to fix these problems, you can try:
 - use variable formatting instead of the one of the character before
 
 ## Versions :
+- v1.2.7, 2023-08-30 :
+  - Upgrade to debian bookworm slim
 - v1.2.6, 2023-08-30 :
   - new comparators for if statements : ===, !==, CONTAINS, NOT_CONTAINS
   - variables of type "html" are now supported and copied as HTML
