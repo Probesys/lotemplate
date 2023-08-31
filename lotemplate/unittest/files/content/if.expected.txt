@@ -10,6 +10,18 @@ This paragraph should be displayed (==oui)
 
 
 
+This paragraph should be displayed (==oui case insensitive)
+
+
+<-empty
+
+
+This paragraph should be displayed (!==OuI case sensitive)
+<-empty
+
+<-nothing
+
+<-nothing
 
 
 This paragraph should be displayed (!= glouglou)

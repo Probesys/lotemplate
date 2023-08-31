@@ -1,0 +1,10 @@
+{
+  "foo": {
+    "type": "html",
+    "value": "simple puis <strong>texte en gras</strong>"
+  },
+  "bar": {
+    "type": "text",
+    "value": "simple puis <strong>texte en gras</strong>"
+  }
+}

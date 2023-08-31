@@ -115,7 +115,11 @@ class IfStatement:
               (?:           # for syntax == var or != var
                   (              # equality
                     \=\=|
-                    \!\=
+                    \!\=|
+                    \=\=\=|
+                    \!\=\=|
+                    CONTAINS|
+                    NOT_CONTAINS
                   )\s*
                   (                 # value is anything, should escape [ and ]
                     (?:
@@ -157,9 +161,17 @@ class IfStatement:
 
     def get_if_result(self, value):
         if self.operator == '==':
-            return value == self.value
+            return value.lower() == self.value.lower()
         if self.operator == '!=':
+            return value.lower() != self.value.lower()
+        if self.operator == '===':
+            return value == self.value
+        if self.operator == '!==':
             return value != self.value
+        if self.operator == 'CONTAINS':
+            return self.value.lower() in value.lower()
+        if self.operator == 'NOT_CONTAINS':
+            return self.value.lower() not in value.lower()
         if self.operator == 'IS_EMPTY':
             return re.search(r'^[\s\t\n]*$', value) is not None
         if self.operator == 'IS_NOT_EMPTY':
@@ -299,6 +311,28 @@ class Template:
             pass
         self.doc = self.open_doc_from_url()
         self.variables = self.scan(should_close=True) if should_scan else None
+
+    def pasteHtml(self, html_string, cursor):
+        """
+        copy the html string as html at the location of the cursor
+        :param html_string:
+        :param cursor:
+        :return:
+        """
+        # horrible hack : there is a bug with the "paste HTML" function of libreoffice, so we have to add
+        # a &nbsp; at the beginning of the string to make it work. Without that, the first element of a list
+        # <ul><li>...</li></ul> is displayed without the bullet point. This is the less visible workaround I found.
+        html_string = '&nbsp;' + html_string
+        input_stream = self.cnx.ctx.ServiceManager.createInstanceWithContext("com.sun.star.io.SequenceInputStream",
+                                                                             self.cnx.ctx)
+        input_stream.initialize((uno.ByteSequence(html_string.encode()),))
+        prop1 = PropertyValue()
+        prop1.Name = "FilterName"
+        prop1.Value = "HTML (StarWriter)"
+        prop2 = PropertyValue()
+        prop2.Name = "InputStream"
+        prop2.Value = input_stream
+        cursor.insertDocumentFromURL("private:stream", (prop1, prop2))
 
     def scan(self, **kwargs) -> dict[str: dict[str, Union[str, list[str]]]]:
         """
@@ -592,7 +626,9 @@ class Template:
                 dict(variable=json_missing[0])
             )
 
-        json_incorrect = [key for key in self.variables if json_vars[key]['type'] != self.variables[key]['type']]
+        # when parsing the template, we assume that all vars are of type text. But it can also be of type html.
+        # So we check if types are equals or if type in json is "html" while type in template is "text"
+        json_incorrect = [key for key in self.variables if (json_vars[key]['type'] != self.variables[key]['type']) and (json_vars[key]['type'] != "html" or self.variables[key]['type']!="text")]
         if json_incorrect:
             raise errors.JsonComparaisonError(
                 'incorrect_value_type',
@@ -607,10 +643,6 @@ class Template:
         json_vars_without_template_missing = {key: json_vars[key] for key in json_vars if key not in template_missing}
         if json_vars_without_template_missing == self.variables:
             return
-
-        raise errors.JsonComparaisonError(
-            'unknown_reason',
-            f"Variables given in the json don't match with the given template, but no reason was found", {})
 
     def fill(self, variables: dict[str, dict[str, Union[str, list[str]]]]) -> None:
         """
@@ -644,19 +676,7 @@ class Template:
                 cursor.String = ''
                 html_string = re.sub(HtmlStatement.end_regex, '', selected_string, flags=re.IGNORECASE)
                 html_string = re.sub(HtmlStatement.start_regex, '', html_string, flags=re.IGNORECASE)
-                # horrible hack : there is a bug with the "paste HTML" function of libreoffice, so we have to add
-                # a &nbsp; at the beginning of the string to make it work. Without that, the first element of a list
-                # <ul><li>...</li></ul> is displayed without the bullet point. This is the less visible workaround I found.
-                html_string = '&nbsp;'+html_string
-                input_stream = self.cnx.ctx.ServiceManager.createInstanceWithContext("com.sun.star.io.SequenceInputStream", self.cnx.ctx)
-                input_stream.initialize((uno.ByteSequence(html_string.encode()),))
-                prop1 = PropertyValue()
-                prop1.Name = "FilterName"
-                prop1.Value = "HTML (StarWriter)"
-                prop2 = PropertyValue()
-                prop2.Name = "InputStream"
-                prop2.Value = input_stream
-                cursor.insertDocumentFromURL("private:stream", (prop1, prop2))
+                self.pasteHtml(html_string, cursor)
 
             # main of for_replace
             search = doc.createSearchDescriptor()
@@ -940,15 +960,48 @@ class Template:
             search = doc.createSearchDescriptor()
             search.SearchString = variable
             founded = doc.findAll(search)
-            instances = [founded.getByIndex(i) for i in range(founded.getCount())]
 
-            for string in instances:
-                string.String = string.String.replace(variable, value)
+            for x_found in founded:
+                text = x_found.getText()
+                cursor = text.createTextCursorByRange(x_found)
+                cursor.String = value
 
             for page in doc.getDrawPages():
                 for shape in page:
-                    if shape.getShapeType() == "com.sun.star.drawing.TextShape":
+                    # note : we changed this test in order to manage more possible shapes.
+                    # if shape.getShapeType() == "com.sun.star.drawing.TextShape":
+                    if hasattr(shape, 'String'):
                         shape.String = shape.String.replace(variable, value)
+
+        def html_fill(doc, variable: str, value: str) -> None:
+            """
+            Fills all the html-related content
+
+            :param doc: the document to fill
+            :param variable: the variable to search
+            :param value: the value to replace with
+            :return: None
+            """
+
+            search = doc.createSearchDescriptor()
+            search.SearchString = variable
+            founded = doc.findAll(search)
+            for x_found in founded:
+                text = x_found.getText()
+                cursor = text.createTextCursorByRange(x_found)
+                cursor.String = ""
+                self.pasteHtml(value, cursor)
+
+            for page in doc.getDrawPages():
+                for shape in page:
+                    # note : we changed this test in order to manage more possible shapes.
+                    # if shape.getShapeType() == "com.sun.star.drawing.TextShape":
+                    if hasattr(shape, 'String'):
+                        shape.String = shape.String.replace(variable, value)
+                        # we wanted to use the pasteHtml function, but it doesn't work in a shape
+                        # cursor = shape.createTextCursor()
+                        # oldString = cursor.String
+                        # self.pasteHtml(oldString.replace(variable, value), cursor)
 
         def image_fill(doc, graphic_provider, variable: str, path: str, should_resize=True) -> None:
             """
@@ -1069,6 +1122,8 @@ class Template:
                 text_fill(self.new, "$" + var, details['value'])
             elif details['type'] == 'image':
                 image_fill(self.new, self.cnx.graphic_provider, "$" + var, details['value'])
+            elif details['type'] == 'html':
+                html_fill(self.new, "$" + var, details['value'])
 
         html_replace(self.new)
 

@@ -1,0 +1,26 @@
+﻿
+Tests of if CONTAINS statements
+
+We check the values with the tutu = text content with searchable words
+
+
+This paragraph should be displayed (contains the « content » word)
+
+
+
+This paragraph should be displayed (contains case insensitve)
+
+
+
+This paragraph should be displayed (substring inside a word)
+
+
+<-nothing
+
+
+This paragraph should be displayed (does not contain glouglou)
+
+
+<-nothing
+
+end of file
