@@ -3,12 +3,4 @@ services:
   lo_api:
     build:
       target: dev
-    networks:
-      - nemo-network
     user: ${MY_UID}:${MY_GID}
-networks:
-  default:
-    driver: bridge
-  nemo-network:
-    external: true
-    name: nemo-network
