@@ -50,7 +50,7 @@ or, for Docker deployment:
 docker-compose up
 ```
 
-# Docker for dev when your uid is not 1000
+## Docker for dev when your uid is not 1000
 
 for this we use fixuid (https://github.com/boxboat/fixuid)
 
