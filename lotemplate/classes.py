@@ -968,9 +968,7 @@ class Template:
 
             for page in doc.getDrawPages():
                 for shape in page:
-                    # note : we changed this test in order to manage more possible shapes.
-                    # if shape.getShapeType() == "com.sun.star.drawing.TextShape":
-                    if hasattr(shape, 'String'):
+                    if shape.getShapeType() == "com.sun.star.drawing.TextShape":
                         shape.String = shape.String.replace(variable, value)
 
         def html_fill(doc, variable: str, value: str) -> None:
@@ -994,9 +992,7 @@ class Template:
 
             for page in doc.getDrawPages():
                 for shape in page:
-                    # note : we changed this test in order to manage more possible shapes.
-                    # if shape.getShapeType() == "com.sun.star.drawing.TextShape":
-                    if hasattr(shape, 'String'):
+                    if shape.getShapeType() == "com.sun.star.drawing.TextShape":
                         shape.String = shape.String.replace(variable, value)
                         # we wanted to use the pasteHtml function, but it doesn't work in a shape
                         # cursor = shape.createTextCursor()
