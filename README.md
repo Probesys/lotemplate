@@ -610,6 +610,8 @@ For trying to fix these problems, you can try:
 - use variable formatting instead of the one of the character before
 
 ## Versions :
+- v1.2.8, 2023-09-01 :
+  - fix bug in TextShape var replacement
 - v1.2.7, 2023-08-30 :
   - Upgrade to debian bookworm slim
 - v1.2.6, 2023-08-30 :
