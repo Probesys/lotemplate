@@ -102,5 +102,11 @@ class Text(unittest.TestCase):
     def test_html_vars(self):
         self.assertTrue(compare_files('html_vars'))
 
+    def test_table(self):
+        self.assertTrue(compare_files('table'))
+
+    def test_image(self):
+        self.assertTrue(compare_files('image'))
+
     def test_debug(self):
         self.assertTrue(compare_files('debug'))
