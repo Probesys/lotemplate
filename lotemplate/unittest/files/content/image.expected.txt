@@ -1,0 +1,22 @@
+﻿Test image modification
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Here we are after the image
+
+Warning : this test does not test automatically the image insertion. You should check the result in the content folder in the image.unittest.odt to see if the image is well inserted.
+
+It only test that the system can find the image on the disk.
