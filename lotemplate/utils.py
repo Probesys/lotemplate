@@ -8,8 +8,7 @@ Utils functions, used by the CLI, the API or the core itself
 __all__ = (
     'convert_to_datas_template',
     'is_network_based',
-    'get_file_url',
-    'var_regexes'
+    'get_file_url'
 )
 
 import functools
@@ -20,7 +19,6 @@ import urllib.error
 from typing import Union
 from sorcery import dict_of
 from copy import deepcopy
-import regex
 
 from . import errors
 
@@ -285,14 +283,3 @@ def get_file_url(file: str) -> str:
     """
     return file if is_network_based(file) else (
         "file://" + ((os.getcwd() + "/" + file) if file[0] != '/' else file))
-
-
-var_regexes = {
-    'image': regex.compile(r'\$\w+'),
-    'text': regex.compile(
-        r'\$(\w+(\(((?:\\.|.)*?)\))?)'),
-    'table': regex.compile(
-        r'\$\w+'
-        r'(?:\((?<arg>(?R)|"[^"]*"|[^$&"\s()][^\s()]*)(?:[+ ](?&arg))*\))?'
-        r'|(?<var>&\w+)'),
-}

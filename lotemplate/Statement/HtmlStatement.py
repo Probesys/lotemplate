@@ -87,3 +87,31 @@ class HtmlStatement:
         while x_found is not None:
             compute_html(doc, x_found)
             x_found = doc.findNext(x_found.End, search)
+
+    def html_fill(template, doc: XComponent, variable: str, value: str) -> None:
+        """
+        Fills all the html-related content (contents of type "html" in the json file)
+
+        :param doc: the document to fill
+        :param variable: the variable to search
+        :param value: the value to replace with
+        :return: None
+        """
+
+        search = doc.createSearchDescriptor()
+        search.SearchString = variable
+        founded = doc.findAll(search)
+        for x_found in founded:
+            text = x_found.getText()
+            cursor = text.createTextCursorByRange(x_found)
+            cursor.String = ""
+            template.pasteHtml(value, cursor)
+
+        for page in doc.getDrawPages():
+            for shape in page:
+                if shape.getShapeType() == "com.sun.star.drawing.TextShape":
+                    shape.String = shape.String.replace(variable, value)
+                    # we wanted to use the pasteHtml function, but it doesn't work in a shape
+                    # cursor = shape.createTextCursor()
+                    # oldString = cursor.String
+                    # self.pasteHtml(oldString.replace(variable, value), cursor)
