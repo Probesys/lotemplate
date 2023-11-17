@@ -540,7 +540,10 @@ and the odt template :
 
 ### counter statement
 
-You can use counter statement in order to display a counter in your document.
+You can use counter statement in order to display values that will be incremented step by step in your document. It
+can be used for example to have a heading automatic numbering.
+
+**WARNING** : generally you don't have to use this counter feature. You can use the automatic numbering of Word or Libre Office
 
 In your odt, you can use :
 
