@@ -538,6 +538,108 @@ and the odt template :
 [endhtml]
 ```
 
+### counter statement
+
+You can use counter statement in order to display a counter in your document.
+
+In your odt, you can use :
+
+```
+chapter [counter chapter] : introduction
+
+chapter [counter chapter] : context
+
+[counter paragraph] : geopolitical context
+
+[counter paragraph] : geographical context
+
+[counter paragraph] : economical context
+
+chapter [counter chapter] : analysis
+[counter.reset paragraph]
+[counter paragraph] : geopolitical analysis
+
+[counter paragraph] : geographical analysis
+
+[counter paragraph] : economical analysis
+```
+
+It will be transformed in : 
+
+```
+chapter 1 : introduction
+
+chapter 2 : context
+
+1 : geopolitical context
+
+2 : geographical context
+
+3 : economical context
+
+chapter 3 : analysis
+
+1 : geopolitical analysis
+
+2 : geographical analysis
+
+3 : economical analysis
+```
+
+The possible syntaxe are :
+
+* `[counter counter_name]` : increment the counter "counter_name" and display it
+* `[counter.reset counter_name]` : reset the counter "counter_name" to 0
+* `[counter.last counter_name]` : display the last value of the counter "counter_name" without incrementing it
+* `[counter.format counter_name format_name]` : change the format of the counter
+    * `[counter.format counter_name number]` : the counter is displayed as a number (default)
+    * `[counter.format counter_name letter_lowercase]` : the counter is displayed as a letter (a, b, c, ...)
+    * `[counter.format counter_name letter_uppercase]` : the counter is displayed as a letter (A, B, C, ...)
+
+You can display hierarchical counters by just using `counter.last`:
+
+
+```
+chapter [counter chapter] : introduction
+
+chapter [counter chapter] : context
+
+[counter.last chapter].[counter paragraph] : geopolitical context
+
+[counter.last chapter].[counter paragraph] : geographical context
+
+[counter.last chapter].[counter paragraph] : economical context
+
+chapter [counter chapter] : analysis
+[counter.reset paragraph]
+[counter.last chapter].[counter paragraph] : geopolitical analysis
+
+[counter.last chapter].[counter paragraph] : geographical analysis
+
+[counter.last chapter].[counter paragraph] : economical analysis
+```
+
+The result will be
+
+```
+chapter 1 : introduction
+
+chapter 2 : context
+
+2.1 : geopolitical context
+
+2.2 : geographical context
+
+2.3 : economical context
+
+chapter 3 : analysis
+
+3.1 : geopolitical analysis
+
+3.2 : geographical analysis
+
+3.3 : economical analysis
+```
 
 ## Supported formats
 
@@ -611,6 +713,8 @@ For trying to fix these problems, you can try:
 
 ## Versions :
 
+- v1.4.0, 2023-11-17 : counters
+  - add a counter system inside templates
 - v1.3.0, 2023-11-16 :
   - major refactoring. No evolution for the user.
   - new unit tests on tables and images
