@@ -25,21 +25,18 @@ class HtmlStatement:
             scan for a single for statement
             """
             html_statement = HtmlStatement(local_x_found.getString())
-            position_in_text = len(html_statement.html_string)
-            text = local_x_found.getText()
-            cursor = text.createTextCursorByRange(local_x_found)
-            while True:
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endhtml_found',
-                        f"The statement {html_statement.html_string} has no endhtml",
-                        dict_of(html_statement.html_string)
-                    )
-                position_in_text = position_in_text + 1
-                selected_string = cursor.String
-                match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
-                if match is not None:
-                    break
+            endhtml_search = doc.createSearchDescriptor()
+            endhtml_search.SearchString = HtmlStatement.end_regex
+            endhtml_search.SearchRegularExpression = True
+            endhtml_search.SearchCaseSensitive = False
+            x_found_endhtml = doc.findNext(local_x_found.End, endhtml_search)
+            if x_found_endhtml is None:
+                cursor = local_x_found.getText().createTextCursorByRange(local_x_found)
+                raise errors.TemplateError(
+                    'no_endhtml_found',
+                    f"The statement [html] has no endhtml",
+                    dict_of(cursor.String)
+                )
 
         search = doc.createSearchDescriptor()
         search.SearchString = HtmlStatement.start_regex
