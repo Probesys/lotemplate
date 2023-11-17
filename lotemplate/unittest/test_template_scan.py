@@ -121,6 +121,18 @@ class Tables(unittest.TestCase):
             (doc := ot.Template("lotemplate/unittest/files/templates/invalid_vars_tab.odt", cnx, False)).scan()
         doc.close()
 
+    def test_for(self):
+        self.assertEqual(
+            {'tutu': {'type': 'array', 'value': []}},
+            (doc := ot.Template("lotemplate/unittest/files/templates/for.odt", cnx, False)).scan()
+        )
+        doc.close()
+
+    def test_for_missing_endfor(self):
+        with self.assertRaises(ot.errors.TemplateError):
+            (doc := ot.Template("lotemplate/unittest/files/templates/for_missing_endfor.odt", cnx, False)).scan()
+        doc.close()
+
     def test_two_tabs_varied(self):
         self.assertEqual(
             {

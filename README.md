@@ -717,6 +717,8 @@ For trying to fix these problems, you can try:
   - add a counter system inside templates
   - add better scan for if statement. Raises an error if there is too many endif in the template.
   - speedup html statement replacement and scanning
+  - speedup for statement replacement and scanning
+  - tests of for scanning
   - internal : add scan testing inside content unit tests
 - v1.3.0, 2023-11-16 :
   - major refactoring. No evolution for the user.
