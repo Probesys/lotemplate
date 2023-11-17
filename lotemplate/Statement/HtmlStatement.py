@@ -59,24 +59,30 @@ class HtmlStatement:
 
         def compute_html(doc, local_x_found):
             html_statement = HtmlStatement(local_x_found.getString())
-            text = local_x_found.getText()
-            cursor = text.createTextCursorByRange(local_x_found)
-            while True:
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endhtml_found',
-                        f"The statement [html] has no endhtml",
-                        dict_of(html_statement.html_string)
-                    )
+            endhtml_search = doc.createSearchDescriptor()
+            endhtml_search.SearchString = HtmlStatement.end_regex
+            endhtml_search.SearchRegularExpression = True
+            endhtml_search.SearchCaseSensitive = False
+            x_found_endhtml = doc.findNext(local_x_found.End, endhtml_search)
+            if x_found_endhtml is None:
+                cursor = local_x_found.getText().createTextCursorByRange(local_x_found)
+                raise errors.TemplateError(
+                    'no_endhtml_found',
+                    f"The statement [html] has no endhtml",
+                    dict_of(cursor.String)
+                )
 
-                selected_string = cursor.String
-                match = re.search(HtmlStatement.end_regex, selected_string, re.IGNORECASE)
-                if match is not None:
-                    break
-            cursor.String = ''
-            html_string = re.sub(HtmlStatement.end_regex, '', selected_string, flags=re.IGNORECASE)
-            html_string = re.sub(HtmlStatement.start_regex, '', html_string, flags=re.IGNORECASE)
-            template.pasteHtml(html_string, cursor)
+            html_text = local_x_found.getText()
+            endhtml_text = x_found_endhtml.getText()
+            html_cursor = html_text.createTextCursorByRange(local_x_found)
+            endhtml_cursor = endhtml_text.createTextCursorByRange(x_found_endhtml)
+            content_cursor = html_text.createTextCursorByRange(local_x_found.End)
+            content_cursor.gotoRange(x_found_endhtml.Start, True)
+            html_string = content_cursor.String
+            html_cursor.String = ''
+            endhtml_cursor.String = ''
+            content_cursor.String = ''
+            template.pasteHtml(html_string, content_cursor)
 
         # main of for_replace
         search = doc.createSearchDescriptor()
