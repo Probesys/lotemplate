@@ -715,6 +715,8 @@ For trying to fix these problems, you can try:
 
 - v1.4.0, 2023-11-17 : counters
   - add a counter system inside templates
+  - add better scan for if statement. Raises an error if there is too many endif in the template.
+  - internal : add scan testing inside content unit tests
 - v1.3.0, 2023-11-16 :
   - major refactoring. No evolution for the user.
   - new unit tests on tables and images

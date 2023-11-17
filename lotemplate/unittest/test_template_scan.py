@@ -295,6 +295,11 @@ class OtherFormats(unittest.TestCase):
         )
         doc.close()
 
+    def test_if_too_many_endif(self):
+        with self.assertRaises(ot.errors.TemplateError):
+            (doc := ot.Template("lotemplate/unittest/files/templates/if_too_many_endif.odt", cnx, False)).scan()
+            doc.close()
+
     def test_invalid(self):
         with self.assertRaises(ot.errors.TemplateError):
             (doc := ot.Template("lotemplate/unittest/files/templates/invalid_format.jpg", cnx, False)).scan()
