@@ -1,0 +1,65 @@
+﻿
+Basic counter
+
+
+
+chapter 1 : Introduction
+
+Text of the introduction
+
+chapter 2 : Context
+
+A ) political context
+
+lorem ipsum
+
+B ) geographical context
+
+lorem ipsum 2
+
+chapter 3 : Solutions
+
+
+
+
+A ) Title 1
+
+Content no 1
+
+B ) Title 2
+
+Content no 2
+
+C ) Title 3
+
+Content no 3
+
+
+chapter 4 : Conclusion
+
+Lorem ipsum 
+
+
+Hierarchical counter
+
+
+
+chapter 1 : Context
+
+1.a ) political context
+
+lorem ipsum
+
+1.b ) geographical context
+
+lorem ipsum 2
+
+chapter 2 : Context
+
+2.a ) political context
+
+lorem ipsum
+
+2.b ) geographical context
+
+lorem ipsum 2

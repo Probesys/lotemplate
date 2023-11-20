@@ -160,6 +160,19 @@ class IfStatement:
         search.SearchCaseSensitive = False
         x_found = doc.findFirst(search)
         find_if_to_compute(doc, search, x_found)
+
+        # check if there is still a endif at the end and rase an error if it is the case
+        globalCursor = doc.getText().createTextCursor()
+        globalCursor.gotoEnd(True)
+        str = globalCursor.String
+        match = re.search(IfStatement.end_regex, str, re.IGNORECASE)
+        if match is not None:
+            raise errors.TemplateError(
+                'too_many_endif_found',
+                f"The document has too many endif",
+                {}
+            )
+
         doc.dispose()
 
 

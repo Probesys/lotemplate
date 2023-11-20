@@ -1,0 +1,19 @@
+{
+  "solutions": {
+    "type": "array",
+    "value": [
+      {
+        "title": "Title 1",
+        "paragraph": "Content no 1"
+      },
+      {
+        "title": "Title 2",
+        "paragraph": "Content no 2"
+      },
+      {
+        "title": "Title 3",
+        "paragraph": "Content no 3"
+      }
+    ]
+  }
+}

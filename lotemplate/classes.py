@@ -33,6 +33,7 @@ from lotemplate.Statement.IfStatement import IfStatement
 from lotemplate.Statement.TextStatement import TextStatement
 from lotemplate.Statement.TableStatement import TableStatement
 from lotemplate.Statement.ImageStatement import ImageStatement
+from lotemplate.Statement.CounterStatement import CounterManager
 
 class Connexion:
 
@@ -199,6 +200,7 @@ class Template:
         images = ImageStatement.scan_image(self.doc)
         fors = ForStatement.scan_for(self.doc)
         HtmlStatement.scan_html(self.doc)
+        CounterManager.scan_counter(self.doc)
 
         variables_list = list(texts.keys()) + list(tables.keys()) + list(images.keys()) + list(fors.keys())
         duplicates = [variable for variable in variables_list if variables_list.count(variable) > 1]
@@ -304,6 +306,8 @@ class Template:
         HtmlStatement.html_replace(template=self, doc=self.new)
 
         TableStatement.tables_fill(self.new, variables, '$', '&')
+
+        CounterManager.counter_replace(self.new)
 
     def export(self, name: str, should_replace=False) -> Union[str, None]:
         """

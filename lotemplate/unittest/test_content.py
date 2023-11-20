@@ -46,6 +46,7 @@ def compare_files(name: str):
         else:
             raise FileNotFoundError('No file found for ' + name)
 
+    temp.scan()
     temp.search_error(to_data(get_filename('json')))
     temp.fill(file_to_dict(get_filename('json')))
 
@@ -107,6 +108,9 @@ class Text(unittest.TestCase):
 
     def test_image(self):
         self.assertTrue(compare_files('image'))
+
+    def test_counter(self):
+        self.assertTrue(compare_files('counter'))
 
     def test_debug(self):
         self.assertTrue(compare_files('debug'))

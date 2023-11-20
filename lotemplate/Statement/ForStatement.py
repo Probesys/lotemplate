@@ -57,26 +57,24 @@ class ForStatement:
         - vars sent are lists
         """
 
-        def scan_single_for(local_x_found) -> str:
+        def scan_single_for(doc: XComponent, local_x_found) -> str:
             """
             scan for a single for statement
             """
             for_statement = ForStatement(local_x_found.getString())
             position_in_text = len(for_statement.for_string)
-            text = local_x_found.getText()
-            cursor = text.createTextCursorByRange(local_x_found)
-            while True:
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endfor_found',
-                        f"The statement {for_statement.for_string} has no endfor",
-                        dict_of(for_statement.for_string)
-                    )
-                position_in_text = position_in_text + 1
-                selected_string = cursor.String
-                match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
-                if match is not None:
-                    break
+
+            endfor_search = doc.createSearchDescriptor()
+            endfor_search.SearchString = ForStatement.end_regex
+            endfor_search.SearchRegularExpression = True
+            endfor_search.SearchCaseSensitive = False
+            x_found_endfor = doc.findNext(local_x_found.End, endfor_search)
+            if x_found_endfor is None:
+                raise errors.TemplateError(
+                    'no_endfor_found',
+                    f"The statement {for_statement.for_string} has no endfor",
+                    dict_of(for_statement.for_string)
+                )
             return for_statement.variable_name
 
         search = doc.createSearchDescriptor()
@@ -87,7 +85,7 @@ class ForStatement:
 
         for_vars = {}
         while x_found is not None:
-            variable_name = scan_single_for(x_found)
+            variable_name = scan_single_for(doc, x_found)
             for_vars[variable_name] = {'type': 'array', 'value': []}
             x_found = doc.findNext(x_found.End, search)
         return for_vars
@@ -218,32 +216,37 @@ class ForStatement:
             for_statement = ForStatement(local_x_found.getString())
             foritem_vars = local_variables[for_statement.variable_name]['value']
 
-            # remove the for statement from the odt
-            text = local_x_found.getText()
-            cursor = text.createTextCursorByRange(local_x_found)
-            cursor.String = ''
-
             # select content between for and endfor (including endfor)
-            while True:
-                if not cursor.goRight(1, True):
-                    raise errors.TemplateError(
-                        'no_endfor_found',
-                        f"The statement {for_statement.for_string} has no endif",
-                        dict_of(for_statement.for_string)
-                    )
-                selected_string = cursor.String
-                match = re.search(ForStatement.end_regex, selected_string, re.IGNORECASE)
-                if match is not None:
-                    break
+            endfor_search = doc.createSearchDescriptor()
+            endfor_search.SearchString = ForStatement.end_regex
+            endfor_search.SearchRegularExpression = True
+            endfor_search.SearchCaseSensitive = False
+            x_found_endfor = doc.findNext(local_x_found.End, endfor_search)
+            if x_found_endfor is None:
+                raise errors.TemplateError(
+                    'no_endfor_found',
+                    f"The statement {for_statement.for_string} has no endfor",
+                    dict_of(for_statement.for_string)
+                )
+
+            for_text = local_x_found.getText()
+            endfor_text = x_found_endfor.getText()
+            for_cursor = for_text.createTextCursorByRange(local_x_found)
+            endfor_cursor = endfor_text.createTextCursorByRange(x_found_endfor)
+            content_cursor = for_text.createTextCursorByRange(local_x_found.End)
+            content_cursor.gotoRange(x_found_endfor.Start, True)
+
+            # remove the for statement from the odt
+            for_cursor.String = ''
 
             # get the content between the for and the endfor
-            cursor.goLeft(len(match.group(0)), True)
-            template = cursor.String
+            template = content_cursor.String
+
             # remove the content from the file
-            cursor.String = ''
+            content_cursor.String = ''
+
             # remove the endfor at the end
-            cursor.goRight(len(match.group(0)), True)
-            cursor.String = ''
+            endfor_cursor.String = ''
 
             # loop on values of the variable
             counter = 0
@@ -265,7 +268,7 @@ class ForStatement:
                     )
 
                 # paste the content
-                text.insertString(cursor, content, False)
+                for_text.insertString(for_cursor, content, False)
 
                 # counter increment
                 counter += 1
