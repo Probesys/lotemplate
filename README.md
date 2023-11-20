@@ -545,6 +545,8 @@ can be used for example to have a heading automatic numbering.
 
 **WARNING** : generally you don't have to use this counter feature. You can use the automatic numbering of Word or Libre Office
 
+#### basic usage of counter
+
 In your odt, you can use :
 
 ```
@@ -592,6 +594,7 @@ chapter 3 : analysis
 The possible syntaxe are :
 
 * `[counter counter_name]` : increment the counter "counter_name" and display it
+* `[counter counter_name hidden]` : increment the counter "counter_name" without displaying it
 * `[counter.reset counter_name]` : reset the counter "counter_name" to 0
 * `[counter.last counter_name]` : display the last value of the counter "counter_name" without incrementing it
 * `[counter.format counter_name format_name]` : change the format of the counter
@@ -599,8 +602,8 @@ The possible syntaxe are :
     * `[counter.format counter_name letter_lowercase]` : the counter is displayed as a letter (a, b, c, ...)
     * `[counter.format counter_name letter_uppercase]` : the counter is displayed as a letter (A, B, C, ...)
 
-You can display hierarchical counters by just using `counter.last`:
 
+#### You can display hierarchical counters by just using `counter.last`:
 
 ```
 chapter [counter chapter] : introduction
@@ -643,6 +646,24 @@ chapter 3 : analysis
 
 3.3 : economical analysis
 ```
+
+#### count the number of elements of a list
+
+```
+[counter.reset iterator]
+
+[for $solutions]
+
+Title : [foritem title]
+
+Content : [foritem paragraph]
+
+[counter iterator hidden]
+[endfor]
+
+we displayed [counter.last iterator] solutions
+```
+
 
 ## Supported formats
 
@@ -716,6 +737,9 @@ For trying to fix these problems, you can try:
 
 ## Versions :
 
+- v1.4.1 : 2023-11-20 : micro-feature for counter and fix possible bug
+  - use counters for counting elements of a list
+  - fix possible bug with reset and last.
 - v1.4.0, 2023-11-17 : counters
   - add a counter system inside templates
   - add better scan for if statement. Raises an error if there is too many endif in the template.

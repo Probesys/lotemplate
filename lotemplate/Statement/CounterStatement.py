@@ -8,6 +8,7 @@ class CounterStatement:
                 (?:
                     (counter)
                     (?:\s+(\w+))
+                    (?:\s+(hidden))?
                 )
                 |
                 (?:
@@ -32,13 +33,14 @@ class CounterStatement:
         if match.group(1) is not None:
             self.command_name = match.group(1)
             self.counter_name = match.group(2)
-        elif match.group(3) is not None:
-            self.command_name = match.group(3)
-            self.counter_name = match.group(4)
-        elif match.group(5) is not None:
-            self.command_name = match.group(5)
-            self.counter_name = match.group(6)
-            self.counter_format = match.group(7)
+            self.is_hidden = match.group(3) is not None
+        elif match.group(4) is not None:
+            self.command_name = match.group(4)
+            self.counter_name = match.group(5)
+        elif match.group(6) is not None:
+            self.command_name = match.group(6)
+            self.counter_name = match.group(7)
+            self.counter_format = match.group(8)
 
 class CounterManager:
     """
@@ -109,29 +111,26 @@ class CounterManager:
 
             counter_text = x_found.getText()
             counter_cursor = counter_text.createTextCursorByRange(x_found)
-            cursor_statement = CounterStatement(counter_cursor.String)
-            if cursor_statement.command_name == 'counter':
-                if cursor_statement.counter_name not in counter_list:
-                    counter_list[cursor_statement.counter_name] = {
-                        "value": 0,
-                        "format": "number"
-                    }
-                counter_list[cursor_statement.counter_name]["value"] = counter_list[cursor_statement.counter_name]["value"] + 1
-                counter_cursor.String = number_formated(counter_list[cursor_statement.counter_name]["format"], counter_list[cursor_statement.counter_name]["value"])
-            elif cursor_statement.command_name == 'counter.format':
-                if cursor_statement.counter_name not in counter_list:
-                    counter_list[cursor_statement.counter_name] = {
-                        "value": 0,
-                        "format": cursor_statement.counter_format
-                    }
+            counter_statement = CounterStatement(counter_cursor.String)
+            if counter_statement.counter_name not in counter_list:
+                counter_list[counter_statement.counter_name] = {
+                    "value": 0,
+                    "format": "number"
+                }
+            if counter_statement.command_name == 'counter':
+                counter_list[counter_statement.counter_name]["value"] = counter_list[counter_statement.counter_name]["value"] + 1
+                if not counter_statement.is_hidden:
+                    counter_cursor.String = number_formated(counter_list[counter_statement.counter_name]["format"], counter_list[counter_statement.counter_name]["value"])
                 else:
-                    counter_list[cursor_statement.counter_name]["format"] = cursor_statement.counter_format
+                    counter_cursor.String = ""
+            elif counter_statement.command_name == 'counter.format':
+                counter_list[counter_statement.counter_name]["format"] = counter_statement.counter_format
                 counter_cursor.String = ""
-            elif cursor_statement.command_name == 'counter.reset':
-                counter_list[cursor_statement.counter_name]["value"] = 0
+            elif counter_statement.command_name == 'counter.reset':
+                counter_list[counter_statement.counter_name]["value"] = 0
                 counter_cursor.String = ""
-            elif cursor_statement.command_name == 'counter.last':
-                counter_cursor.String = number_formated(counter_list[cursor_statement.counter_name]["format"], counter_list[cursor_statement.counter_name]["value"])
+            elif counter_statement.command_name == 'counter.last':
+                counter_cursor.String = number_formated(counter_list[counter_statement.counter_name]["format"], counter_list[counter_statement.counter_name]["value"])
 
         def find_counter_to_compute(doc, search, x_found):
             """
