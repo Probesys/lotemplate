@@ -63,3 +63,26 @@ lorem ipsum
 2.b ) geographical context
 
 lorem ipsum 2
+
+Hidden counter and element counter.format
+
+
+
+
+a ) Title 1
+
+Content no 1
+
+
+b ) Title 2
+
+Content no 2
+
+
+c ) Title 3
+
+Content no 3
+
+
+
+we displayed 3 solutions
