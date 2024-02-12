@@ -737,6 +737,9 @@ For trying to fix these problems, you can try:
 
 ## Versions :
 
+- v1.5.0 : 2024-02-12 : syntax error detection
+  - add syntax error detection in if statements
+  - add syntax error detection in for statements
 - v1.4.1 : 2023-11-20 : micro-feature for counter and fix possible bug
   - use counters for counting elements of a list
   - fix possible bug with reset and last.

@@ -10,7 +10,7 @@ class ForStatement:
     Class representing an for statement in a template libreoffice
     """
     start_regex = r"""
-        \[\s*for\s*          # [if detection
+        \[\s*for\s+          # [if detection
           \$                # var start with $
           (\w+              # basic var name
             (\(             # parsing of fonction var
@@ -25,6 +25,15 @@ class ForStatement:
     start_regex = re.sub(r'#.*', '', start_regex).replace("\n", "").replace("\t", "").replace(" ", "")
     # print(start_regex)
     # \[\s*for\s*\$(\w+(\(((?:\\.|.)*?)\))?)\s*\]
+
+    start_regex_light = r"""
+        \[\s*for\s          # [for detection
+          (?:.*?)            # anything before the var name
+        \]
+    """
+    # remove comments, spaces and newlines
+    start_regex_light = re.sub(r'#.*', '', start_regex_light).replace("\n", "").replace("\t", "").replace(" ", "")
+
     foritem_regex = r"""
         \[\s*foritem\s*          # [foritem detection
             (
@@ -46,6 +55,12 @@ class ForStatement:
     def __init__(self, for_string):
         self.for_string = for_string
         match = re.search(self.start_regex, for_string, re.IGNORECASE)
+        if match is None:
+            raise errors.TemplateError(
+                'syntax_error_in_for_statement',
+                f"Syntax Error in for statement : {for_string}",
+                dict_of(for_string)
+            )
         self.variable_name = match.group(1)
 
     def scan_for(doc: XComponent) -> dict:
@@ -78,7 +93,7 @@ class ForStatement:
             return for_statement.variable_name
 
         search = doc.createSearchDescriptor()
-        search.SearchString = ForStatement.start_regex
+        search.SearchString = ForStatement.start_regex_light
         search.SearchRegularExpression = True
         search.SearchCaseSensitive = False
         x_found = doc.findFirst(search)

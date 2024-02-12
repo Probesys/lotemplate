@@ -308,9 +308,28 @@ class OtherFormats(unittest.TestCase):
         doc.close()
 
     def test_if_too_many_endif(self):
-        with self.assertRaises(ot.errors.TemplateError):
+        with self.assertRaises(ot.errors.TemplateError) as cm:
             (doc := ot.Template("lotemplate/unittest/files/templates/if_too_many_endif.odt", cnx, False)).scan()
             doc.close()
+        self.assertEqual(cm.exception.code, "too_many_endif_found")
+
+    def test_if_syntax_error(self):
+        with self.assertRaises(ot.errors.TemplateError) as cm:
+            (doc := ot.Template("lotemplate/unittest/files/templates/if_syntax_error.odt", cnx, False)).scan()
+            doc.close()
+        self.assertEqual(cm.exception.code, "syntax_error_in_if_statement")
+
+    def test_for_syntax_error(self):
+        with self.assertRaises(ot.errors.TemplateError) as cm:
+            (doc := ot.Template("lotemplate/unittest/files/templates/for_syntax_error.odt", cnx, False)).scan()
+            doc.close()
+        self.assertEqual(cm.exception.code, "syntax_error_in_for_statement")
+
+    def test_if_syntax_error_no_endif(self):
+        with self.assertRaises(ot.errors.TemplateError) as cm:
+            (doc := ot.Template("lotemplate/unittest/files/templates/if_syntax_error_no_endif.odt", cnx, False)).scan()
+            doc.close()
+        self.assertEqual(cm.exception.code, "no_endif_found")
 
     def test_invalid(self):
         with self.assertRaises(ot.errors.TemplateError):

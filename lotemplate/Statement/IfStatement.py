@@ -64,6 +64,15 @@ class IfStatement:
 
     end_regex = r'\[\s*endif\s*\]'
 
+    start_regex_light = r"""
+        \[\s*if\s*                         # [if detection
+          (?:(?:.*?)\[\s*for(?:.*?)\])?    # [foritem xxx] et [forindex] detection
+          (?:.*?)                          # anything but not too greedy
+        \]
+    """
+    # remove comments, spaces and newlines
+    start_regex_light = re.sub(r'#.*', '', start_regex_light).replace("\n", "").replace("\t", "").replace(" ", "")
+
     def __init__(self, if_string):
         self.if_string = if_string
         match = re.search(self.start_regex, if_string, re.IGNORECASE)
@@ -119,6 +128,14 @@ class IfStatement:
             content_cursor = if_text.createTextCursorByRange(x_found.End)
             content_cursor.gotoRange(x_found_endif.Start, True)
 
+            match = re.search(IfStatement.start_regex, if_cursor.String, re.IGNORECASE)
+            if match is None:
+                raise errors.TemplateError(
+                    'syntax_error_in_if_statement',
+                    f"The statement {if_cursor.String} has a Syntax Error",
+                    dict_of(if_cursor.String)
+                )
+
             if_cursor.String = ''
             endif_cursor.String = ''
             content_cursor.String = ''
@@ -155,7 +172,7 @@ class IfStatement:
         # main of if_replace
         doc = template.open_doc_from_url()
         search = doc.createSearchDescriptor()
-        search.SearchString = IfStatement.start_regex
+        search.SearchString = IfStatement.start_regex_light
         search.SearchRegularExpression = True
         search.SearchCaseSensitive = False
         x_found = doc.findFirst(search)
