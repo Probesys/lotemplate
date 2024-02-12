@@ -11,15 +11,13 @@ RUN apt-get -qq update > /dev/null && DEBIAN_FRONTEND=noninteractive apt-get -qq
     python3-uno \
     python3-pip \
     libreoffice-nogui \
-    default-jre \
-    libreoffice-java-common \
     fonts-liberation \
     ttf-mscorefonts-installer \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # These packages resolve the following warning : "Warning: failed to launch javaldx - java may not function correctly"
-# but it does not seem to be needed. All tests pass without it. So it is commented out.
+# but it does not seem to be needed. All tests pass without it. So it is commented out. (it saves 400Mo for the Docker image)
 # RUN apt-get -qq update > /dev/null && DEBIAN_FRONTEND=noninteractive apt-get -qq -y --no-install-recommends install \
 #    default-jre \
 #    libreoffice-java-common \
