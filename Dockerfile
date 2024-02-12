@@ -1,27 +1,39 @@
 FROM debian:bookworm-slim as prod
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
-    --mount=type=cache,id=debconf,target=/var/cache/debconf,sharing=locked \
-	sed -i -e's/Components: main/Components: main contrib non-free/' /etc/apt/sources.list.d/debian.sources \
-	&&  echo "Types: deb\nURIs: http://deb.debian.org/debian\nSuites: bookworm-backports\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg" > /etc/apt/sources.list.d/backports.sources \
-	&& cat /etc/apt/sources.list.d/backports.sources \
-	&& apt update \
-	&& apt -y -t bookworm-backports install dash bash python3 python3-uno python3-pip libreoffice-nogui fonts-liberation ttf-mscorefonts-installer \
-	&& useradd -d /app python
+
+# activate non free components for mscorefonts
+RUN sed -i -e's/Components: main/Components: main contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources
+
+# install needed packages
+RUN apt-get -qq update > /dev/null && DEBIAN_FRONTEND=noninteractive apt-get -qq -y --no-install-recommends install \
+    dash \
+    bash \
+    python3 \
+    python3-uno \
+    python3-pip \
+    libreoffice-nogui \
+    fonts-liberation \
+    ttf-mscorefonts-installer \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN useradd -d /app python
+
 COPY . /app
 WORKDIR /app
+
 RUN chown python /app -R \
        && pip install -r requirements.txt --break-system-packages
+
 USER python
 
 
 From prod as dev
 USER root
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
-    --mount=type=cache,id=debconf,target=/var/cache/debconf,sharing=locked \
-    apt update && \
-    apt install -y curl
+RUN apt-get -qq update > /dev/null && DEBIAN_FRONTEND=noninteractive apt-get -qq -y --no-install-recommends install \
+    curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+
 
 RUN USER=python && \
     GROUP=python && \
