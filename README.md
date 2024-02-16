@@ -5,10 +5,10 @@ LOTemplate is document generator used to create documents programatically (ODT, 
 
 ```mermaid
 flowchart LR
-    template[Template<br/>in DOCX or ODT]
-    json[Data<br/>JSON]
+    template["Template<br/>(DOCX or ODT)"]
+    json["Data<br/>(JSON)"]
     lotemplate["LO Template<br/>(accessible by API or CLI)"]
-    generatedFile[Generated File<br/>PDF, DOCX, ODT, RTF,...]
+    generatedFile["Generated File<br/>(PDF, DOCX, ODT, RTF,...)"]
     
     template --> lotemplate
     json --> lotemplate
