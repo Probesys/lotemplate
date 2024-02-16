@@ -5,10 +5,22 @@ LOTemplate is document generator used to create documents programatically (ODT, 
 
 Templates are Word or Libreoffice documents (ODT or DOCX).
 
+```mermaid
+flowchart LR
+    template[Template<br/>in DOCX or ODT]
+    json[Data<br/>JSON]
+    lotemplate[LO Template]
+    generatedFile[Generated File<br/>PDF, DOCX, ODT]
+    
+    template --> lotemplate
+    json --> lotemplate
+    lotemplate --> generatedFile
+```
+
 What makes this tool different from others are the following features :
 
 * The templates are in DOCS or ODT format
-* Template can have complex structures (loop, conditions, counters, html,...)
+* Template can have complex structures (variables, loop, conditions, counters, html,...)
 * The tool can scan the template to extract the variables sheet
 * The tool can be called by an API, a CLI or a python module.
 
