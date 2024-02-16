@@ -1,17 +1,93 @@
-# LOTemplateFiller
+LOTemplate (for Libre Office Template)
+======================================
 
-LOTemplateFiller is a script that fills a given document, used as a template, with elements given in a 
-json file. This script can be used as an API (using Flask), a CLI or a python module for your own code.
-For more information on a specific usage, read, the `Execute and use the API` or 
-`Execute and use the CLI` section.
+LOTemplate is document generator used to create documents programatically (ODT, DOCX, PDF) from a template and a json file.
 
-## Functionalities
-- scans the template to extract the variables sheet
-- search for all possible errors before filling
-- filling the template
-- export the filled template
+Templates are Word or Libreoffice documents (ODT or DOCX).
 
-## Requirements
+What makes this tool different from others are the following features :
+
+* The templates are in DOCS or ODT format
+* Template can have complex structures (loop, conditions, counters, html,...)
+* The tool can scan the template to extract the variables sheet
+* The tool can be called by an API, a CLI or a python module.
+
+The tool is written in Python and use a real LibreOffice headless to fill the templates.
+
+Quick start
+-----------
+
+### Run the project with docker compose
+
+Create a docker-compose.yml
+
+```yaml
+version: '3'
+services:
+  lotemplate:
+    image: probesys38/lotemplate:v1.5.0
+    volumes:
+      - lotemplate-uploads:/app/uploads
+    environment:
+      - SECRET_KEY=lopassword
+    command: "gunicorn -w 4 -b 0.0.0.0:8000 app:app"
+```
+
+run the service
+
+```shell
+docker-compose up -d
+```
+
+### Use the API
+
+```bash
+# creation of a directory
+curl -X PUT -H 'secret_key: lopassword' -H 'directory: test_dir1' http://localhost:8000/
+# {"directory":"test_dir1","message":"Successfully created"}
+```
+
+Let's imagine we have an file basic_test.odt (created by libreoffice) like this :
+
+```
+Test document
+
+let’s see if the tag $my_tag is replaced and this $other_tag is detected.
+[if $my_tag == foo]My tag is foo[endif]
+[if $my_tag != foo]My tag is not foo[endif]
+```
+
+Upload this file to lotemplate
+
+```bash
+# upload a template
+curl -X PUT -H 'secret_key: lopassword' -F file=@/tmp/basic_test.odt http://localhost:8000/test_dir1
+# {"file":"basic_test.odt","message":"Successfully uploaded","variables":{"my_tag":{"type":"text","value":""},"other_tag":{"type":"text","value":""}}}
+
+# generate a file titi.odt from a template and a json content
+curl -X POST \
+    -H 'secret_key: lopassword' \
+    -H 'Content-Type: application/json' \
+    -d '[{"name":"my_file.odt","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}}}]' \
+    --output titi.odt http://localhost:8000/test_dir1/basic_test.odt 
+```
+
+After the operation, you get the file titi.odt with this content :
+
+```
+Test document
+
+let’s see if the tag foo is replaced and this bar is detected.
+
+My tag is foo
+
+```
+
+Installation
+------------
+
+### Requirements
+
 For Docker use of the API, you can skip this step.
 
 - LibreOffice (the console-line version will be enough)
@@ -21,14 +97,11 @@ For Docker use of the API, you can skip this step.
   `pip install -r requirements.txt`. `Flask` and `Werkzeug` are optional, as they are used only for the API.
 
 ```bash
-# on debian bullseye, you can use these commands
-echo 'deb http://deb.debian.org/debian bullseye-backports main' > /etc/apt/sources.list.d/backports.list
+# on debian bookworm, you can use these commands
 apt update
-apt -y -t bullseye-backports install bash python3 python3-uno python3-pip libreoffice-nogui
+apt -y -t install bash python3 python3-uno python3-pip libreoffice-nogui
 pip install -r requirements.txt
 ```
-
-## Use the API
 
 ### Run the API
 
@@ -50,22 +123,12 @@ or, for Docker deployment:
 docker-compose up
 ```
 
-## Docker for dev when your uid is not 1000
+Basic Usage
+-----------
 
-for this we use fixuid (https://github.com/boxboat/fixuid)
+### With the API
 
-you have to define two env variable MY_UID and MY_GID with your uid and gid
-copy docker-compose.override.yml.example to docker-compose.override.yml
-
-```shell
-export MY_UID=$(id -u)
-export MY_GID=$(id -g)
-cp docker-compose.override.yml.example docker-compose.override.yml
-docker-compose up
-```
-
-
-### Quick start with the API
+#### Examples of curl requests
 
 ```bash
 # creation of a directory
@@ -118,7 +181,7 @@ Test document
 let’s see if the tag foo is replaced and this bar is detected.
 ```
 
-### API reference
+#### API reference
 
 Then use the following routes :
 
@@ -157,7 +220,9 @@ If you're deploying the app with Docker, port and ip are editable in the [Docker
 You can also specify the host and port used to run and connect to soffice as command line arguments,
 or in a config file (`config.yml`/`config.ini`/`config` or specified via --config).
 
-## Execute and use the CLI
+
+
+### Execute and use the CLI
 
 Run the script with the following arguments :
 ```
@@ -190,7 +255,7 @@ optional arguments:
 
 Args that start with '--' (e.g. --json) can also be set in a config file
 (`config.yml`/`config.ini`/`config` or specified via --config). Config file syntax allows: key=value,
-flag=true, stuff=[a,b,c] (for details, [see syntax](https://goo.gl/R74nmi)).
+flag=true, stuff=[a,b,c] (for details, [see syntax](https://pypi.org/project/ConfigArgParse/)).
 If an arg is specified in more than one place, then commandline values
 override config file values which override defaults.
 
@@ -200,7 +265,9 @@ Get a file to fill with the `--scan` argument, and fill the fields you want. Add
 of an array to dynamically add rows. Then pass the file, and the completed json file(s) (using `--json_file`)
 to fill it.
 
-## Template Syntax
+
+Template Syntax
+---------------
 
 ### text variables
 
@@ -683,7 +750,8 @@ Other formats can be easily added by adding the format information in the dictio
 Format information can be found on the 
 [unoconv repo](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391).
 
-## Doc for developpers
+Doc for developpers of lotemplate
+---------------------------------
 
 ### Run the tests
 
@@ -693,7 +761,22 @@ You need to have docker and docker-compose installed and then run
 make tests
 ```
 
-## Unsolvable problems
+### Installation with Docker for dev when your uid is not 1000
+
+for this we use fixuid (https://github.com/boxboat/fixuid)
+
+you have to define two env variable MY_UID and MY_GID with your uid and gid
+copy docker-compose.override.yml.example to docker-compose.override.yml
+
+```shell
+export MY_UID=$(id -u)
+export MY_GID=$(id -g)
+cp docker-compose.override.yml.example docker-compose.override.yml
+docker-compose up
+```
+
+Unsolvable problems
+-------------------
 
 The error `UnoException` happens frequently and 
 unpredictably, and this error stops the soffice processus 
@@ -716,7 +799,9 @@ case). Again, this is a bug in LibreOffice/soffice that has existed for years.
 For trying to fix these problems, you can try:
 - Use the most recent stable release of LibreOffice (less memory, more stable, fewer crashes)
 
-## Useful elements
+Useful elements
+---------------
+
 - [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
 - [The unoconv source code, written in python with PyUNO](https://github.com/unoconv/unoconv/blob/master/unoconv)
 - [Unoconv source code for list formats - and properties - compatible with LibreOffice for export](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391)
@@ -727,7 +812,8 @@ For trying to fix these problems, you can try:
 - [Flask documentation - quickstart](https://flask.palletsprojects.com/en/2.0.x/quickstart/)
 - [Flask documentation - upload](https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/)
     
-## To consider
+To consider
+-----------
 
 - Possibly to add dynamic images in tables
 - another way to make image variables that would be compatible with Microsoft Word and maybe other formats (example : set the variable name in the 'alternative text' field)
@@ -735,8 +821,10 @@ For trying to fix these problems, you can try:
 - handle bulleted lists using table like variables
 - use variable formatting instead of the one of the character before
 
-## Versions :
-
+Versions
+--------
+- v1.5.1 : 2024-02-16 : Better README
+  - Rewriting of the README file
 - v1.5.0 : 2024-02-12 : syntax error detection
   - add syntax error detection in if statements
   - add syntax error detection in for statements
