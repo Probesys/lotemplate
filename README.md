@@ -3,8 +3,6 @@ LOTemplate (for Libre Office Template)
 
 LOTemplate is document generator used to create documents programatically (ODT, DOCX, PDF) from a template and a json file.
 
-Templates are Word or Libreoffice documents (ODT or DOCX).
-
 ```mermaid
 flowchart LR
     template[Template<br/>in DOCX or ODT]
@@ -19,7 +17,7 @@ flowchart LR
 
 What makes this tool different from others are the following features :
 
-* The templates are in DOCS or ODT format
+* The templates are in DOCX or ODT (Word or Libre Office) format
 * Template can have complex structures (variables, loop, conditions, counters, html,...)
 * The tool can scan the template to extract the variables sheet
 * The tool can be called by an API, a CLI or a python module.
