@@ -98,7 +98,7 @@ Table of content
 
 * [Installation](#installation)
 * [Basic Usage](#basic-usage)
-* [Template Syntax](#template-syntax)
+* [Template syntax and examples](#template-syntax)
 * [Supported formats](#supported-formats)
 * [Doc for developpers of lotemplate](#doc-for-devs)
 * [Unsolvable problems](#unsolvable-problems)
@@ -288,8 +288,8 @@ of an array to dynamically add rows. Then pass the file, and the completed json 
 to fill it.
 
 
-<a name="template-syntax"></a>Template Syntax
----------------------------------------------
+<a name="template-syntax"></a>Template syntax and examples
+----------------------------------------------------------
 
 ### text variables
 
@@ -773,7 +773,7 @@ Other formats can be easily added by adding the format information in the dictio
 Format information can be found on the 
 [unoconv repo](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391).
 
-<a name="doc-for-dev"></a>Doc for developpers of lotemplate
+<a name="doc-for-devs"></a>Doc for developpers of lotemplate
 -----------------------------------------------------------
 
 ### Run the tests
