@@ -93,8 +93,20 @@ My tag is foo
 
 ```
 
-Installation
-------------
+Table of content
+----------------
+
+* [Installation](#installation)
+* [Basic Usage](#basic-usage)
+* [Template Syntax](#template-syntax)
+* [Supported formats](#supported-formats)
+* [Doc for developpers of lotemplate](#doc-for-devs)
+* [Unsolvable problems](#unsolvable-problems)
+* [External documentations](#external-documentations)
+* [Versions](#versions)
+
+<a name="installation"></a>Installation
+---------------------------------------
 
 ### Requirements
 
@@ -133,8 +145,8 @@ or, for Docker deployment:
 docker-compose up
 ```
 
-Basic Usage
------------
+<a name="basic-usage"></a>Basic Usage
+-------------------------------------
 
 ### With the API
 
@@ -276,8 +288,8 @@ of an array to dynamically add rows. Then pass the file, and the completed json 
 to fill it.
 
 
-Template Syntax
----------------
+<a name="template-syntax"></a>Template Syntax
+---------------------------------------------
 
 ### text variables
 
@@ -742,7 +754,8 @@ we displayed [counter.last iterator] solutions
 ```
 
 
-## Supported formats
+<a name="supported-formats"></a>Supported formats
+-------------------------------------------------
 
 ### Import
 | Format                  | ODT, OTT | HTML | DOC, DOCX | RTF | TXT | OTHER |
@@ -760,8 +773,8 @@ Other formats can be easily added by adding the format information in the dictio
 Format information can be found on the 
 [unoconv repo](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391).
 
-Doc for developpers of lotemplate
----------------------------------
+<a name="doc-for-dev"></a>Doc for developpers of lotemplate
+-----------------------------------------------------------
 
 ### Run the tests
 
@@ -785,8 +798,8 @@ cp docker-compose.override.yml.example docker-compose.override.yml
 docker-compose up
 ```
 
-Unsolvable problems
--------------------
+<a name="unsolvable-problems"></a>Unsolvable problems
+-----------------------------------------------------
 
 The error `UnoException` happens frequently and 
 unpredictably, and this error stops the soffice processus 
@@ -809,8 +822,8 @@ case). Again, this is a bug in LibreOffice/soffice that has existed for years.
 For trying to fix these problems, you can try:
 - Use the most recent stable release of LibreOffice (less memory, more stable, fewer crashes)
 
-Useful elements
----------------
+<a name="external-documentations"></a>External documentations
+---------------------------------------------------------
 
 - [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
 - [The unoconv source code, written in python with PyUNO](https://github.com/unoconv/unoconv/blob/master/unoconv)
@@ -821,18 +834,9 @@ Useful elements
 - [Deploying Flask](https://flask.palletsprojects.com/en/2.0.x/deploying/)
 - [Flask documentation - quickstart](https://flask.palletsprojects.com/en/2.0.x/quickstart/)
 - [Flask documentation - upload](https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/)
-    
-To consider
------------
 
-- Possibly to add dynamic images in tables
-- another way to make image variables that would be compatible with Microsoft Word and maybe other formats (example : set the variable name in the 'alternative text' field)
-- key system for each institution for security
-- handle bulleted lists using table like variables
-- use variable formatting instead of the one of the character before
-
-Versions
---------
+<a name="versions"></a>Versions
+-------------------------------
 
 - v1.5.1 : 2024-02-16 : Better README
   - Rewriting of the README file
@@ -871,3 +875,11 @@ Versions
 - v1.0.1, 2023-05-05 : workaround, fix in html formatting
 - v1.0.0, 2023-05-03 : if statement, for statement, html statement
 - not numbered : about may 2022 : first version
+
+### Possible futur evolutions
+
+- Possibly to add dynamic images in tables
+- another way to make image variables that would be compatible with Microsoft Word and maybe other formats (example : set the variable name in the 'alternative text' field)
+- key system for each institution for security
+- handle bulleted lists using table like variables
+- use variable formatting instead of the one of the character before
