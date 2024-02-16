@@ -1,6 +1,8 @@
 LOTemplate (for Libre Office Template)
 ======================================
 
+[![Unittest](https://github.com/Probesys/lotemplate/actions/workflows/unittest.yml/badge.svg)](https://github.com/Probesys/lotemplate/actions/workflows/unittest.yml)
+
 LOTemplate is document generator used to create documents programatically (ODT, DOCX, PDF) from a template and a json file.
 
 ```mermaid
