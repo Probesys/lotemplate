@@ -840,6 +840,8 @@ For trying to fix these problems, you can try:
 <a name="versions"></a>Versions
 -------------------------------
 
+- v1.5.2 : 2024-02-24 : Better README
+  - Rewrite for a betterdocker DockerFile without bug 
 - v1.5.1 : 2024-02-16 : Better README
   - Rewriting of the README file
 - v1.5.0 : 2024-02-12 : syntax error detection
