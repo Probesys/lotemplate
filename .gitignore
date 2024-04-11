@@ -18,6 +18,7 @@ exports/
 /lotemplate/unittest/files/content/debug.odt
 /lotemplate/unittest/files/content/debug.json
 /lotemplate/unittest/files/content/*.unittest.odt
+/lotemplate/unittest/files/content/*.unittest.pdf
 /venv
 /output*.*
 .fontconfig/

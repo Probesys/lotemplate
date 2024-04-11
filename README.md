@@ -839,7 +839,10 @@ For trying to fix these problems, you can try:
 
 <a name="versions"></a>Versions
 -------------------------------
-
+- v1.6.0 : 2024-04-11
+  - allow put variables inside headers and footers
+  - fix a bug when a variable is both inside the text content and inside a table (it should not arrive, but it is fixed)
+  - a new unit test system based on PDF converted to text in order to test contents that are not converted to text with a simple saveAs 
 - v1.5.2 : 2024-02-24 : Better README
   - Rewrite for a betterdocker DockerFile without bug 
 - v1.5.1 : 2024-02-16 : Better README

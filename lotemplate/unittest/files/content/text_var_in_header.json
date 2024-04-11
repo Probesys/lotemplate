@@ -1,0 +1,6 @@
+{
+  "my_var": {
+    "type": "text",
+    "value": "my replaced text"
+  }
+}

@@ -6,3 +6,4 @@ gunicorn~=20.1.0
 Werkzeug~=2.2.2
 sorcery~=0.2.1
 regex~=2022.10.31
+pypdf~=4.2.0

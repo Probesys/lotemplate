@@ -10,6 +10,7 @@ import urllib.request
 import lotemplate as ot
 from time import sleep
 import subprocess
+from pypdf import PdfReader
 
 subprocess.call(f'soffice "--accept=socket,host=localhost,port=2002;urp;StarOffice.ServiceManager" &', shell=True)
 sleep(2)
@@ -28,7 +29,10 @@ def to_data(file: str):
     return ot.convert_to_datas_template(file_to_dict(file))
 
 
-def compare_files(name: str):
+def compare_files(name: str, format: str = 'txt'):
+    if format not in ['txt', 'pdf']:
+        return False
+
     base_path = 'lotemplate/unittest/files/content'
 
     def get_filename(ext: str):
@@ -50,17 +54,29 @@ def compare_files(name: str):
     temp.search_error(to_data(get_filename('json')))
     temp.fill(file_to_dict(get_filename('json')))
 
-    if os.path.isfile(get_filename('unittest.txt')):
-        os.remove(get_filename('unittest.txt'))
-    temp.export(get_filename('unittest.txt'), True)
+    if os.path.isfile(get_filename('unittest.'+format)):
+        os.remove(get_filename('unittest.'+format))
+    temp.export(get_filename('unittest.'+format), True)
     # temp.close()
     if os.path.isfile(get_filename('unittest.odt')):
         os.remove(get_filename('unittest.odt'))
     temp.export(get_filename('unittest.odt'), True)
     temp.close()
+
+    # The PDF format is used to test some documents with headers or footers that are not supported by the text saveAs from
+    # LibreOffice. The PDF is then converted to text to compare with the expected text.
+    if format == 'pdf':
+        # convert to text
+        reader = PdfReader(get_filename('unittest.pdf'))
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() + "\n"
+        if os.path.isfile(get_filename('unittest.txt')):
+            os.remove(get_filename('unittest.txt'))
+        with open(get_filename('unittest.txt'), 'w') as f:
+            f.write(text)
+
     response = filecmp.cmp(get_filename('unittest.txt'), get_filename('expected.txt'))
-    # if os.path.isfile(get_filename('unittest.txt')):
-    #    os.remove(get_filename('unittest.txt'))
     return response
 
 
@@ -111,6 +127,9 @@ class Text(unittest.TestCase):
 
     def test_counter(self):
         self.assertTrue(compare_files('counter'))
+
+    def test_text_var_in_header(self):
+        self.assertTrue(compare_files('text_var_in_header', 'pdf'))
 
     def test_debug(self):
         self.assertTrue(compare_files('debug'))
