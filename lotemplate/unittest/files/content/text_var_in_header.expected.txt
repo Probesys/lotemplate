@@ -1,0 +1,3 @@
+Can we change the following var my replaced text in the header ?
+This document test the replacement of a variable in the header.
+And in the footer the var “my replaced text” is still ther

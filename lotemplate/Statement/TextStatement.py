@@ -7,7 +7,8 @@ from lotemplate.Statement.TableStatement import TableStatement
 
 
 class TextStatement:
-    text_regex = regex.compile(r'\$(\w+(\(((?:\\.|.)*?)\))?)')
+    text_regex_as_string = r'\$(\w+(\(((?:\\.|.)*?)\))?)'
+    text_regex = regex.compile(text_regex_as_string)
     def __init__(self, text_string):
         self.text_string = text_string
 
@@ -19,11 +20,21 @@ class TextStatement:
         :return: the scanned variables
         """
 
-        raw_string = doc.getText().getString()
-        matches = TextStatement.text_regex.finditer(raw_string)
+        search = doc.createSearchDescriptor()
+        search.SearchString = TextStatement.text_regex_as_string
+        search.SearchRegularExpression = True
+        search.SearchCaseSensitive = False
+        founded = doc.findAll(search)
+
+        simple_var_list = []
+        for x_found in founded:
+            text = x_found.getText()
+            cursor = text.createTextCursorByRange(x_found)
+            simple_var_list.append(cursor.String)
+
         plain_vars = {}
-        for var in matches:
-            key_name = var[0][1:]
+        for var in simple_var_list:
+            key_name = var[1:]
             # add to plain_vars if it doesn't matche ForStatement.foritem_regex
             if not re.search(ForStatement.forindex_regex, key_name, re.IGNORECASE):
                 plain_vars[key_name] = {'type': 'text', 'value': ''}
@@ -38,8 +49,11 @@ class TextStatement:
                 text_fields_vars = (text_fields_vars |
                                     {var.group(0)[1:]: {'type': 'text', 'value': ''} for var in matches})
 
-        for var in TableStatement.scan_table(doc, get_list=True):
-            if '$' + var in plain_vars:
+        table_var_list = TableStatement.scan_table(doc, get_list=True)
+        for var in table_var_list:
+            if var.startswith("$"):
+                var = var[1:]
+            if var in plain_vars:
                 del plain_vars[var]
 
         for var in ForStatement.scan_for(doc):

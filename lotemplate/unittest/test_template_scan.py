@@ -40,6 +40,13 @@ class Text(unittest.TestCase):
             (doc := ot.Template("lotemplate/unittest/files/templates/text_vars.odt", cnx, False)).scan())
         doc.close()
 
+    def test_text_var_in_header(self):
+        self.assertEqual(
+            {"my_var": {"type": "text", "value": ""}},
+            (doc := ot.Template("lotemplate/unittest/files/templates/text_var_in_header.odt", cnx, False)).scan()
+        )
+        doc.close()
+
     def test_static_table(self):
         self.assertEqual(
             {"var1": {"type": "text", "value": ""}, "var2": {"type": "text", "value": ""}},
