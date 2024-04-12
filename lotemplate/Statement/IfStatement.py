@@ -65,9 +65,11 @@ class IfStatement:
     end_regex = r'\[\s*endif\s*\]'
 
     start_regex_light = r"""
-        \[\s*if\s*                         # [if detection
-          (?:(?:.*?)\[\s*for(?:.*?)\])?    # [foritem xxx] et [forindex] detection
-          (?:.*?)                          # anything but not too greedy
+        \[\s*if\s*                    # [if detection
+          (?:[^\[\]]*)                # anything before the foritem or forindex
+                                      # ex: [if $foo.[forindex] == PP]
+          (?:\[\s*for(?:.*?)\])?      # [foritem xxx] et [forindex] detection
+          (?:[^\]]*)                  # anything but not too greedy
         \]
     """
     # remove comments, spaces and newlines

@@ -131,5 +131,8 @@ class Text(unittest.TestCase):
     def test_text_var_in_header(self):
         self.assertTrue(compare_files('text_var_in_header', 'pdf'))
 
+    def test_too_many_endif_strange(self):
+        self.assertTrue(compare_files('too_many_endif_strange'))
+
     def test_debug(self):
         self.assertTrue(compare_files('debug'))

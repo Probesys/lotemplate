@@ -1,0 +1,21 @@
+{
+  "odoo(coop_forme_juridique)": {
+    "type": "text",
+    "value": "SAS"
+  },
+  "odoo(mandataires_sas)": {
+    "type": "array",
+    "value": [
+      {
+        "type": "PP",
+        "nom": "nom1",
+        "titre": "titre1"
+      },
+      {
+        "type": "type2",
+        "nom": "nom2",
+        "titre": "titre2"
+      }
+    ]
+  }
+}
