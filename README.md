@@ -839,6 +839,9 @@ For trying to fix these problems, you can try:
 
 <a name="versions"></a>Versions
 -------------------------------
+
+- v1.5.1 : 2024-04-12 : bugfix
+  - fix the issue https://github.com/Probesys/lotemplate/issues/34 : too many endif buggy
 - v1.6.0 : 2024-04-11
   - allow put variables inside headers and footers
   - fix a bug when a variable is both inside the text content and inside a table (it should not arrive, but it is fixed)

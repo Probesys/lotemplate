@@ -66,6 +66,8 @@ class IfStatement:
 
     start_regex_light = r"""
         \[\s*if\s*                    # [if detection
+          (?:[^\[\]]*)                # anything before the foritem or forindex
+                                      # ex: [if $foo.[forindex] == PP]
           (?:\[\s*for(?:.*?)\])?      # [foritem xxx] et [forindex] detection
           (?:[^\]]*)                  # anything but not too greedy
         \]
