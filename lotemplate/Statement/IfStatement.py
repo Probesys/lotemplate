@@ -65,9 +65,9 @@ class IfStatement:
     end_regex = r'\[\s*endif\s*\]'
 
     start_regex_light = r"""
-        \[\s*if\s*                         # [if detection
-          (?:(?:.*?)\[\s*for(?:.*?)\])?    # [foritem xxx] et [forindex] detection
-          (?:.*?)                          # anything but not too greedy
+        \[\s*if\s*                    # [if detection
+          (?:\[\s*for(?:.*?)\])?      # [foritem xxx] et [forindex] detection
+          (?:[^\]]*)                  # anything but not too greedy
         \]
     """
     # remove comments, spaces and newlines
