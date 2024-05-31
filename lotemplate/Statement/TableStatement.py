@@ -1,5 +1,5 @@
 from com.sun.star.lang import XComponent
-from com.sun.star.sheet import XCellRangeData
+from com.sun.star.uno import RuntimeException
 from typing import Union
 import lotemplate.errors as errors
 import regex
@@ -47,15 +47,18 @@ class TableStatement:
         tab_vars = {}
         list_tab_vars = []
         for i in range(doc.getTextTables().getCount()):
-            table = doc.getTextTables().getByIndex(i)
-            if not isinstance(table, XCellRangeData):
+            try:
+                table_data = doc.getTextTables().getByIndex(i).getDataArray()
+                t_name = doc.getTextTables().getByIndex(i).getName()
+                nb_rows = len(table_data)
+                for row_i, row in enumerate(table_data):
+                    for column in row:
+                        scan_cell(column)
+            except errors.TemplateError as e:
+                raise e
                 continue
-            table_data = table.getDataArray()
-            t_name = doc.getTextTables().getByIndex(i).getName()
-            nb_rows = len(table_data)
-            for row_i, row in enumerate(table_data):
-                for column in row:
-                    scan_cell(column)
+            except RuntimeException as e:
+                continue
 
         return list_tab_vars if get_list else tab_vars
 
