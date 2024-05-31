@@ -1,4 +1,5 @@
 from com.sun.star.lang import XComponent
+from com.sun.star.sheet import XCellRangeData
 from typing import Union
 import lotemplate.errors as errors
 import regex
@@ -46,7 +47,10 @@ class TableStatement:
         tab_vars = {}
         list_tab_vars = []
         for i in range(doc.getTextTables().getCount()):
-            table_data = doc.getTextTables().getByIndex(i).getDataArray()
+            table = doc.getTextTables().getByIndex(i)
+            if not isinstance(table, XCellRangeData):
+                continue
+            table_data = table.getDataArray()
             t_name = doc.getTextTables().getByIndex(i).getName()
             nb_rows = len(table_data)
             for row_i, row in enumerate(table_data):
