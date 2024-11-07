@@ -1,26 +1,10 @@
 ﻿
-Column1
-Column2
-Column3
-a
-static
-A
-b
-static
-B
-c
-static
-C
-d
-static
-D
-e
-static
-E
-f
-static
-F
-g
-static
-G
+Column1	Column2	Column3
+a	static	A
+b	static	B
+c	static	C
+d	static	D
+e	static	E
+f	static	F
+g	static	G
 
