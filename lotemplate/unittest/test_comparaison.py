@@ -19,7 +19,7 @@ def to_data(file: str):
 
 class Text(unittest.TestCase):
 
-    temp = ot.Template("lotemplate/unittest/files/comparaison/text_vars.odt", cnx, True)
+    temp = ot.WriterTemplate("lotemplate/unittest/files/comparaison/text_vars.odt", cnx, True)
 
     def test_valid(self):
         self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/text_vars_valid.json"))
@@ -41,7 +41,7 @@ class Text(unittest.TestCase):
 
     temp.close()
 
-    temp_tab = ot.Template("lotemplate/unittest/files/comparaison/static_tab.odt", cnx, True)
+    temp_tab = ot.WriterTemplate("lotemplate/unittest/files/comparaison/static_tab.odt", cnx, True)
 
     def test_tab_valid(self):
         self.temp_tab.search_error(to_data("lotemplate/unittest/files/comparaison/static_tab_valid.json"))
@@ -51,7 +51,7 @@ class Text(unittest.TestCase):
 
 class Tables(unittest.TestCase):
 
-    temp = ot.Template("lotemplate/unittest/files/comparaison/two_row_tab_varied.odt", cnx, True)
+    temp = ot.WriterTemplate("lotemplate/unittest/files/comparaison/two_row_tab_varied.odt", cnx, True)
 
     def test_valid(self):
         self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/two_row_tab_varied_valid.json"))
@@ -73,7 +73,7 @@ class Tables(unittest.TestCase):
 
 class Images(unittest.TestCase):
 
-    temp = ot.Template("lotemplate/unittest/files/comparaison/img_vars.odt", cnx, True)
+    temp = ot.WriterTemplate("lotemplate/unittest/files/comparaison/img_vars.odt", cnx, True)
 
     def test_valid(self):
         self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/img_vars_valid.json"))

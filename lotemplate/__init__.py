@@ -15,13 +15,20 @@ __version__ = '1.0'
 __all__ = (
     'Connexion',
     'Template',
+    'CalcTemplate',
+    'WriterTemplate',
     'errors',
     'convert_to_datas_template',
     'is_network_based',
     'get_file_url',
+    'TemplateFromExt',
 )
 
 from .errors import *
 from .utils import *
-from .classes import *
+from .connexion import *
+from .Template import *
+from .WriterTemplate import *
+from .CalcTemplate import *
+from .lofunction import *
 

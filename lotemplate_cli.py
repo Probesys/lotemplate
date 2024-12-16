@@ -12,9 +12,10 @@ import urllib.request
 import urllib.error
 import sys
 import traceback
-import subprocess
+import shlex, subprocess
 from time import sleep
-
+import os
+import random
 
 def set_arguments() -> cparse.Namespace:
     """
@@ -36,12 +37,12 @@ def set_arguments() -> cparse.Namespace:
     p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
     p.add_argument('--host', default="localhost", help='Host address to use for the libreoffice connection')
     p.add_argument('--port', default="2002", help='Port to use for the libreoffice connexion')
+    p.add_argument('--cpu', default="0", help='number of libreoffice start, default 0 is the number of CPU')
     p.add_argument('--scan', '-s', action='store_true',
                    help="Specify if the program should just scan the template and return the information, or fill it.")
     p.add_argument('--force_replacement', '-f', action='store_true',
                    help="Specify if the program should ignore the scan's result")
     return p.parse_args()
-
 
 if __name__ == '__main__':
 
@@ -49,15 +50,27 @@ if __name__ == '__main__':
     args = set_arguments()
 
     # run soffice
-    subprocess.call(
-        f'soffice "--accept=socket,host={args.host},port={args.port};urp;StarOffice.ServiceManager" &', shell=True)
-    sleep(2)
+    if args.cpu == "0":
+        nb_process=len(os.sched_getaffinity(0))
+    else:
+        nb_process=int(args.cpu)
 
+    for i in range(nb_process):
+
+       subprocess.Popen(
+             shlex.split('soffice  -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
+            -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
+            "--accept=socket,host="'+args.host+',port='+args.port+str(i)+';urp;" \
+            --headless --nologo --terminate_after_init \
+            --norestore " '), shell=False, stdin = subprocess.PIPE,
+                     stdout = subprocess.PIPE,)
+
+    #sleep(1+nb_process/2)
+    i=random.randint(0,nb_process-1)
     # establish the connection to the server
-    connexion = ot.Connexion(args.host, args.port)
-
+    connexion = ot.Connexion(args.host, args.port+str(i))
     # generate the document to operate and its parameters
-    document = ot.Template(args.template_file, connexion, not args.force_replacement)
+    document = ot.TemplateFromExt(args.template_file, connexion, not args.force_replacement)
 
     # prints scan result in json format if it should
     if args.scan:
@@ -82,18 +95,21 @@ if __name__ == '__main__':
             try:
                 # scan for errors
                 document.search_error(ot.convert_to_datas_template(json_variables))
-
+                #pdb.set_trace()
                 # fill and export the document
                 document.fill(json_variables)
+                if not args.output:
+                    filename=json_name
+                    path='exports'
+                else:
+                    filename=os.path.basename(args.output)
+                    path=os.path.dirname(args.output)
+                    if not path:
+                        path='exports'
+
                 print(
-                    f"File {repr(json_name)}: Document saved as " +
-                    repr(document.export(
-                        args.output if len(json_dict) == 1 else
-                        ".".join(args.output.split(".")[:-1]) + '_' + (
-                            json_name.split("/")[-1][:-5] if json_name.split("/")[-1][-5:] == ".json"
-                            else json_name.split("/")[-1]
-                        ) + "." + args.output.split(".")[-1]
-                    ))
+                    f"Document saved as " +
+                    repr(document.export( filename, path, True))
                 )
             except Exception as exception:
                 print(f'Ignoring exception on json {repr(json_name)}:', file=sys.stderr)

@@ -10,43 +10,64 @@ import configargparse as cparse
 import glob
 import os
 import sys
-import subprocess
+import shlex, subprocess
 from time import sleep
 from typing import Union
 from zipfile import ZipFile
+import random
 
-p = cparse.ArgumentParser(default_config_files=['config.yml', 'config.ini', 'config'])
-p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
-p.add_argument('--host', default="localhost", help='Host address to use for the libreoffice connection')
-p.add_argument('--port', default="2002", help='Port to use for the libreoffice connexion')
-args = p.parse_known_args()[0]
+host='localhost'
+port='200'
+gworkers=0
+def start_soffice(workers):
+    global gworkers
+    gworkers=workers
+    os.makedirs("uploads", exist_ok=True)
+    os.makedirs("exports", exist_ok=True)
+    clean_temp_files()
+    i=1
+    for i in range(workers):
+       subprocess.Popen(
+             shlex.split('soffice  -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
+            -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
+            "--accept=socket,host="'+host+',port='+port+str(i)+';urp;" \
+            --headless --nologo --terminate_after_init \
+            --norestore " '), shell=False, stdin = subprocess.PIPE,
+                     stdout = subprocess.PIPE,)
 
-os.makedirs("uploads", exist_ok=True)
-os.makedirs("exports", exist_ok=True)
-subprocess.call(
-    f'soffice "--accept=socket,host={args.host},port={args.port};urp;StarOffice.ServiceManager" &', shell=True)
-sleep(3)
-cnx = ot.Connexion(args.host, args.port)
-
-
-def restart_soffice() -> None:
+def restart_soffice(i) -> None:
     """
     simply restart the soffice process
 
     :return: None
     """
+    i=1
+    subprocess.Popen(
+             shlex.split('soffice  -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
+            -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
+            "--accept=socket,host="'+host+',port='+port+str(i)+';urp;" \
+            --headless --nologo --terminate_after_init \
+            --norestore " '), shell=False, stdin = subprocess.PIPE,
+                     stdout = subprocess.PIPE,)
 
-    clean_temp_files()
-    subprocess.call(
-        f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
-        shell=True
-    )
-    sleep(2)
+def connexion():
+    #pdb.set_trace()
+    i=random.randint(0,gworkers-1)
+    # establish the connection to the server
     try:
-        cnx.restart()
-    except:
-        pass
+        cnx = ot.Connexion(host,port+str(i))
+    except ot.errors.UnoException as e:
+        restart_soffice(i)
+        if error_caught:
+            return (
+                error_format(e, "Internal server error on file opening. Please checks the README file, section "
+                                "'Unsolvable problems' for more informations."),
+                500
+            )
+    except Exception as e:
+        return error_format(e), 500
 
+    return cnx
 
 def clean_temp_files():
     """
@@ -148,23 +169,16 @@ def save_file(directory: str, f, name: str, error_caught=False) -> Union[tuple[d
         i += 1
     f.stream.seek(0)
     f.save(f"uploads/{directory}/{name}")
+
+
+    cnx = connexion()
+
     try:
-        with ot.Template(f"uploads/{directory}/{name}", cnx, True) as temp:
+        with ot.TemplateFromExt(f"uploads/{directory}/{name}", cnx, True) as temp:
             values = temp.variables
     except ot.errors.TemplateError as e:
         delete_file(directory, name)
         return error_format(e), 415
-    except ot.errors.UnoException as e:
-        delete_file(directory, name)
-        restart_soffice()
-        if error_caught:
-            return (
-                error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                                "'Unsolvable problems' for more informations."),
-                500
-            )
-        else:
-            return save_file(directory, f, name, True)
     except Exception as e:
         delete_file(directory, name)
         return error_format(e), 500
@@ -180,24 +194,13 @@ def scan_file(directory: str, file: str, error_caught=False) -> Union[tuple[dict
     :param error_caught: specify if an error was already caught
     :return: a json and optionally an int which represent the status code to return
     """
-
-    try:
-        with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
+    cnx = connexion()
+    with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True) as temp:
             variables = temp.variables
-    except ot.errors.UnoException as e:
-        restart_soffice()
-        if error_caught:
-            return (
-                error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                                "'Unsolvable problems' for more informations."),
-                500
-            )
-        else:
-            return scan_file(directory, file, True)
     return {'file': file, 'message': "Successfully scanned", 'variables': variables}
 
 
-def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tuple[dict, int], dict, Response]:
+def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tuple[dict, int], dict, tuple[str,Response]]:
     """
     fill the specified file
 
@@ -211,10 +214,11 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
     if type(json) != list or not json:
         return error_sim("JsonSyntaxError", 'api_invalid_base_value_type', "The json should be a non-empty array"), 415
 
+    
+    cnx = connexion()
     try:
-        with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
+        with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True) as temp:
 
-            exports = []
 
             for elem in json:
 
@@ -241,28 +245,13 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
                     temp.fill(elem["variables"])
                     if elem.get('page_break', False):
                         temp.page_break()
-                    exports.append(temp.export("exports/" + elem["name"], should_replace=(
-                        True if len(json) == 1 else False)))
+                    export_file=temp.export(elem["name"],"exports")
+                    export_name=elem["name"]
                 except Exception as e:
                     return error_format(e), 415
 
-            if len(exports) == 1:
-                return send_file(exports[0], download_name=exports[0].split("/")[-1])
-            else:
-                with ZipFile('exports/export.zip', 'w') as zipped:
-                    for elem2 in exports:
-                        zipped.write(elem2, elem2.split("/")[-1])
-                return send_file('exports/export.zip', 'export.zip')
-    except ot.errors.UnoException as e:
-        restart_soffice()
-        if error_caught:
-            return (
-                error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                                "'Unsolvable problems' for more informations."),
-                500
-            )
-        else:
-            return fill_file(directory, file, json, True)
+                return (export_file,send_file(export_file, export_name))
 
+    except Exception as e:
+            return error_format(e), 500
 
-clean_temp_files()

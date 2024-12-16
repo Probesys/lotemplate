@@ -40,9 +40,9 @@ def compare_files(name: str, format: str = 'txt'):
 
     temp = None
     if os.path.isfile(get_filename('odt')):
-        temp = ot.Template(get_filename('odt'), cnx, True)
+        temp = ot.WriterTemplate(get_filename('odt'), cnx, True)
     if os.path.isfile(get_filename('docx')):
-        temp = ot.Template(get_filename('docx'), cnx, True)
+        temp = ot.WriterTemplate(get_filename('docx'), cnx, True)
 
     if temp is None:
         if name == 'debug':
@@ -56,11 +56,11 @@ def compare_files(name: str, format: str = 'txt'):
 
     if os.path.isfile(get_filename('unittest.'+format)):
         os.remove(get_filename('unittest.'+format))
-    temp.export(get_filename('unittest.'+format), True)
+    temp.export(name+'.unittest.'+format,base_path, True)
     # temp.close()
     if os.path.isfile(get_filename('unittest.odt')):
         os.remove(get_filename('unittest.odt'))
-    temp.export(get_filename('unittest.odt'), True)
+    temp.export(name+'.unittest.odt',base_path, True)
     temp.close()
 
     # The PDF format is used to test some documents with headers or footers that are not supported by the text saveAs from

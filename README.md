@@ -1,9 +1,16 @@
 LOTemplate (for Libre Office Template)
 ======================================
 
+```
+IMPORTANT CHANGE variable SECRET_KEY  has been rename in SECRETKEY
+don't forget to change your .env
+
+this is due to the upgrade of flask that don't accept variables with _
+```
+
 [![Unittest](https://github.com/Probesys/lotemplate/actions/workflows/unittest.yml/badge.svg)](https://github.com/Probesys/lotemplate/actions/workflows/unittest.yml)
 
-LOTemplate is document generator used to create documents programatically (ODT, DOCX, PDF) from a template and a json file.
+LOTemplate is document generator used to create documents programatically (ODT, DOCX,ODS, XLSX, PDF) from a office template and a json file.
 
 ```mermaid
 flowchart LR
@@ -19,8 +26,8 @@ flowchart LR
 
 What makes this tool different from others are the following features :
 
-* The templates are in DOCX or ODT (Word or Libre Office) format
-* Template can have complex structures (variables, loop, conditions, counters, html,...)
+* The templates are in office format (ods,odt, docx, xlsx, ... )format
+* Template can have complex structures (variables, loop, conditions, counters, html,...) except for calc document for the moment 
 * The tool can scan the template to extract the variables sheet
 * The tool can be called by an API, a CLI or a python module.
 
@@ -31,19 +38,10 @@ Quick start
 
 ### Run the project with docker compose
 
-Create a docker-compose.yml
+Use the docker-compose.yml at the root of the project. Configure the .env file
 
-```yaml
-version: '3'
-services:
-  lotemplate:
-    image: probesys38/lotemplate:v1.5.0
-    volumes:
-      - lotemplate-uploads:/app/uploads
-    environment:
-      - SECRET_KEY=lopassword
-    command: "gunicorn -w 4 -b 0.0.0.0:8000 app:app"
-```
+* SECRETKEY define the API KEY
+* NB_WORKERS define the number of worker of gunicorn and the number of process libreoffice started.
 
 run the service
 
@@ -55,7 +53,7 @@ docker-compose up -d
 
 ```bash
 # creation of a directory
-curl -X PUT -H 'secret_key: lopassword' -H 'directory: test_dir1' http://localhost:8000/
+curl -X PUT -H 'secretkey: lopassword' -H 'directory: test_dir1' http://localhost:8000/
 # {"directory":"test_dir1","message":"Successfully created"}
 ```
 
@@ -73,12 +71,12 @@ Upload this file to lotemplate
 
 ```bash
 # upload a template
-curl -X PUT -H 'secret_key: lopassword' -F file=@/tmp/basic_test.odt http://localhost:8000/test_dir1
+curl -X PUT -H 'secretkey: lopassword' -F file=@/tmp/basic_test.odt http://localhost:8000/test_dir1
 # {"file":"basic_test.odt","message":"Successfully uploaded","variables":{"my_tag":{"type":"text","value":""},"other_tag":{"type":"text","value":""}}}
 
 # generate a file titi.odt from a template and a json content
 curl -X POST \
-    -H 'secret_key: lopassword' \
+    -H 'secretkey: lopassword' \
     -H 'Content-Type: application/json' \
     -d '[{"name":"my_file.odt","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}}}]' \
     --output titi.odt http://localhost:8000/test_dir1/basic_test.odt 
@@ -156,21 +154,21 @@ docker-compose up
 
 ```bash
 # creation of a directory
-curl -X PUT -H 'secret_key: my_secret_key' -H 'directory: test_dir1' http://lotemplate:8000/
+curl -X PUT -H 'secretkey: my_secret_key' -H 'directory: test_dir1' http://lotemplate:8000/
 # {"directory":"test_dir1","message":"Successfully created"}
-curl -X PUT -H 'secret_key: my_secret_key' -H 'directory: test_dir2' http://lotemplate:8000/
+curl -X PUT -H 'secretkey: my_secret_key' -H 'directory: test_dir2' http://lotemplate:8000/
 # {"directory":"test_dir2","message":"Successfully created"}
 
 # look at the created directories
-curl -X GET -H 'secret_key: my_secret_key' http://lotemplate:8000/
+curl -X GET -H 'secretkey: my_secret_key' http://lotemplate:8000/
 # ["test_dir2","test_dir1"]
 
 # delete a directory (and it's content
-curl -X DELETE -H 'secret_key: my_secret_key' http://lotemplate:8000/test_dir2
+curl -X DELETE -H 'secretkey: my_secret_key' http://lotemplate:8000/test_dir2
 # {"directory":"test_dir2","message":"The directory and all his content has been deleted"}
 
 # look at the directories
-curl -X GET -H 'secret_key: my_secret_key' http://lotemplate:8000/
+curl -X GET -H 'secretkey: my_secret_key' http://lotemplate:8000/
 # ["test_dir1"]
 ```
 
@@ -186,15 +184,15 @@ Upload this file to lotemplate
 
 ```bash
 # upload a template
-curl -X PUT -H 'secret_key: my_secret_key' -F file=@/tmp/basic_test.odt http://lotemplate:8000/test_dir1
+curl -X PUT -H 'secretkey: my_secret_key' -F file=@/tmp/basic_test.odt http://lotemplate:8000/test_dir1
 {"file":"basic_test.odt","message":"Successfully uploaded","variables":{"my_tag":{"type":"text","value":""},"other_tag":{"type":"text","value":""}}}
 
 # analyse an existing file and get variables
-curl -X GET -H 'secret_key: my_secret_key'  http://lotemplate:8000/test_dir1/basic_test.odt
+curl -X GET -H 'secretkey: my_secret_key'  http://lotemplate:8000/test_dir1/basic_test.odt
 # {"file":"basic_test.odt","message":"Successfully scanned","variables":{"my_tag":{"type":"text","value":""},"other_tag":{"type":"text","value":""}}}
 
 # generate a file titi.odt from a template and a json content
- curl -X POST -H 'secret_key: my_secret_key' -H 'Content-Type: application/json' -d '[{"name":"my_file.odt","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}}}]' --output titi.odt http://lotemplate:8000/test_dir1/basic_test.odt 
+ curl -X POST -H 'secretkey: my_secret_key' -H 'Content-Type: application/json' -d '[{"name":"my_file.odt","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}}}]' --output titi.odt http://lotemplate:8000/test_dir1/basic_test.odt 
 ```
 
 After the operation, you get the file titi.odt with this content :
@@ -209,7 +207,7 @@ let’s see if the tag foo is replaced and this bar is detected.
 
 Then use the following routes :
 
-*all routes take a secret key in the header, key `secret_key`, that correspond to the secret key configured in the 
+*all routes take a secret key in the header, key `secretkey`, that correspond to the secret key configured in the 
 [.env](.env) file. If no secret key is configured, the secret key isn't required at request.*
 
 - `/`
@@ -271,7 +269,8 @@ optional arguments:
                         Configuration file path
   --host HOST           Host address to use for the libreoffice connection
   --port PORT           Port to use for the libreoffice connexion
-  --scan, -s            Specify if the program should just scan the template
+  --cpu            		 Specify if the program should just scan the template
+  --scan, -s            Specify the number of libreoffice to start, default 0 is the number of CPU
                         and return the information, or fill it.
   --force_replacement, -f
                         Specify if the program should ignore the scan's result
@@ -760,18 +759,19 @@ we displayed [counter.last iterator] solutions
 -------------------------------------------------
 
 ### Import
-| Format                  | ODT, OTT | HTML | DOC, DOCX | RTF | TXT | OTHER |
-|-------------------------|----------|------|-----------|-----|-----|-------|
-| text variables support  | ✅        | ✅    | ✅         | ✅   | ✅   | ❌     |
-| dynamic tables support  | ✅        | ✅    | ✅         | ✅   | ❌   | ❌     |
-| image variables support | ✅        | ✅    | ✅         | ❌   | ❌   | ❌     |
+| Format                  | ODT, OTT |ODS, ODST |XLSX, XLS | HTML | DOC, DOCX | RTF | TXT | OTHER |
+|-------------------------|----------|----------|----------|------|-----------|-----|-----|-------|
+| text variables support  | ✅        | ✅        | ✅        | ✅    | ✅         | ✅   | ✅   | ❌     |
+| dynamic tables support  | ✅        | ❌        | ❌        | ✅    | ✅         | ✅   | ❌   | ❌     |
+| image variables support | ✅        | ❌        | ❌        | ✅    | ✅         | ❌   | ❌   | ❌     |
 
 ### Export
+For Writer
 odt, pdf, html, docx.
+For Calc
+ods, xls, xlsx, html, csv
 
-Other formats can be easily added by adding the format information in the dictionary `formats` in 
-[lotemplate/classes.py](lotemplate/classes.py) > Template > export().
-
+Other formats can be easily added by adding the format information in the dictionary `formats` of the respective classes
 Format information can be found on the 
 [unoconv repo](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391).
 
@@ -800,96 +800,20 @@ cp docker-compose.override.yml.example docker-compose.override.yml
 docker-compose up
 ```
 
-<a name="unsolvable-problems"></a>Unsolvable problems
------------------------------------------------------
-
-The error `UnoException` happens frequently and 
-unpredictably, and this error stops the soffice processus 
-(please note that the API try to re-launch the process by itself). This error, particularly annoying, is unfortunately 
-impossible to fix, since it can be caused by multiples soffice (LibreOffice) bugs.
-Here is a non-exhaustive list of cases that ***can*** cause this bug :
-- The soffice process was simply closed after the connection is established.
-- The `.~lock.[FILENAME].odt#` file is present in the folder where the document is open. This file is created when the 
-  file is currently edited via libreoffice, and deleted when the programs in which it is edited are 
-  closed. The program try to avoid this error by deleting this file at document opening.
-- The first line of the document is occupied by a table or another dynamic element
-  (just jump a line, it will solve the problem)
-- The background of document is an image, and is overlaid by many text fields
-- The document is an invalid file (e.g: the file is an image), and the bridge crashes instead of return the proper 
-  error.
-
-The amount of memory used by soffice can increase with its use, even when open files are properly closed (which is the 
-case). Again, this is a bug in LibreOffice/soffice that has existed for years.
-
-For trying to fix these problems, you can try:
-- Use the most recent stable release of LibreOffice (less memory, more stable, fewer crashes)
 
 <a name="external-documentations"></a>External documentations
 ---------------------------------------------------------
 
+
+For Pyuno
+
+-  [LibreOffice SDK API Reference](https://api.libreoffice.org/docs/idl/ref/index.html)
+- [LibreOffice 24.2 API Documentation](https://api.libreoffice.org/) 
+
+- [Libreoffice Development Wiki](https://wiki.documentfoundation.org/Development)
 - [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
 - [The unoconv source code, written in python with PyUNO](https://github.com/unoconv/unoconv/blob/master/unoconv)
 - [Unoconv source code for list formats - and properties - compatible with LibreOffice for export](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391)
-- [OpenOffice Python Bridge information and code exemples](http://www.openoffice.org/udk/python/python-bridge.html)
-- [com.sun.star Java API docs (On which pyuno is based - but is not identical)](https://www.openoffice.org/api/docs/common/ref/com/sun/star/module-ix.html)
-- [Java LibreOffice Programming Book](http://fivedots.coe.psu.ac.th/~ad/jlop)
-- [Deploying Flask](https://flask.palletsprojects.com/en/2.0.x/deploying/)
-- [Flask documentation - quickstart](https://flask.palletsprojects.com/en/2.0.x/quickstart/)
-- [Flask documentation - upload](https://flask.palletsprojects.com/en/2.0.x/patterns/fileuploads/)
 
-<a name="versions"></a>Versions
--------------------------------
 
-- v1.6.1 : 2024-04-12 : bugfix
-  - fix the issue https://github.com/Probesys/lotemplate/issues/34 : too many endif buggy
-- v1.6.0 : 2024-04-11
-  - allow put variables inside headers and footers
-  - fix a bug when a variable is both inside the text content and inside a table (it should not arrive, but it is fixed)
-  - a new unit test system based on PDF converted to text in order to test contents that are not converted to text with a simple saveAs 
-- v1.5.2 : 2024-02-24 : Better README
-  - Rewrite for a betterdocker DockerFile without bug 
-- v1.5.1 : 2024-02-16 : Better README
-  - Rewriting of the README file
-- v1.5.0 : 2024-02-12 : syntax error detection
-  - add syntax error detection in if statements
-  - add syntax error detection in for statements
-  - come back to default libreoffice of Debian Bookworm (removed backports, incompatibility)
-- v1.4.1 : 2023-11-20 : micro-feature for counter and fix possible bug
-  - use counters for counting elements of a list
-  - fix possible bug with reset and last.
-- v1.4.0, 2023-11-17 : counters
-  - add a counter system inside templates
-  - add better scan for if statement. Raises an error if there is too many endif in the template.
-  - speedup html statement replacement and scanning
-  - speedup for statement replacement and scanning
-  - tests of for scanning
-  - internal : add scan testing inside content unit tests
-- v1.3.0, 2023-11-16 :
-  - major refactoring. No evolution for the user.
-  - new unit tests on tables and images
-  - no BC Break (theoretically)
-- v1.2.8, 2023-09-01 :
-  - fix bug in TextShape var replacement
-- v1.2.7, 2023-08-30 :
-  - Upgrade to debian bookworm slim
-- v1.2.6, 2023-08-30 :
-  - new comparators for if statements : ===, !==, CONTAINS, NOT_CONTAINS
-  - variables of type "html" are now supported and copied as HTML
-- v1.2.5, 2023-07-17 : temporary fix for detecting endhtml and endfor
-- v1.2.4, 2023-07-09 : fix major bug in if statement scanning
-- v1.2.3, 2023-07-07 : no endif detection, performance improvement in if statement
-- v1.2.2, 2023-06-09 : bugfix html statement scan missing
-- v1.2.1, 2023-06-05 : little fix for CI
-- v1.2.0, 2023-06-04 : if statements inside for
-- v1.1.0, 2023-05-23 : recursive if statement
-- v1.0.1, 2023-05-05 : workaround, fix in html formatting
-- v1.0.0, 2023-05-03 : if statement, for statement, html statement
-- not numbered : about may 2022 : first version
 
-### Possible futur evolutions
-
-- Possibly to add dynamic images in tables
-- another way to make image variables that would be compatible with Microsoft Word and maybe other formats (example : set the variable name in the 'alternative text' field)
-- key system for each institution for security
-- handle bulleted lists using table like variables
-- use variable formatting instead of the one of the character before

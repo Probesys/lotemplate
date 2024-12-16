@@ -1,5 +1,7 @@
 __pycache__
 .bash_history
+*.swp
+.viminfo
 /.cache/
 /.config/
 .local
@@ -10,6 +12,7 @@ uploads/
 .fleet/
 .vscode/
 .~lock.*#
+.python_history
 exports/
 /config*
 /lotemplate/unittest/files/content/*.unittest.txt
@@ -23,3 +26,4 @@ exports/
 /output*.*
 .fontconfig/
 docker-compose.override.yml
+/tmpfile
