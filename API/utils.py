@@ -51,7 +51,6 @@ def restart_soffice(i) -> None:
                      stdout = subprocess.PIPE,)
 
 def connexion():
-    #pdb.set_trace()
     i=random.randint(0,gworkers-1)
     # establish the connection to the server
     try:
@@ -211,46 +210,40 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
     :return: a json and optionally an int which represent the status code to return
     """
 
-    if type(json) != list or not json:
-        return error_sim("JsonSyntaxError", 'api_invalid_base_value_type', "The json should be a non-empty array"), 415
-
     
     cnx = connexion()
     try:
         with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True) as temp:
 
+            length = len(json)
+            is_name_present = type(json.get("name")) is str
+            is_variables_present = type(json.get("variables")) is dict
+            is_page_break_present = type(json.get("page_break")) is bool
 
-            for elem in json:
+            if (
+                    not is_name_present
+                    or not is_variables_present
+                    or ((length > 2 and not is_page_break_present) or (length > 3 and is_page_break_present))
+            ):
+                return error_sim(
+                    "JsonSyntaxError",
+                    'api_invalid_instance_syntax',
+                    "Each instance of the array in the json should be an object containing only 'name' - "
+                    "a non-empty string, 'variables' - a non-empty object, and, optionally, 'page_break' - "
+                    "a boolean."), 415
 
-                length = len(elem)
-                is_name_present = type(elem.get("name")) is str
-                is_variables_present = type(elem.get("variables")) is dict
-                is_page_break_present = type(elem.get("page_break")) is bool
+            try:
+                json_variables = ot.convert_to_datas_template(json["variables"])
+                temp.search_error(json_variables)
+                temp.fill(json["variables"])
+                if json.get('page_break', False):
+                    temp.page_break()
+                export_file=temp.export(json["name"],"exports")
+                export_name=json["name"]
+            except Exception as e:
+                return error_format(e), 415
 
-                if (
-                        not is_name_present
-                        or not is_variables_present
-                        or ((length > 2 and not is_page_break_present) or (length > 3 and is_page_break_present))
-                ):
-                    return error_sim(
-                        "JsonSyntaxError",
-                        'api_invalid_instance_syntax',
-                        "Each instance of the array in the json should be an object containing only 'name' - "
-                        "a non-empty string, 'variables' - a non-empty object, and, optionally, 'page_break' - "
-                        "a boolean."), 415
-
-                try:
-                    json_variables = ot.convert_to_datas_template(elem["variables"])
-                    temp.search_error(json_variables)
-                    temp.fill(elem["variables"])
-                    if elem.get('page_break', False):
-                        temp.page_break()
-                    export_file=temp.export(elem["name"],"exports")
-                    export_name=elem["name"]
-                except Exception as e:
-                    return error_format(e), 415
-
-                return (export_file,send_file(export_file, export_name))
+            return (export_file,send_file(export_file, export_name))
 
     except Exception as e:
             return error_format(e), 500

@@ -17,6 +17,7 @@ exports/
 /config*
 /lotemplate/unittest/files/content/*.unittest.txt
 /lotemplate/unittest/files/content/*.unittest.odt
+/lotemplate/unittest/files/content/*.unittest.html
 /lotemplate/unittest/files/content/debug.docx
 /lotemplate/unittest/files/content/debug.odt
 /lotemplate/unittest/files/content/debug.json

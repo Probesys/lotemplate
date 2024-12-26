@@ -221,4 +221,7 @@ class Template:
 
         return path
 
+    def __del__(self):
+        if os.path.exists(self.tmp_file):
+            os.remove(self.tmp_file)
 

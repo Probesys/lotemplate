@@ -44,7 +44,6 @@ class CalcTemplate(Template):
             "pdf": "calc_pdf_Export",
             "html": "HTML (StarCalc)",
             "csv": "Text - txt - csv (StarCalc)",
-            'rtf': 'Rich Text Format (StarCalc)',
             'xls': 'MS Excel 2003 XML',
             'xlsx': 'Calc MS Excel 2007 XML'
         }

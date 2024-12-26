@@ -27,9 +27,9 @@ def set_arguments() -> cparse.Namespace:
     p = cparse.ArgumentParser(default_config_files=['config.yml', 'config.ini', 'config'])
     p.add_argument('template_file',
                    help="Template file to scan or fill")
-    p.add_argument('--json_file', '-jf', nargs='+', default=[],
+    p.add_argument('--json_file', '-jf', 
                    help="Json files that must fill the template, if any")
-    p.add_argument('--json', '-j', nargs='+', default=[],
+    p.add_argument('--json', '-j', 
                    help="Json strings that must fill the template, if any")
     p.add_argument('--output', '-o', default="output.pdf",
                    help="Names of the filled files, if the template should be filled. supported formats: "
@@ -81,38 +81,31 @@ if __name__ == '__main__':
 
         # get the specified jsons
         json_dict = {}
-        for elem in args.json_file:
-            if ot.is_network_based(elem):
-                json_dict[elem] = json.loads(urllib.request.urlopen(elem).read())
+        if args.json_file:
+            if ot.is_network_based(args.json_file):
+                json_variables = json.loads(urllib.request.urlopen(args.json_file).read())
             else:
-                with open(elem) as f:
-                    json_dict[elem] = json.loads(f.read())
-        for index, elem in enumerate(args.json):
-            json_dict[f"json_{index}"] = json.loads(elem)
+                with open(args.json_file) as f:
+                    json_variables = json.loads(f.read())
+        if args.json:
+            json_variables = json.loads(args.json)
 
-        for json_name, json_variables in json_dict.items():
+        try:
+            # scan for errors
+            document.search_error(ot.convert_to_datas_template(json_variables))
+            #pdb.set_trace()
+            # fill and export the document
+            document.fill(json_variables)
+            filename=os.path.basename(args.output)
+            path=os.path.dirname(args.output)
+            if not path:
+               path='exports'
 
-            try:
-                # scan for errors
-                document.search_error(ot.convert_to_datas_template(json_variables))
-                #pdb.set_trace()
-                # fill and export the document
-                document.fill(json_variables)
-                if not args.output:
-                    filename=json_name
-                    path='exports'
-                else:
-                    filename=os.path.basename(args.output)
-                    path=os.path.dirname(args.output)
-                    if not path:
-                        path='exports'
-
-                print(
-                    f"Document saved as " +
-                    repr(document.export( filename, path, True))
-                )
-            except Exception as exception:
-                print(f'Ignoring exception on json {repr(json_name)}:', file=sys.stderr)
-                traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
-                continue
+            print(
+                f"Document saved as " +
+                repr(document.export( filename, path, True))
+            )
+        except Exception as exception:
+            print(f'Ignoring exception on json :', file=sys.stderr)
+            traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
     document.close()

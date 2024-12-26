@@ -2,8 +2,15 @@ LOTemplate (for Libre Office Template)
 ======================================
 
 ```
-IMPORTANT CHANGE variable SECRET_KEY  has been rename in SECRETKEY
+IMPORTANT CHANGE 
+
+
+variable SECRET_KEY  has been rename in SECRETKEY
 don't forget to change your .env
+
+
+Now API and CLI accept json and now a dict of json look at example
+
 
 this is due to the upgrade of flask that don't accept variables with _
 ```
@@ -78,7 +85,7 @@ curl -X PUT -H 'secretkey: lopassword' -F file=@/tmp/basic_test.odt http://local
 curl -X POST \
     -H 'secretkey: lopassword' \
     -H 'Content-Type: application/json' \
-    -d '[{"name":"my_file.odt","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}}}]' \
+    -d '{"name":"my_file.odt","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}}}' \
     --output titi.odt http://localhost:8000/test_dir1/basic_test.odt 
 ```
 
@@ -192,7 +199,7 @@ curl -X GET -H 'secretkey: my_secret_key'  http://lotemplate:8000/test_dir1/basi
 # {"file":"basic_test.odt","message":"Successfully scanned","variables":{"my_tag":{"type":"text","value":""},"other_tag":{"type":"text","value":""}}}
 
 # generate a file titi.odt from a template and a json content
- curl -X POST -H 'secretkey: my_secret_key' -H 'Content-Type: application/json' -d '[{"name":"my_file.odt","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}}}]' --output titi.odt http://lotemplate:8000/test_dir1/basic_test.odt 
+ curl -X POST -H 'secretkey: my_secret_key' -H 'Content-Type: application/json' -d '{"name":"my_file.odt","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}}}' --output titi.odt http://lotemplate:8000/test_dir1/basic_test.odt 
 ```
 
 After the operation, you get the file titi.odt with this content :
@@ -258,9 +265,9 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --json_file JSON_FILE [JSON_FILE ...], -jf JSON_FILE [JSON_FILE ...]
+  --json_file JSON_FILE , -jf JSON_FILE
                         Json files that must fill the template, if any
-  --json JSON [JSON ...], -j JSON [JSON ...]
+  --json JSON , -j JSON 
                         Json strings that must fill the template, if any
   --output OUTPUT, -o OUTPUT
                         Names of the filled files, if the template should

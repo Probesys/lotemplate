@@ -87,7 +87,6 @@ def file_route(directory, file):
         try:
             os.remove(file)
         except Exception as ex:
-            print(file)
             print("Error delete file " + str(file))
         return response
     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):

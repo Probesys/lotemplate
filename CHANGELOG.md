@@ -1,6 +1,7 @@
 <a name="versions"></a>Versions
 -------------------------------
 - v2.0.0 : 01/01/2025 
+  - IMPORTANT JSON now must not be a dict only JSON 
   - IMPORTANT due to upgrade of FLASH now the variable SECRET_KEY in name SECRETKEY 
   - now work with Calc only for variables at the moment
   - Is multiThreaded proof (see Doc to configure number of libreoffice process
