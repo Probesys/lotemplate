@@ -40,9 +40,9 @@ def compare_files(name: str, format: str = 'txt'):
 
     temp = None
     if os.path.isfile(get_filename('odt')):
-        temp = ot.WriterTemplate(get_filename('odt'), cnx, True)
+        temp = ot.TemplateFromExt(get_filename('odt'), cnx, True)
     if os.path.isfile(get_filename('docx')):
-        temp = ot.WriterTemplate(get_filename('docx'), cnx, True)
+        temp = ot.TemplateFromExt(get_filename('docx'), cnx, True)
 
     if temp is None:
         if name == 'debug':

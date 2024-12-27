@@ -44,7 +44,7 @@ class Template:
     TMPDIR='tmpfile'
 
     formats =  {}
-
+    tmp_file= ''
 
     def __enter__(self):
         return self
