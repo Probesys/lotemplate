@@ -7,6 +7,7 @@ The classes used for document connexion and manipulation
 
 __all__ = (
     'Connexion',
+    'start_office',
 )
 
 import os

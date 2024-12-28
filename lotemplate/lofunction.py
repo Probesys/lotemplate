@@ -52,22 +52,3 @@ def start_multi_office(host:str="localhost",start_port:int=2000,nb_env:int=1):
         port=port+1
     return soffices
 
-def start_office(host:str="localhost",port:str="2000"):
-    """
-    start one process LibreOffice
-
-    :param host:  define host in the UNO connect-string --accept
-    :param port:   define port in the UNO connect-string --accept
-    environnement had to be different for each environnement
-    """
-
-    subprocess.Popen(
-             shlex.split('soffice \
-             -env:UserInstallation="file:///tmp/LibO_Process'+port+'" \
-            -env:UserInstallation="file:///tmp/LibO_Process'+port+'" \
-            "--accept=socket,host="'+host+',port='+port+';urp;" \
-            --headless --nologo --terminate_after_init \
-            --norestore " '), shell=False, stdin = subprocess.PIPE,
-                     stdout = subprocess.PIPE,)
-
-    return host, port,'file:///tmp/LibO_Process'+str(port)
