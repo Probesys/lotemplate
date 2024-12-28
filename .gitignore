@@ -27,4 +27,5 @@ exports/
 /output*.*
 .fontconfig/
 docker-compose.override.yml
-/tmpfile
+/tmpfile/**
+!/tmpfile/.keep
