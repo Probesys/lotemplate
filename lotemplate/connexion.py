@@ -12,7 +12,7 @@ __all__ = (
 import os
 from typing import Union
 from sorcery import dict_of
-
+import shlex,subprocess
 import uno
 import unohelper
 from com.sun.star.beans import PropertyValue
@@ -27,7 +27,25 @@ from . import errors
 from .utils import *
 import pdb
 
+def start_office(host:str="localhost",port:str="2000"):
+    """
+    start one process LibreOffice
 
+    :param host:  define host in the UNO connect-string --accept
+    :param port:   define port in the UNO connect-string --accept
+    environnement had to be different for each environnement
+    """
+
+    subprocess.Popen(
+             shlex.split('soffice \
+             -env:UserInstallation="file:///tmp/LibO_Process'+port+'" \
+            -env:UserInstallation="file:///tmp/LibO_Process'+port+'" \
+            "--accept=socket,host="'+host+',port='+port+';urp;" \
+            --headless --nologo --terminate_after_init \
+            --norestore " '), shell=False, stdin = subprocess.PIPE,
+                     stdout = subprocess.PIPE,)
+
+    return host, port,'file:///tmp/LibO_Process'+str(port)
 
 
 class Connexion:
@@ -53,14 +71,15 @@ class Connexion:
         self.host = host
         self.port = port
         self.local_ctx = uno.getComponentContext()
-        for attempt in range(10):
+        for attempt in range(3):
             try:
                 self.ctx = self.local_ctx.ServiceManager.createInstanceWithContext(
                     "com.sun.star.bridge.UnoUrlResolver", self.local_ctx
                 ).resolve(f"uno:socket,host={host},port={port};urp;StarOffice.ComponentContext")
             except (NoConnectException, RuntimeException) as e:
-                if attempt < 9:
-                    sleep(1)
+                if attempt < 2:
+                    start_office(host,port)
+                    sleep(2)
                 else:
                     raise errors.UnoException(
                         'connection_error',

@@ -26,7 +26,6 @@ def start_soffice(workers):
     os.makedirs("uploads", exist_ok=True)
     os.makedirs("exports", exist_ok=True)
     clean_temp_files()
-    
     my_lo=ot.start_multi_office(nb_env=workers)
 
 
