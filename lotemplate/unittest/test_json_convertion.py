@@ -2,19 +2,14 @@
 Copyright (C) 2023 Probesys
 """
 
-import json
 import unittest
 import urllib.request
 import lotemplate as ot
 
+from test_function import *
 
-def file_to_dict(file_path: str) -> dict:
-    if ot.is_network_based(file_path):
-        return json.loads(urllib.request.urlopen(file_path).read())
-    else:
-        with open(file_path) as f:
-            return json.loads(f.read())
 
+cnx = start_office()
 
 class Generic(unittest.TestCase):
 

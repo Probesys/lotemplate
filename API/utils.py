@@ -21,52 +21,20 @@ port='200'
 gworkers=0
 def start_soffice(workers):
     global gworkers
+    global my_lo
     gworkers=workers
     os.makedirs("uploads", exist_ok=True)
     os.makedirs("exports", exist_ok=True)
     clean_temp_files()
-    i=1
-    for i in range(workers):
-       subprocess.Popen(
-             shlex.split('soffice  -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
-            -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
-            "--accept=socket,host="'+host+',port='+port+str(i)+';urp;" \
-            --headless --nologo --terminate_after_init \
-            --norestore " '), shell=False, stdin = subprocess.PIPE,
-                     stdout = subprocess.PIPE,)
+    
+    my_lo=ot.start_multi_office(nb_env=workers)
 
-def restart_soffice(i) -> None:
-    """
-    simply restart the soffice process
-
-    :return: None
-    """
-    i=1
-    subprocess.Popen(
-             shlex.split('soffice  -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
-            -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
-            "--accept=socket,host="'+host+',port='+port+str(i)+';urp;" \
-            --headless --nologo --terminate_after_init \
-            --norestore " '), shell=False, stdin = subprocess.PIPE,
-                     stdout = subprocess.PIPE,)
 
 def connexion():
-    i=random.randint(0,gworkers-1)
-    # establish the connection to the server
-    try:
-        cnx = ot.Connexion(host,port+str(i))
-    except ot.errors.UnoException as e:
-        restart_soffice(i)
-        if error_caught:
-            return (
-                error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                                "'Unsolvable problems' for more informations."),
-                500
-            )
-    except Exception as e:
-        return error_format(e), 500
+   global my_lo 
+   cnx= ot.randomConnexion(my_lo)
 
-    return cnx
+   return cnx
 
 def clean_temp_files():
     """

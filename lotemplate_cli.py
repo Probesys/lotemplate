@@ -55,20 +55,10 @@ if __name__ == '__main__':
     else:
         nb_process=int(args.cpu)
 
-    for i in range(nb_process):
+    my_lo=ot.start_multi_office(nb_env=nb_process)
 
-       subprocess.Popen(
-             shlex.split('soffice  -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
-            -env:UserInstallation="file:///tmp/LibO_Process'+str(i)+'" \
-            "--accept=socket,host="'+args.host+',port='+args.port+str(i)+';urp;" \
-            --headless --nologo --terminate_after_init \
-            --norestore " '), shell=False, stdin = subprocess.PIPE,
-                     stdout = subprocess.PIPE,)
-
-    #sleep(1+nb_process/2)
-    i=random.randint(0,nb_process-1)
     # establish the connection to the server
-    connexion = ot.Connexion(args.host, args.port+str(i))
+    connexion = ot.randomConnexion(my_lo)
     # generate the document to operate and its parameters
     document = ot.TemplateFromExt(args.template_file, connexion, not args.force_replacement)
 

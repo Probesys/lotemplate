@@ -7,10 +7,11 @@ import lotemplate as ot
 from time import sleep
 import subprocess
 
-subprocess.call(f'soffice "--accept=socket,host=localhost,port=2002;urp;StarOffice.ServiceManager" &', shell=True)
-sleep(2)
-cnx = ot.Connexion("localhost", "2002")
+from test_function import *
 
+
+
+cnx=start_office()
 
 class Text(unittest.TestCase):
 

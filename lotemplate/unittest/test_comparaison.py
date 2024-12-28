@@ -4,17 +4,12 @@ Copyright (C) 2023 Probesys
 
 import unittest
 import lotemplate as ot
-import test_json_convertion
 from time import sleep
 import subprocess
 
-subprocess.call(f'soffice "--accept=socket,host=localhost,port=2002;urp;StarOffice.ServiceManager" &', shell=True)
-sleep(2)
-cnx = ot.Connexion("localhost", "2002")
+from test_function import *
 
-
-def to_data(file: str):
-    return ot.convert_to_datas_template(test_json_convertion.file_to_dict(file))
+cnx=start_office()
 
 
 class Text(unittest.TestCase):
