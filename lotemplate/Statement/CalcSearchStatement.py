@@ -2,9 +2,7 @@ import re
 from com.sun.star.lang import XComponent
 from com.sun.star.beans import PropertyValue, UnknownPropertyException
 import regex
-from lotemplate.Statement.ForStatement import ForStatement
-from lotemplate.Statement.TableStatement import TableStatement
-#import pdb 
+import pdb 
 
 class CalcTextStatement:
     text_regex_as_string = r'\$(\w+(\(((?:\\.|.)*?)\))?)'
@@ -15,36 +13,41 @@ class CalcTextStatement:
 
 
 
-    def scan_text(doc: XComponent) -> dict[str, dict[str, str]]:
+    def scan(component: XComponent, get_table=False) -> dict[str, dict[str, str]]:
         """
         scan for text in the given doc
 
         :param doc: the document to scan
         :return: the scanned variables
-        """
-
-
+        """ 
+        if  component.getImplementationName()=="ScNamedRangeObj":
+            #doc= component.getReferredCells().getSpreadsheet()
+            doc=component.getReferredCells()
+            CalcTextStatement.text_regex_as_string = r'\&(\w+(\(((?:\\.|.)*?)\))?)'
+        else:
+            doc=component
         plain_vars = {}
         search = doc.createReplaceDescriptor()
         search.SearchString = CalcTextStatement.text_regex_as_string
         search.SearchRegularExpression = True
         search.SearchCaseSensitive = False
         founded = doc.findAll(search)
-        simple_var_list = []
-        for x_found in founded:
-            Arraytext = x_found.getDataArray()
-            #cursor = text.createTextCursorByRange(x_found)
-            for text in  Arraytext:
+        var_table = {}
+        if founded: 
+            for x_found in founded:
+                Arraytext = x_found.getDataArray()
 
-                for result in re.findall(search.SearchString,text[0]):
-                    plain_vars[result[0]] = {'type': 'text', 'value': ''}
+                #cursor = text.createTextCursorByRange(x_found)
+                for Array in  Arraytext:
+                    for text in Array:
+                        for result in re.findall(search.SearchString,text):
+                            plain_vars[result[0]] = {'type': 'text', 'value': ''}
+                            var_table[result[0]] = {'type': 'table', 'value':[]}
 
 
+        return  var_table if get_table else plain_vars
 
-
-        return plain_vars
-
-    def text_fill(doc: XComponent, variable: str, value: str) -> None:
+    def fill(doc: XComponent, variable: str, value: str) -> None:
         """
         Fills all the text-related content
 
@@ -53,7 +56,8 @@ class CalcTextStatement:
         :param value: the value to replace with
         :return: None
         """
-
+        #pdb.set_trace()
+        #print("var="+variable+" value="+value+" "+str(doc) )
         search = doc.createReplaceDescriptor()
         search.SearchString = variable
         search.ReplaceString = value

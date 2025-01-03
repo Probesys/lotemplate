@@ -12,6 +12,7 @@ import os
 from typing import Union
 from sorcery import dict_of
 
+
 import uno
 import unohelper
 from com.sun.star.beans import PropertyValue
@@ -25,15 +26,7 @@ from com.sun.star.style.BreakType import PAGE_AFTER
 from . import errors
 from .utils import *
 
-from lotemplate.Statement.ForStatement import ForStatement
-from lotemplate.Statement.HtmlStatement import HtmlStatement
-from lotemplate.Statement.IfStatement import IfStatement
-from lotemplate.Statement.TextStatement import TextStatement
-from lotemplate.Statement.TableStatement import TableStatement
-from lotemplate.Statement.ImageStatement import ImageStatement
-from lotemplate.Statement.CounterStatement import CounterManager
-
-
+from lotemplate.Statement.CalcTableStatement import CalcTableStatement
 from . import Template
 from lotemplate.Statement.CalcSearchStatement import CalcTextStatement
 import pdb
@@ -92,12 +85,12 @@ class CalcTemplate(Template):
         #('maF1', 'Feuille2')
         #(Pdb) self.doc.getSheets().getByName('maF1')
         for sheet in self.doc.getSheets():
-            texts = texts | CalcTextStatement.scan_text(sheet)
-
-
+            texts = texts | CalcTextStatement.scan(sheet)
+        tables=CalcTableStatement.scan(self.doc)
+        #range.getElementNames()
         #texts = CalcTextStatement.scan_Document_text(self.doc)
 
-        return texts 
+        return texts | tables 
 
 
     def search_error(self, json_vars: dict[str, dict[str, Union[str, list[str]]]]) -> None:
@@ -150,12 +143,13 @@ class CalcTemplate(Template):
         ###
         ### main calls
         ###
-
+        objects={}
         for var, details in sorted(variables.items(), key=lambda s: -len(s[0])):
             if details['type'] == 'text':
                 for sheet in self.doc.getSheets():
-
-                    CalcTextStatement.text_fill(sheet, "$" + var, details['value'])
-
-
+                    CalcTextStatement.fill(sheet, "$" + var, details['value'])
+            elif details['type'] == "object" and  CalcTableStatement.isTableVar(var) :
+                    objects[var]=details
+        for  var, details in objects.items():
+            CalcTableStatement.fill(self.doc, var, details['value'])
 

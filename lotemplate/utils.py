@@ -21,7 +21,7 @@ from sorcery import dict_of
 from copy import deepcopy
 
 from . import errors
-
+import pdb
 
 def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
     """
@@ -89,6 +89,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
             def recursive_check_type(rec_type, rec_value):
                 if (type(rec_type) is type and type(rec_value) is not rec_type) or \
                         (rec_type is None and rec_value is not None):
+                    pdb.set_trace()
                     raise errors.JsonSyntaxError(
                         'invalid_variable_value_type',
                         f"The variable value type {repr(get_type(rec_value))} isn't accepted for variable type "
@@ -141,6 +142,17 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
             recursive_check_type(var_type, var_value)
             return f(var_name, var_value)
         return wrapper_check_type
+
+    @check_type
+    def get_cleaned_object(var_name: str, var_value: dict ) -> dict:
+        """
+        clean a table variable
+        :param var_name: the variable name
+        :param var_value: the table
+        :return: the cleaned table
+        """
+        return dict
+
 
     @check_type
     def get_cleaned_table(var_name: str, var_value: list[str]) -> list[str]:
