@@ -41,7 +41,7 @@ import pdb
 
 class Template:
 
-    TMPDIR='tmpfile'
+    TMPDIR='/tmp'
 
     formats =  {}
     tmp_file= ''

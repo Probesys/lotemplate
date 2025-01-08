@@ -1,0 +1,131 @@
+{
+    "TOTO": {
+        "type": "text",
+        "value": "RORO"
+    },
+    "second": {
+        "type": "text",
+        "value": "recond"
+    },
+    "titi": {
+        "type": "text",
+        "value": "riri"
+    },
+    "toto": {
+        "type": "text",
+        "value": "roro"
+    },
+    "myvar": {
+        "type": "text",
+        "value": "ryval"
+    },
+    "foobar": {
+        "type": "text",
+        "value": "roobar"
+    },
+    "f3": {
+        "type": "text",
+        "value": "mon appart"
+    },
+    "table_d_tab1": {
+        "type": "object",
+        "value": {
+           "nom": {
+                "type": "table",
+                "value": ["perle","chat","chien"]
+            },
+            "prix": {
+                "type": "table",
+                "value": ["1","2.5","10"]
+            },
+            "nb": {
+                "type": "table",
+                "value": ["10","4","2"]
+            }
+        }
+    },
+    "table_d_tab2": {
+        "type": "object",
+         "value": {
+           "produit": {
+                "type": "table",
+                "value": ["velo","pied","skate","woiture"]
+            },
+            "prix": {
+                "type": "table",
+                "value": ["2","2.5","4"]
+            },
+            "nb": {
+                "type": "table",
+                "value": ["9","4","2"]
+            }
+        }
+    },
+    "table_r_tab3": {
+        "type": "object",
+        "value": {
+            "nom": {
+                "type": "table",
+                "value": ["leonardo","Raffaello","Donatello","Michelangelo"]
+            },
+            "prenom": {
+                "type": "table",
+                "value": ["de Vinci ","Sanzio","di Niccolò di Betto Bardi","di Lodovico Buonarroti Simoni"]
+            },
+            "Age": {
+                "type": "table",
+                "value": [12,13,14,14]
+            },
+            "poid": {
+                "type": "table",
+                "value": [100,110,111,112]
+            },
+            "poste": {
+                "type": "table",
+                "value": ["ninja1","ninja2","ninja3","ninja4"]
+            }
+        }
+    },
+    "table_d_large1": {
+        "type": "object",
+         "value": {
+           "produit": {
+                "type": "table",
+                "value": ["velo","pied","skate"]
+            },
+            "prix": {
+                "type": "table",
+                "value": ["2","2.5","4"]
+            },
+            "nb": {
+                "type": "table",
+                "value": ["9","4","2"]
+            }
+        }
+    },
+    "table_r_large2": {
+        "type": "object",
+        "value": {
+            "nom": {
+                "type": "table",
+                "value": ["leonardo","Raffaello","Donatello","Michelangelo"]
+            },
+            "prenom": {
+                "type": "table",
+                "value": ["de Vinci ","Sanzio","di Niccolò di Betto Bardi","di Lodovico Buonarroti Simoni"]
+            },
+            "Age": {
+                "type": "table",
+                "value": [12,13,14,14]
+            },
+            "poid": {
+                "type": "table",
+                "value": [100,110,111,112]
+            },
+            "poste": {
+                "type": "table",
+                "value": ["ninja1","ninja2","ninja3","ninja4"]
+            }
+        }
+    }
+}

@@ -89,7 +89,6 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
             def recursive_check_type(rec_type, rec_value):
                 if (type(rec_type) is type and type(rec_value) is not rec_type) or \
                         (rec_type is None and rec_value is not None):
-                    pdb.set_trace()
                     raise errors.JsonSyntaxError(
                         'invalid_variable_value_type',
                         f"The variable value type {repr(get_type(rec_value))} isn't accepted for variable type "

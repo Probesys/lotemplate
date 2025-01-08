@@ -1,16 +1,15 @@
 """
 Copyright (C) 2023 Probesys
 """
-
 import unittest
+
 import lotemplate as ot
 from time import sleep
 import subprocess
 import filecmp
 import os
 import json
-from test_function import *
-
+from lotemplate.unittest.test_function import *
 
 cnx = start_office()
 
@@ -29,5 +28,9 @@ class Test_calc(unittest.TestCase):
 
     def test_var(self):
         self.assertTrue(compare_files_html('calc_variables',cnx))
+
+    def test_table(self):
+        self.assertTrue(compare_files_html('calc_table',cnx))
+
 
 

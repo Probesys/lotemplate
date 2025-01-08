@@ -6,8 +6,7 @@ import unittest
 import lotemplate as ot
 from time import sleep
 import subprocess
-
-from test_function import *
+from lotemplate.unittest.test_function import *
 
 cnx=start_office()
 
