@@ -15,6 +15,7 @@ from time import sleep
 from typing import Union
 from zipfile import ZipFile
 import random
+import pdb
 
 host='localhost'
 port='200'
@@ -177,7 +178,10 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
     :return: a json and optionally an int which represent the status code to return
     """
 
-    
+    if  isinstance(json, list):
+        json=json[0]
+        print("####\nUsing a list of dict is DEPRECATED, you must directly send the dict.")
+        print("See documentation.\n#######")
     cnx = connexion()
     try:
         with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True) as temp:
