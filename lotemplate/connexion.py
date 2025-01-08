@@ -45,7 +45,6 @@ def start_office(host:str="localhost",port:str="2000"):
             --headless --nologo --terminate_after_init \
             --norestore " '), shell=False, stdin = subprocess.PIPE,
                      stdout = subprocess.PIPE,)
-
     return host, port,'file:///tmp/LibO_Process'+str(port)
 
 
@@ -78,9 +77,11 @@ class Connexion:
                     "com.sun.star.bridge.UnoUrlResolver", self.local_ctx
                 ).resolve(f"uno:socket,host={host},port={port};urp;StarOffice.ComponentContext")
             except (NoConnectException, RuntimeException) as e:
-                if attempt < 2:
+                if attempt==1:
+                    sleep(3)
+                elif attempt<2:
                     start_office(host,port)
-                    sleep(2)
+                    sleep(5)
                 else:
                     raise errors.UnoException(
                         'connection_error',
@@ -91,7 +92,6 @@ class Connexion:
                     ) from e
             else:
                 break
-            
         self.desktop = self.ctx.ServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", self.ctx)
         self.graphic_provider = self.ctx.ServiceManager.createInstance('com.sun.star.graphic.GraphicProvider')
 
@@ -101,7 +101,7 @@ class Connexion:
 
         :return: None
         """
-
+        print( "##### RESTART One Office#####")
         self.__init__(self.host, self.port)
 
 def TemplateFromExt(file_path: str, cnx: Connexion, should_scan: bool):

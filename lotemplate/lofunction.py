@@ -17,7 +17,7 @@ from .CalcTemplate import *
 from .connexion import *
 import shlex,subprocess
 import random
-
+import pdb
 def TemplateFromExt(file_path: str, cnx: Connexion, should_scan: bool):
 
         filename, file_extension = os.path.splitext(file_path)
@@ -47,7 +47,7 @@ def start_multi_office(host:str="localhost",start_port:int=2000,nb_env:int=1):
        raise TypeError("%s is an invalid positive int value" % value)
     soffices=[]
     port=start_port
-    for i in range(1,nb_env+1):
+    for i in range(nb_env):
         soffices.append(start_office(host,str(port)))
         port=port+1
     return soffices
