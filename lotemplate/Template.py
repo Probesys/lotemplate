@@ -12,7 +12,7 @@ __all__ = (
 import os
 from typing import Union
 from sorcery import dict_of
-
+import hashlib
 import uno
 import unohelper
 from com.sun.star.beans import PropertyValue
@@ -24,7 +24,7 @@ from com.sun.star.text.ControlCharacter import PARAGRAPH_BREAK
 from com.sun.star.style.BreakType import PAGE_AFTER
 
 from . import errors
-from . import Connexion 
+from . import Connexion
 from .utils import *
 
 from lotemplate.Statement.ForStatement import ForStatement
@@ -36,6 +36,7 @@ from lotemplate.Statement.ImageStatement import ImageStatement
 from lotemplate.Statement.CounterStatement import CounterManager
 import uuid
 import shutil
+import json
 import pdb
 
 
@@ -94,7 +95,7 @@ class Template:
     def validDocType(self,doc):
            pass
 
-    def __init__(self, file_path: str, cnx: Connexion, should_scan: bool):
+    def __init__(self, file_path: str, cnx: Connexion, should_scan: bool, json_cache_dir=None):
         """
         An object representing a LibreOffice/OpenOffice template that you can fill, scan, export and more
 
@@ -116,7 +117,20 @@ class Template:
             self.variables = None
             self.doc = None
             self.doc = self.open_doc_from_url()
-            self.variables = self.scan(should_close=True) if should_scan else None
+            if json_cache_dir:
+                with open(file_path,'rb') as office:
+                    cachedjson=json_cache_dir+"/"+(hashlib.md5(office.read()).hexdigest())+'-'+self.file_name+".json"
+                if os.path.exists(cachedjson) and should_scan :
+                    try:
+                        with open(cachedjson) as f:
+                            self.variables = json.load(f)
+                        return
+                    except:
+                        pass
+            self.variables = self.scan(should_close=True)
+            if json_cache_dir:
+                with open(cachedjson, 'w') as f:
+                    json.dump(self.variables, f, ensure_ascii=False)
         else:
             raise errors.FileNotFoundError(
                 'file_not_found',

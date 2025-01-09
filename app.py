@@ -8,9 +8,11 @@ from werkzeug.utils import secure_filename
 import os
 from shutil import copyfile, rmtree
 import pdb
-
+from os.path import isfile, join
+from os import listdir
 from API import utils
 
+import hashlib
 
 
 app = Flask(__name__)
@@ -62,6 +64,13 @@ def directory_route(directory):
                 {'key': 'file'}), 400
         return utils.save_file(directory, f, secure_filename(f.filename))
     elif request.method == 'DELETE':
+        onlyfiles = [f for f in listdir("uploads/"+directory) if isfile(join("uploads/"+directory, f))]
+        json_cache_dir=utils.scannedjson
+        for file in onlyfiles:
+          with open("uploads/"+directory+"/"+file,'rb') as office:
+                cachedjson=json_cache_dir+"/"+(hashlib.md5(office.read()).hexdigest())+'-'+file+".json"
+                if os.path.exists(cachedjson):
+                    os.remove(cachedjson)
         rmtree(f"uploads/{directory}")
         return {'directory': directory, 'message': 'The directory and all his content has been deleted'}
     elif request.method == 'PATCH':
@@ -84,10 +93,11 @@ def directory_route(directory):
 def file_route(directory, file):
     @after_this_request
     def delete_image(response):
-        try:
-            os.remove(file)
-        except Exception as ex:
-            print("Error delete file " + str(file))
+        if request.method == 'POST':
+            try:
+                os.remove(file)
+            except Exception as ex:
+                print("Error delete file " + str(file))
         return response
     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
@@ -122,6 +132,10 @@ def file_route(directory, file):
         file ,response = utils.fill_file(directory, file, request.json)
         return response
     elif request.method == 'DELETE':
+        json_cache_dir=utils.scannedjson
+        with open("uploads/"+directory+"/"+file,'rb') as office:
+                cachedjson=json_cache_dir+"/"+(hashlib.md5(office.read()).hexdigest())+'-'+file+".json"
+        os.remove(cachedjson)
         os.remove(f"uploads/{directory}/{file}")
         return {'directory': directory, 'file': file, 'message': "File successfully deleted"}
 

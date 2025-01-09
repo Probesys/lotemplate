@@ -6,8 +6,7 @@ import unittest
 import lotemplate as ot
 from time import sleep
 import subprocess
-
-from test_function import *
+from lotemplate.unittest.test_function import *
 
 
 
@@ -93,7 +92,6 @@ class Ifs(unittest.TestCase):
     def test_no_endif(self):
         with self.assertRaises(ot.errors.TemplateError):
             (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/invalid_if_statement.odt", cnx, False)).scan()
-        doc.close()
 
 
 class Tables(unittest.TestCase):
@@ -122,12 +120,10 @@ class Tables(unittest.TestCase):
     def test_invalid_var(self):
         with self.assertRaises(ot.errors.TemplateError):
             (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/invalid_var_tab.odt", cnx, False)).scan()
-        doc.close()
 
     def test_invalid_vars(self):
         with self.assertRaises(ot.errors.TemplateError):
             (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/invalid_vars_tab.odt", cnx, False)).scan()
-        doc.close()
 
     def test_for(self):
         self.assertEqual(
@@ -139,7 +135,6 @@ class Tables(unittest.TestCase):
     def test_for_missing_endfor(self):
         with self.assertRaises(ot.errors.TemplateError):
             (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/for_missing_endfor.odt", cnx, False)).scan()
-        doc.close()
 
     def test_two_tabs_varied(self):
         self.assertEqual(
@@ -220,7 +215,6 @@ class Generic(unittest.TestCase):
     def test_duplicated_variable(self):
         with self.assertRaises(ot.errors.TemplateError):
             (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/duplicated_variables.odt", cnx, False)).scan()
-        doc.close()
 
 
 class OtherFormats(unittest.TestCase):
@@ -315,7 +309,6 @@ class OtherFormats(unittest.TestCase):
     def test_if_too_many_endif(self):
         with self.assertRaises(ot.errors.TemplateError) as cm:
             (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/if_too_many_endif.odt", cnx, False)).scan()
-            doc.close()
         self.assertEqual(cm.exception.code, "too_many_endif_found")
 
     def test_if_syntax_error(self):

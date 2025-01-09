@@ -42,6 +42,7 @@ def set_arguments() -> cparse.Namespace:
                    help="Specify if the program should just scan the template and return the information, or fill it.")
     p.add_argument('--force_replacement', '-f', action='store_true',
                    help="Specify if the program should ignore the scan's result")
+    p.add_argument('--json_cache_dir',nargs='?',  help="Specify a cache for the scanned json")
     return p.parse_args()
 
 if __name__ == '__main__':
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     # establish the connection to the server
     connexion = ot.randomConnexion(my_lo)
     # generate the document to operate and its parameters
-    document = ot.TemplateFromExt(args.template_file, connexion, not args.force_replacement)
+    document = ot.TemplateFromExt(args.template_file, connexion, not args.force_replacement,args.json_cache_dir)
 
     # prints scan result in json format if it should
     if args.scan:

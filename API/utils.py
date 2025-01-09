@@ -20,12 +20,16 @@ import pdb
 host='localhost'
 port='200'
 gworkers=0
-def start_soffice(workers):
+scannedjson=''
+def start_soffice(workers,jsondir):
     global gworkers
     global my_lo
+    global scannedjson
+    scannedjson=jsondir
     gworkers=workers
     os.makedirs("uploads", exist_ok=True)
     os.makedirs("exports", exist_ok=True)
+    os.makedirs(scannedjson, exist_ok=True)
     clean_temp_files()
     my_lo=ot.start_multi_office(nb_env=workers)
 
@@ -139,9 +143,9 @@ def save_file(directory: str, f, name: str, error_caught=False) -> Union[tuple[d
 
 
     cnx = connexion()
-
+    global scannedjson
     try:
-        with ot.TemplateFromExt(f"uploads/{directory}/{name}", cnx, True) as temp:
+        with ot.TemplateFromExt(f"uploads/{directory}/{name}", cnx, True,scannedjson) as temp:
             values = temp.variables
     except ot.errors.TemplateError as e:
         delete_file(directory, name)
@@ -162,7 +166,8 @@ def scan_file(directory: str, file: str, error_caught=False) -> Union[tuple[dict
     :return: a json and optionally an int which represent the status code to return
     """
     cnx = connexion()
-    with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True) as temp:
+    global scannedjson
+    with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True,scannedjson) as temp:
             variables = temp.variables
     return {'file': file, 'message': "Successfully scanned", 'variables': variables}
 
@@ -183,8 +188,9 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
         print("####\nUsing a list of dict is DEPRECATED, you must directly send the dict.")
         print("See documentation.\n#######")
     cnx = connexion()
+    global scannedjson
     try:
-        with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True) as temp:
+        with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True,scannedjson) as temp:
 
             length = len(json)
             is_name_present = type(json.get("name")) is str

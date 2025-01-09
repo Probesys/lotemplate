@@ -18,14 +18,14 @@ from .connexion import *
 import shlex,subprocess
 import random
 import pdb
-def TemplateFromExt(file_path: str, cnx: Connexion, should_scan: bool):
+def TemplateFromExt(file_path: str, cnx: Connexion, should_scan: bool,json_cache_dir=None):
 
         filename, file_extension = os.path.splitext(file_path)
         ods_ext=('.xls','.xlsx','.ods')
         if file_extension in ods_ext:
-             document = CalcTemplate(file_path, cnx , should_scan)
+             document = CalcTemplate(file_path, cnx , should_scan,json_cache_dir)
         else:
-             document = WriterTemplate(file_path, cnx , should_scan)
+             document = WriterTemplate(file_path, cnx , should_scan,json_cache_dir)
         return document
 
 

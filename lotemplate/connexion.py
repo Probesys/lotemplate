@@ -36,7 +36,6 @@ def start_office(host:str="localhost",port:str="2000"):
     :param port:   define port in the UNO connect-string --accept
     environnement had to be different for each environnement
     """
-
     subprocess.Popen(
              shlex.split('soffice \
              -env:UserInstallation="file:///tmp/LibO_Process'+port+'" \
@@ -77,9 +76,9 @@ class Connexion:
                     "com.sun.star.bridge.UnoUrlResolver", self.local_ctx
                 ).resolve(f"uno:socket,host={host},port={port};urp;StarOffice.ComponentContext")
             except (NoConnectException, RuntimeException) as e:
-                if attempt==1:
-                    sleep(3)
-                elif attempt<2:
+                if attempt==0:
+                    sleep(4)
+                elif  attempt<2:
                     start_office(host,port)
                     sleep(5)
                 else:
