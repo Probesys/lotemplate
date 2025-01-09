@@ -7,3 +7,4 @@ Werkzeug~=3.1.2
 sorcery~=0.2.2
 regex~=2024.11.6
 pypdf~=5.1.0
+jsondiff~=2.2

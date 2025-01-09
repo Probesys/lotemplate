@@ -150,7 +150,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
         :param var_value: the table
         :return: the cleaned table
         """
-        return dict
+        return convert_to_datas_template(var_value) 
 
 
     @check_type
@@ -161,7 +161,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
         :param var_value: the table
         :return: the cleaned table
         """
-        return [""]
+        return []
 
     @check_type
     def get_cleaned_image(var_name: str, var_value: str) -> str:

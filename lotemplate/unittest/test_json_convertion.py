@@ -123,9 +123,9 @@ class Tables(unittest.TestCase):
     def test_valid(self):
         self.assertEqual(
             {
-                "var": {"type": "table", "value": [""]},
-                "var1": {"type": "table", "value": [""]},
-                "var2": {"type": "table", "value": [""]}
+                "var": {"type": "table", "value": []},
+                "var1": {"type": "table", "value": []},
+                "var2": {"type": "table", "value": []}
             },
             ot.convert_to_datas_template(file_to_dict("lotemplate/unittest/files/jsons/tab_valid.json"))
         )

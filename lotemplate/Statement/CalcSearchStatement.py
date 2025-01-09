@@ -5,8 +5,10 @@ import regex
 import pdb 
 
 class CalcTextStatement:
-    text_regex_as_string = r'\$(\w+(\(((?:\\.|.)*?)\))?)'
-    text_regex = regex.compile(text_regex_as_string)
+    text_regex_str = r'\$(\w+(\(((?:\\.|.)*?)\))?)'
+    text_regex = regex.compile(text_regex_str)
+    table_regex_str = r'\&(\w+(\(((?:\\.|.)*?)\))?)'
+    table_regex = regex.compile(table_regex_str)
 
     def __init__(self, text_string):
         self.text_string = text_string
@@ -23,12 +25,14 @@ class CalcTextStatement:
         if  component.getImplementationName()=="ScNamedRangeObj":
             #doc= component.getReferredCells().getSpreadsheet()
             doc=component.getReferredCells()
-            CalcTextStatement.text_regex_as_string = r'\&(\w+(\(((?:\\.|.)*?)\))?)'
+            regex_to_use=CalcTextStatement.table_regex_str
         else:
             doc=component
+            regex_to_use=CalcTextStatement.text_regex_str
+
         plain_vars = {}
         search = doc.createReplaceDescriptor()
-        search.SearchString = CalcTextStatement.text_regex_as_string
+        search.SearchString = regex_to_use
         search.SearchRegularExpression = True
         search.SearchCaseSensitive = False
         founded = doc.findAll(search)
@@ -62,5 +66,6 @@ class CalcTextStatement:
         search.SearchString = variable
         search.ReplaceString = value
         founded = doc.replaceAll(search)
+
 
 

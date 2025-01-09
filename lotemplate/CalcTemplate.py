@@ -30,6 +30,7 @@ from lotemplate.Statement.CalcTableStatement import CalcTableStatement
 from . import Template
 from lotemplate.Statement.CalcSearchStatement import CalcTextStatement
 import pdb
+from jsondiff import diff
 
 class CalcTemplate(Template):
     formats = {
@@ -82,14 +83,11 @@ class CalcTemplate(Template):
         should_close = kwargs.get("should_close", False)
         texts = {} 
         #(Pdb) self.doc.getSheets().getElementNames()
-        #('maF1', 'Feuille2')
-        #(Pdb) self.doc.getSheets().getByName('maF1')
         for sheet in self.doc.getSheets():
             texts = texts | CalcTextStatement.scan(sheet)
         tables=CalcTableStatement.scan(self.doc)
-        #range.getElementNames()
         #texts = CalcTextStatement.scan_Document_text(self.doc)
-
+        #pdb.set_trace()
         return texts | tables 
 
 
@@ -100,17 +98,15 @@ class CalcTemplate(Template):
         :param json_vars: the given json variables
         :return: None
         """
-
-        if json_vars == self.variables:
+        notdiff=diff(json_vars, self.variables)
+        if  not notdiff:
             return
-
-        json_missing = [key for key in set(self.variables) - set(json_vars)]
-        if json_missing:
-            raise errors.JsonComparaisonError(
+        else:
+           raise errors.JsonComparaisonError(
                 'missing_required_variable',
-                f"The variable {json_missing[0]!r}, present in the template, "
-                f"isn't present in the json.",
-                dict(variable=json_missing[0])
+                f"The json are not the same here is the diff "
+                f"{notdiff}",
+                dict(variable=notdiff)
             )
 
         # when parsing the template, we assume that all vars are of type text. But it can also be of type html.
