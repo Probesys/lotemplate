@@ -1,12 +1,9 @@
 from com.sun.star.lang import XComponent
-from com.sun.star.uno import RuntimeException
 from typing import Union
-import lotemplate.errors as errors
 from lotemplate.Statement.CalcSearchStatement import  CalcTextStatement
-from com.sun.star.sheet.CellInsertMode import  NONE, DOWN, RIGHT, ROWS,COLUMNS
+from com.sun.star.sheet.CellInsertMode import  DOWN, RIGHT
 from com.sun.star.sheet.CellDeleteMode import   UP, LEFT 
 import re
-import pdb
 
 
 def incr_chr(c):
@@ -26,7 +23,7 @@ class CalcTableStatement:
     table_pattern = re.compile("^table_[udlr]_(.+)",re.IGNORECASE)
 
     def isTableVar(var):
-        if mymatch := re.match(CalcTableStatement.table_pattern,var):
+        if re.match(CalcTableStatement.table_pattern,var):
             return True
         else:
             return False
@@ -51,9 +48,8 @@ class CalcTableStatement:
             nonlocal doc
             return CalcTextStatement.scan(myrange,True)
         tab_vars = {}
-        table_vars = {}
         for  NamedRange in doc.NamedRanges:
-            if mymatch := re.match(CalcTableStatement.table_pattern,NamedRange.getName()):
+            if re.match(CalcTableStatement.table_pattern,NamedRange.getName()):
                 named = scan_range(NamedRange)
                 tab_vars[NamedRange.getName()] = {'type': 'object', 'value': named}
 
@@ -69,8 +65,9 @@ class CalcTableStatement:
         :return: None
         """
         myrange=doc.NamedRanges.getByName(variable)
-        mycellrange=myrange.getReferredCells()
+        #mycellrange=myrange.getReferredCells()
         mycellrangeaddr=myrange.getReferredCells().getRangeAddress()
+
 
         mycontent,finalcol,finalrow =myrange.getContent().rsplit('$', 2)
 
@@ -103,7 +100,7 @@ class CalcTableStatement:
                 except IndexError:
                     CalcTextStatement.fill(rangetocopy,'&'+key,"") 
 
-        if left==True:
+        if left:
            myrange.setContent(mycontent+'$'+incr_str(finalcol,maxlen*size)+'$'+finalrow)
            mycellrangeaddr.EndColumn=mycellrangeaddr.EndColumn+maxlen*size
            mycellrangeaddr.StartColumn=mycellrangeaddr.StartColumn+maxlen*size

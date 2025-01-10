@@ -2,14 +2,12 @@
 Copyright (C) 2023 Probesys
 """
 
-from flask import *
+from flask import Flask,request, jsonify,after_this_request,send_file 
 from werkzeug.utils import secure_filename
 
 import os
 
-import hashlib
 from shutil import copyfile, rmtree
-import pdb
 from os.path import isfile, join
 from os import listdir
 from API import utils
@@ -22,7 +20,7 @@ app = Flask(__name__)
 def main_route():
     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
-            'ApiError', 'invalid_secretkey', f"The secret key is invalid or not given", {'key': 'secret_key'}), 401
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
     if request.method == 'PUT':
         if 'directory' not in request.headers:
             return utils.error_sim(
@@ -43,7 +41,7 @@ def main_route():
 def directory_route(directory):
     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
-            'ApiError', 'invalid_secretkey', f"The secret key is invalid or not given", {'key': 'secret_key'}), 401
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
     if not os.path.isdir(f"uploads/{directory}") and request.method != 'PUT':
         return utils.error_sim(
             'ApiError', 'dir_not_found', f"the specified directory {repr(directory)} doesn't exist",
@@ -96,12 +94,12 @@ def file_route(directory, file):
         if request.method == 'POST':
             try:
                 os.remove(file)
-            except Exception as ex:
+            except Exception:
                 print("Error delete file " + str(file))
         return response
     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
-            'ApiError', 'invalid_secretkey', f"The secret key is invalid or not given", {'key': 'secret_key'}), 401
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
     if not os.path.isdir(f"uploads/{directory}"):
         return utils.error_sim(
             'ApiError', 'dir_not_found', f"the specified directory {repr(directory)} doesn't exist",
@@ -145,7 +143,7 @@ def file_route(directory, file):
 def download_route(directory, file):
     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
-            'ApiError', 'invalid_secretkey', f"The secret key is invalid or not given", {'key': 'secret_key'}), 401
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
     if not os.path.isdir(f"uploads/{directory}"):
         return utils.error_sim(
             'ApiError', 'dir_not_found', f"the specified directory {repr(directory)} doesn't exist",

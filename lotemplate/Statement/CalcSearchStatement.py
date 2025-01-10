@@ -1,8 +1,6 @@
 import re
 from com.sun.star.lang import XComponent
-from com.sun.star.beans import PropertyValue, UnknownPropertyException
 import regex
-import pdb 
 
 class CalcTextStatement:
     text_regex_str = r'\$(\w+(\(((?:\\.|.)*?)\))?)'
@@ -65,7 +63,7 @@ class CalcTextStatement:
         search = doc.createReplaceDescriptor()
         search.SearchString = variable
         search.ReplaceString = value
-        founded = doc.replaceAll(search)
+        doc.replaceAll(search)
 
 
 

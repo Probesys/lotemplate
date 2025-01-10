@@ -9,30 +9,19 @@ __all__ = (
     'Template',
 )
 
-import os
 from typing import Union
 from sorcery import dict_of
 
 import uno
-import unohelper
-import time
-import pdb
-import random
-import uuid
 
 from com.sun.star.beans import PropertyValue
-from com.sun.star.io import IOException
-from com.sun.star.lang import IllegalArgumentException, DisposedException
-from com.sun.star.connection import NoConnectException
-from com.sun.star.uno import RuntimeException
 from com.sun.star.text.ControlCharacter import PARAGRAPH_BREAK
 from com.sun.star.style.BreakType import PAGE_AFTER
 
 from . import errors
-from .utils import *
 
 
-from . import Template
+from .Template import Template
 
 from lotemplate.Statement.ForStatement import ForStatement
 from lotemplate.Statement.HtmlStatement import HtmlStatement

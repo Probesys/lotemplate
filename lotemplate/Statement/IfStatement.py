@@ -188,7 +188,7 @@ class IfStatement:
         if match is not None:
             raise errors.TemplateError(
                 'too_many_endif_found',
-                f"The document has too many endif",
+                "The document has too many endif",
                 {}
             )
 

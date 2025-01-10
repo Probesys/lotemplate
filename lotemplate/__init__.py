@@ -17,18 +17,17 @@ __all__ = (
     'Template',
     'CalcTemplate',
     'WriterTemplate',
-    'errors',
     'convert_to_datas_template',
     'is_network_based',
     'get_file_url',
     'TemplateFromExt',
+    'start_multi_office',
+    'randomConnexion',
 )
 
-from .errors import *
-from .utils import *
-from .connexion import *
-from .Template import *
-from .WriterTemplate import *
-from .CalcTemplate import *
-from .lofunction import *
-
+from .connexion import Connexion
+from .utils import convert_to_datas_template,is_network_based,get_file_url
+from .Template import Template
+from .WriterTemplate import WriterTemplate
+from .CalcTemplate import CalcTemplate
+from .lofunction import TemplateFromExt,start_multi_office,randomConnexion

@@ -12,10 +12,7 @@ import urllib.request
 import urllib.error
 import sys
 import traceback
-import shlex, subprocess
-from time import sleep
 import os
-import random
 
 def set_arguments() -> cparse.Namespace:
     """
@@ -93,10 +90,10 @@ if __name__ == '__main__':
                path='exports'
 
             print(
-                f"Document saved as " +
+                "Document saved as " +
                 repr(document.export( filename, path, True))
             )
         except Exception as exception:
-            print(f'Ignoring exception on json :', file=sys.stderr)
+            print('Ignoring exception on json :', file=sys.stderr)
             traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
     document.close()

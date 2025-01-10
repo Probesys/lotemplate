@@ -1,4 +1,4 @@
-from com.sun.star.beans import PropertyValue, UnknownPropertyException
+from com.sun.star.beans import PropertyValue
 from com.sun.star.lang import XComponent
 import regex
 from urllib import request

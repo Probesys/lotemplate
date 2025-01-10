@@ -2,20 +2,14 @@
 Copyright (C) 2023 Probesys
 """
 
-from flask import *
+from flask import Response, send_file
 
 import lotemplate as ot
 
-import configargparse as cparse
 import glob
 import os
 import sys
-import shlex, subprocess
-from time import sleep
 from typing import Union
-from zipfile import ZipFile
-import random
-import pdb
 
 host='localhost'
 port='200'

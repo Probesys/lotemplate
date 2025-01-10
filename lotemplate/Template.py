@@ -12,32 +12,20 @@ __all__ = (
 import os
 from typing import Union
 from sorcery import dict_of
-import uno
 import unohelper
 from com.sun.star.beans import PropertyValue
 from com.sun.star.io import IOException
 from com.sun.star.lang import IllegalArgumentException, DisposedException
-from com.sun.star.connection import NoConnectException
 from com.sun.star.uno import RuntimeException
-from com.sun.star.text.ControlCharacter import PARAGRAPH_BREAK
-from com.sun.star.style.BreakType import PAGE_AFTER
 
 from . import errors
-from . import Connexion
-from .utils import *
+#from . import Connexion
+from .utils import get_file_url,get_cached_json 
 
-from lotemplate.Statement.ForStatement import ForStatement
-from lotemplate.Statement.HtmlStatement import HtmlStatement
-from lotemplate.Statement.IfStatement import IfStatement
-from lotemplate.Statement.TextStatement import TextStatement
-from lotemplate.Statement.TableStatement import TableStatement
-from lotemplate.Statement.ImageStatement import ImageStatement
-from lotemplate.Statement.CounterStatement import CounterManager
 
 import uuid
 import shutil
 import json
-import pdb
 
 
 class Template:
@@ -95,7 +83,7 @@ class Template:
     def validDocType(self,doc):
            pass
 
-    def __init__(self, file_path: str, cnx: Connexion, should_scan: bool, json_cache_dir=None):
+    def __init__(self, file_path: str, cnx, should_scan: bool, json_cache_dir=None):
         """
         An object representing a LibreOffice/OpenOffice template that you can fill, scan, export and more
 
@@ -124,7 +112,7 @@ class Template:
                         with open(cachedjson) as f:
                             self.variables = json.load(f)
                         return
-                    except:
+                    except Exception:
                         pass
             self.variables = self.scan(should_close=True)
             if json_cache_dir:

@@ -8,28 +8,15 @@ The classes used for document connexion and manipulation
 __all__ = (
     'CalcTemplate',
 )
-import os
 from typing import Union
-from sorcery import dict_of
 
 
-import uno
-import unohelper
-from com.sun.star.beans import PropertyValue
-from com.sun.star.io import IOException
-from com.sun.star.lang import IllegalArgumentException, DisposedException
-from com.sun.star.connection import NoConnectException
-from com.sun.star.uno import RuntimeException
-from com.sun.star.text.ControlCharacter import PARAGRAPH_BREAK
-from com.sun.star.style.BreakType import PAGE_AFTER
 
 from . import errors
-from .utils import *
 
 from lotemplate.Statement.CalcTableStatement import CalcTableStatement
-from . import Template
+from .Template import Template
 from lotemplate.Statement.CalcSearchStatement import CalcTextStatement
-import pdb
 from jsondiff import diff
 
 class CalcTemplate(Template):
@@ -80,7 +67,7 @@ class CalcTemplate(Template):
         :return: list containing all the variables founded in the template
         """
 
-        should_close = kwargs.get("should_close", False)
+        #should_close = kwargs.get("should_close", False)
         texts = {} 
         #(Pdb) self.doc.getSheets().getElementNames()
         for sheet in self.doc.getSheets():

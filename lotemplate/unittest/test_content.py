@@ -3,14 +3,12 @@ Copyright (C) 2023 Probesys
 """
 
 import unittest
-import urllib.request
 import lotemplate as ot
-from time import sleep
 
-from test_function import *
+from test_function import compare_files 
 
 
-cnx=start_office()
+cnx=ot.start_multi_office()
 
 class Text(unittest.TestCase):
 

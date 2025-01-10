@@ -3,13 +3,12 @@ Copyright (C) 2023 Probesys
 """
 
 import unittest
-import urllib.request
 import lotemplate as ot
+import json
+from .test_function import file_to_dict
 
-from test_function import *
 
-
-cnx = start_office()
+cnx = ot.start_multi_office()
 
 class Generic(unittest.TestCase):
 

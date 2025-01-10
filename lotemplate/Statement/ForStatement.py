@@ -77,7 +77,7 @@ class ForStatement:
             scan for a single for statement
             """
             for_statement = ForStatement(local_x_found.getString())
-            position_in_text = len(for_statement.for_string)
+            #position_in_text = len(for_statement.for_string)
 
             endfor_search = doc.createSearchDescriptor()
             endfor_search.SearchString = ForStatement.end_regex

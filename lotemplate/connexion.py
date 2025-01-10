@@ -11,22 +11,17 @@ __all__ = (
 )
 
 import os
-from typing import Union
 from sorcery import dict_of
-import shlex,subprocess
+import shlex
+import subprocess
 import uno
-import unohelper
-from com.sun.star.beans import PropertyValue
-from com.sun.star.io import IOException
-from com.sun.star.lang import IllegalArgumentException, DisposedException
 from com.sun.star.connection import NoConnectException
 from com.sun.star.uno import RuntimeException
-from com.sun.star.text.ControlCharacter import PARAGRAPH_BREAK
-from com.sun.star.style.BreakType import PAGE_AFTER
 from time import sleep
 from . import errors
-from .utils import *
-import pdb
+#from .utils import *
+from .WriterTemplate import WriterTemplate
+from .CalcTemplate import CalcTemplate
 
 def start_office(host:str="localhost",port:str="2000"):
     """
@@ -108,8 +103,8 @@ def TemplateFromExt(file_path: str, cnx: Connexion, should_scan: bool):
         filename, file_extension = os.path.splitext(file_path)
         ods_ext=('.xls','.xlsx','.ods')
         if file_extension in ods_ext:
-             document = ot.CalcTemplate(file_path, cnx , should_scan)
+             document = CalcTemplate(file_path, cnx , should_scan)
         else:
-             document = ot.WriterTemplate(file_path, cnx , should_scan)
+             document = WriterTemplate(file_path, cnx , should_scan)
         return document
 

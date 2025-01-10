@@ -12,13 +12,11 @@ __all__ = (
 )
 
 import os
-from .WriterTemplate import *
-from .CalcTemplate import *
-from .connexion import *
-import shlex,subprocess
+from .WriterTemplate import WriterTemplate
+from .CalcTemplate import CalcTemplate 
+from .connexion import Connexion,start_office 
 import random
-import pdb
-def TemplateFromExt(file_path: str, cnx: Connexion, should_scan: bool,json_cache_dir=None):
+def TemplateFromExt(file_path: str, cnx, should_scan: bool,json_cache_dir=None):
 
         filename, file_extension = os.path.splitext(file_path)
         ods_ext=('.xls','.xlsx','.ods')
@@ -44,7 +42,7 @@ def start_multi_office(host:str="localhost",start_port:int=2000,nb_env:int=1):
     :return: list of (host,port,lo dir) 
     """
     if nb_env <= 0:
-       raise TypeError("%s is an invalid positive int value" % value)
+       raise TypeError("%s is an invalid positive int value" % nb_env)
     soffices=[]
     port=start_port
     for i in range(nb_env):

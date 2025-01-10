@@ -55,13 +55,13 @@ class CounterManager:
         scan for counter statement. No return. We just verify that there is
         and endif for each if statement
         """
-        def compute_counter(x_found):
-            """
-            Compute the counter statement.
-            """
-            counter_text = x_found.getText()
-            counter_cursor = counter_text.createTextCursorByRange(x_found)
-            cursor_statement = CounterStatement(counter_cursor.String)
+        #def compute_counter(x_found):
+        #    """
+        #    Compute the counter statement.
+        #    """
+        #    counter_text = x_found.getText()
+            #counter_cursor = counter_text.createTextCursorByRange(x_found)
+            #cursor_statement = CounterStatement(counter_cursor.String)
 
         def find_counter_to_compute(doc, search, x_found):
             """
@@ -70,7 +70,7 @@ class CounterManager:
             if x_found is None:
                 return None
 
-            compute_counter(x_found)
+        #    compute_counter(x_found)
 
             # searching for the next counter statement.
             x_found_after = doc.findNext(x_found.End, search)
@@ -139,9 +139,9 @@ class CounterManager:
             if x_found is None:
                 return None
 
-            text = x_found.getText()
-            cursor = text.createTextCursorByRange(x_found)
-            str = cursor.String
+            #text = x_found.getText()
+            #cursor = text.createTextCursorByRange(x_found)
+            #str = cursor.String
 
 
             compute_counter(x_found)

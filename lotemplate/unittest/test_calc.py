@@ -4,14 +4,9 @@ Copyright (C) 2023 Probesys
 import unittest
 
 import lotemplate as ot
-from time import sleep
-import subprocess
-import filecmp
-import os
-import json
-from lotemplate.unittest.test_function import *
+from lotemplate.unittest.test_function import compare_files_html 
 
-cnx = start_office()
+cnx = ot.start_multi_office()
 
 
 class Test_calc(unittest.TestCase):
@@ -23,7 +18,7 @@ class Test_calc(unittest.TestCase):
             ""}, "toto": {"type": "text", "value": ""}, "myvar":
             {"type": "text", "value": ""}, "foobar": {"type": "text",
             "value": ""}},
-            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/calc_variables.ods", cnx, False)).scan())
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/calc_variables.ods", ot.randomConnexion(cnx), False)).scan())
         doc.close()
 
     def test_var(self):

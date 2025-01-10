@@ -4,28 +4,17 @@ Copyright (C) 2023 Probesys
 
 
 import lotemplate as ot
-from time import sleep
-import shlex,subprocess
 import filecmp
 import os
 import json
 from pypdf import PdfReader
 
-def start_office():
-   mylo=(ot.start_multi_office())
-   sleep(2)
-   cnx= ot.randomConnexion(mylo)
-   return cnx
 
 
 def file_to_dict(file_path: str) -> dict:
-    if ot.is_network_based(file_path):
-        return json.loads(urllib.request.urlopen(file_path).read())
-    else:
         with open(file_path) as f:
             return json.loads(f.read())
-def to_data(file: str):
-    return ot.convert_to_datas_template(test_json_convertion.file_to_dict(file))
+
 
 
 def to_data(file: str):
@@ -41,7 +30,7 @@ def compare_files_html(name: str, cnx ):
 
     temp = None
     if os.path.isfile(get_filename('ods')):
-        temp = ot.TemplateFromExt(get_filename('ods'), cnx, True)
+        temp = ot.TemplateFromExt(get_filename('ods'), ot.randomConnexion(cnx), True)
 
     if temp is None:
         if name == 'debug':
@@ -91,9 +80,9 @@ def compare_files(name: str, format: str = 'txt',cnx = None):
 
     temp = None
     if os.path.isfile(get_filename('odt')):
-        temp = ot.TemplateFromExt(get_filename('odt'), cnx, True)
+        temp = ot.TemplateFromExt(get_filename('odt'), ot.randomConnexion(cnx), True)
     if os.path.isfile(get_filename('docx')):
-        temp = ot.TemplateFromExt(get_filename('docx'), cnx, True)
+        temp = ot.TemplateFromExt(get_filename('docx'), ot.randomConnexion(cnx), True)
 
     if temp is None:
         if name == 'debug':
