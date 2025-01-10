@@ -6,13 +6,14 @@ from flask import *
 from werkzeug.utils import secure_filename
 
 import os
+
+import hashlib
 from shutil import copyfile, rmtree
 import pdb
 from os.path import isfile, join
 from os import listdir
 from API import utils
-
-import hashlib
+from lotemplate.utils import get_cached_json
 
 
 app = Flask(__name__)
@@ -67,10 +68,9 @@ def directory_route(directory):
         onlyfiles = [f for f in listdir("uploads/"+directory) if isfile(join("uploads/"+directory, f))]
         json_cache_dir=utils.scannedjson
         for file in onlyfiles:
-          with open("uploads/"+directory+"/"+file,'rb') as office:
-                cachedjson=json_cache_dir+"/"+(hashlib.md5(office.read()).hexdigest())+'-'+file+".json"
-                if os.path.exists(cachedjson):
-                    os.remove(cachedjson)
+            cachedjson=get_cached_json(json_cache_dir,"uploads/"+directory+"/"+file)
+            if os.path.exists(cachedjson):
+                os.remove(cachedjson)
         rmtree(f"uploads/{directory}")
         return {'directory': directory, 'message': 'The directory and all his content has been deleted'}
     elif request.method == 'PATCH':
@@ -133,10 +133,11 @@ def file_route(directory, file):
         return response
     elif request.method == 'DELETE':
         json_cache_dir=utils.scannedjson
-        with open("uploads/"+directory+"/"+file,'rb') as office:
-                cachedjson=json_cache_dir+"/"+(hashlib.md5(office.read()).hexdigest())+'-'+file+".json"
-        os.remove(cachedjson)
-        os.remove(f"uploads/{directory}/{file}")
+        cachedjson=get_cached_json(json_cache_dir,"uploads/"+directory+"/"+file)
+        if os.path.exists(cachedjson):
+            os.remove(cachedjson)
+        if os.path.exists(f"uploads/{directory}/{file}"):
+            os.remove(f"uploads/{directory}/{file}")
         return {'directory': directory, 'file': file, 'message': "File successfully deleted"}
 
 

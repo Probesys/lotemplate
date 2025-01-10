@@ -12,7 +12,6 @@ __all__ = (
 import os
 from typing import Union
 from sorcery import dict_of
-import hashlib
 import uno
 import unohelper
 from com.sun.star.beans import PropertyValue
@@ -34,6 +33,7 @@ from lotemplate.Statement.TextStatement import TextStatement
 from lotemplate.Statement.TableStatement import TableStatement
 from lotemplate.Statement.ImageStatement import ImageStatement
 from lotemplate.Statement.CounterStatement import CounterManager
+
 import uuid
 import shutil
 import json
@@ -118,8 +118,7 @@ class Template:
             self.doc = None
             self.doc = self.open_doc_from_url()
             if json_cache_dir:
-                with open(file_path,'rb') as office:
-                    cachedjson=json_cache_dir+"/"+(hashlib.md5(office.read()).hexdigest())+'-'+self.file_name+".json"
+                cachedjson=get_cached_json(json_cache_dir,file_path)
                 if os.path.exists(cachedjson) and should_scan :
                     try:
                         with open(cachedjson) as f:

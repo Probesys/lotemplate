@@ -8,7 +8,8 @@ Utils functions, used by the CLI, the API or the core itself
 __all__ = (
     'convert_to_datas_template',
     'is_network_based',
-    'get_file_url'
+    'get_file_url',
+    'get_cached_json'
 )
 
 import functools
@@ -20,8 +21,16 @@ from typing import Union
 from sorcery import dict_of
 from copy import deepcopy
 
+import hashlib
 from . import errors
 import pdb
+
+
+
+def get_cached_json(json_cache_dir:str, filepath:str):
+    filename = filepath.split("/")[-1]  
+    with open(filepath,'rb') as office:
+        return json_cache_dir+"/"+(hashlib.md5(office.read()).hexdigest())+'-'+filename+".json"
 
 def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
     """
