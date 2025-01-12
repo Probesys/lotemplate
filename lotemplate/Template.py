@@ -27,7 +27,6 @@ import uuid
 import shutil
 import json
 
-
 class Template:
 
     TMPDIR='/tmp'
@@ -40,6 +39,13 @@ class Template:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+    def __del__(self):
+        #print('destroy#########################################################')
+        self.close()
+        if os.path.exists(self.tmp_file):
+            os.remove(self.tmp_file)
+
 
     def __str__(self):
         return str(self.file_name)
@@ -83,7 +89,8 @@ class Template:
     def validDocType(self,doc):
            pass
 
-    def __init__(self, file_path: str, cnx, should_scan: bool, json_cache_dir=None):
+    def __init__(self, file_path: str, cnx, should_scan: bool,
+                 json_cache_dir=None, author=''):
         """
         An object representing a LibreOffice/OpenOffice template that you can fill, scan, export and more
 
@@ -105,6 +112,9 @@ class Template:
             self.variables = None
             self.doc = None
             self.doc = self.open_doc_from_url()
+            self.doc.getDocumentProperties().resetUserData(author)
+            #print("number of opendocument"+str(len(list(self.cnx.desktop.getComponents()))))
+            #print([print(a.getURL()) for a in list(self.cnx.desktop.getComponents())])
             if json_cache_dir:
                 cachedjson=get_cached_json(json_cache_dir,file_path)
                 if os.path.exists(cachedjson) and should_scan :
@@ -119,6 +129,7 @@ class Template:
                 with open(cachedjson, 'w') as f:
                     json.dump(self.variables, f, ensure_ascii=False)
         else:
+            self.close()
             raise errors.FileNotFoundError(
                 'file_not_found',
                 f"the given file does not exist or has not been found (file {file_path!r})",
@@ -145,6 +156,7 @@ class Template:
 
         json_missing = [key for key in set(self.variables) - set(json_vars)]
         if json_missing:
+            self.close()
             raise errors.JsonComparaisonError(
                 'missing_required_variable',
                 f"The variable {json_missing[0]!r}, present in the template, "
@@ -156,6 +168,7 @@ class Template:
         # So we check if types are equals or if type in json is "html" while type in template is "text"
         json_incorrect = [key for key in self.variables if (json_vars[key]['type'] != self.variables[key]['type']) and (json_vars[key]['type'] != "html" or self.variables[key]['type']!="text")]
         if json_incorrect:
+            self.close()
             raise errors.JsonComparaisonError(
                 'incorrect_value_type',
                 f"The variable {json_incorrect[0]!r} should be of type "
@@ -179,11 +192,13 @@ class Template:
 
         :return: None
         """
-
         if not self:
             return
-        if self.doc:
-            self.doc.close(True)
+        try:
+            if self.doc:
+                 self.doc.close(True)
+        except Exception:
+            pass 
         try:
             os.remove(self.tmp_file)
             os.remove(Template.TMPDIR+ "/.~lock." + self.file_tmp_name + "#")
@@ -210,9 +225,11 @@ class Template:
         try:
             self.doc.storeToURL(url, (PropertyValue("FilterName", 0, self.formats[file_type], 0),))
         except KeyError:
+            self.close()
             raise errors.ExportError('invalid_format',
                                      f"Invalid export format {file_type!r}.", dict_of(file_type)) from None
         except IOException as error:
+            self.close()
 
             raise errors.ExportError(
                 'unknown_error',
@@ -222,7 +239,4 @@ class Template:
 
         return path
 
-    def __del__(self):
-        if os.path.exists(self.tmp_file):
-            os.remove(self.tmp_file)
 

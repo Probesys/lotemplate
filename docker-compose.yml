@@ -11,4 +11,5 @@ services:
     environment:
       - SECRET_KEY=$SECRET_KEY
       - NB_WORKERS=$NB_WORKERS
+      - MAXTIME=$MAXTIME
     command: "gunicorn -b 0.0.0.0:8000 app:app"

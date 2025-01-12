@@ -22,7 +22,7 @@ def set_arguments() -> cparse.Namespace:
     """
 
     p = cparse.ArgumentParser(default_config_files=['config.yml', 'config.ini', 'config'])
-    p.add_argument('template_file',
+    p.add_argument('--template_file', '-t',
                    help="Template file to scan or fill")
     p.add_argument('--json_file', '-jf', 
                    help="Json files that must fill the template, if any")
@@ -35,18 +35,26 @@ def set_arguments() -> cparse.Namespace:
     p.add_argument('--host', default="localhost", help='Host address to use for the libreoffice connection')
     p.add_argument('--port', default="2002", help='Port to use for the libreoffice connexion')
     p.add_argument('--cpu', default="0", help='number of libreoffice start, default 0 is the number of CPU')
+    p.add_argument('--clean', action='store_true',
+                   help="Specify if the program should all to old open connection")
+    p.add_argument('--maxtime', default="60" , help='number of second before considering a document open for too long')
+    p.add_argument('--stats', action='store_true',
+                   help="return statistic about open files that should not be")
     p.add_argument('--scan', '-s', action='store_true',
                    help="Specify if the program should just scan the template and return the information, or fill it.")
     p.add_argument('--force_replacement', '-f', action='store_true',
                    help="Specify if the program should ignore the scan's result")
     p.add_argument('--json_cache_dir',nargs='?',  help="Specify a cache for the scanned json")
-    return p.parse_args()
+    args=p.parse_args()
+    if not args.scan and not args.clean and not args.template_file and not args.stats:
+         p.error(" #######You need at minimun --scan or --clean or --template_file")
+    elif (args.scan and not  args.template_file):
+         p.error(" ####### with --scan you need --template_file")
+    return args
 
 if __name__ == '__main__':
-
     # get the necessaries arguments
     args = set_arguments()
-
     # run soffice
     if args.cpu == "0":
         nb_process=len(os.sched_getaffinity(0))
@@ -54,6 +62,15 @@ if __name__ == '__main__':
         nb_process=int(args.cpu)
 
     my_lo=ot.start_multi_office(nb_env=nb_process)
+    if args.clean:
+        print(json.dumps(ot.clean_old_open_document(my_lo, args.maxtime)))
+        exit()
+
+    if args.stats:
+        print(json.dumps(ot.statistic_open_document(my_lo, args.maxtime)))
+   
+        exit()
+
 
     # establish the connection to the server
     connexion = ot.randomConnexion(my_lo)

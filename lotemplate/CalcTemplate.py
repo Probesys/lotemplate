@@ -89,6 +89,7 @@ class CalcTemplate(Template):
         if  not notdiff:
             return
         else:
+           self.close()
            raise errors.JsonComparaisonError(
                 'missing_required_variable',
                 f"The json are not the same here is the diff "
@@ -100,6 +101,7 @@ class CalcTemplate(Template):
         # So we check if types are equals or if type in json is "html" while type in template is "text"
         json_incorrect = [key for key in self.variables if (json_vars[key]['type'] != self.variables[key]['type']) and (json_vars[key]['type'] != "html" or self.variables[key]['type']!="text")]
         if json_incorrect:
+            self.close()
             raise errors.JsonComparaisonError(
                 'incorrect_value_type',
                 f"The variable {json_incorrect[0]!r} should be of type "

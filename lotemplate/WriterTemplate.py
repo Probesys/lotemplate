@@ -53,6 +53,7 @@ class WriterTemplate(Template):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
+
     def __str__(self):
         return str(self.file_name)
 
@@ -66,7 +67,8 @@ class WriterTemplate(Template):
 
 
         if not doc or not doc.supportsService('com.sun.star.text.GenericTextDocument'):
-            self.close()
+            if doc:
+                doc.close(True)
             raise errors.TemplateError(
                 'invalid_format',
                 f"The given format ({self.file_name.split('.')[-1]!r}) is invalid, or the file is already open by "
@@ -105,7 +107,7 @@ class WriterTemplate(Template):
         :return: list containing all the variables founded in the template
         """
 
-        should_close = kwargs.get("should_close", False)
+        #should_close = kwargs.get("should_close", False)
 
         texts = TextStatement.scan_text(self.doc)
         # we use another document for if statement scanning because it modifies the file
@@ -122,8 +124,7 @@ class WriterTemplate(Template):
         if duplicates:
             first_type = "text" if duplicates[0] in texts.keys() else "image"
             second_type = "table" if duplicates[0] in tables.keys() else "image"
-            if should_close:
-                self.close()
+            self.close()
             raise errors.TemplateError(
                 'duplicated_variable',
                 f"The variable {duplicates[0]!r} is mentioned two times, but "

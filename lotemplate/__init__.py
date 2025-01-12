@@ -23,6 +23,8 @@ __all__ = (
     'TemplateFromExt',
     'start_multi_office',
     'randomConnexion',
+    'clean_old_open_document',
+    'statistic_open_document',
 )
 
 from .connexion import Connexion
@@ -30,4 +32,4 @@ from .utils import convert_to_datas_template,is_network_based,get_file_url
 from .Template import Template
 from .WriterTemplate import WriterTemplate
 from .CalcTemplate import CalcTemplate
-from .lofunction import TemplateFromExt,start_multi_office,randomConnexion
+from .lofunction import TemplateFromExt,start_multi_office,randomConnexion,clean_old_open_document,statistic_open_document

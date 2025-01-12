@@ -12,7 +12,7 @@ from os.path import isfile, join
 from os import listdir
 from API import utils
 from lotemplate.utils import get_cached_json
-
+from lotemplate import statistic_open_document,clean_old_open_document
 
 app = Flask(__name__)
 
@@ -36,6 +36,22 @@ def main_route():
     elif request.method == 'GET':
         return jsonify(os.listdir("uploads"))
 
+
+@app.route("/stats")
+def stats_route():
+     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
+        return utils.error_sim(
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
+     else:
+        return statistic_open_document(utils.my_lo,utils.maxtime)
+
+@app.route("/clean_lo")
+def clean_route():
+     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
+        return utils.error_sim(
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
+     else:
+        return clean_old_open_document(utils.my_lo,utils.maxtime)
 
 @app.route("/<directory>", methods=['PUT', 'DELETE', 'PATCH', 'GET'])
 def directory_route(directory):

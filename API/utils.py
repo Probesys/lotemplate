@@ -15,10 +15,13 @@ host='localhost'
 port='200'
 gworkers=0
 scannedjson=''
-def start_soffice(workers,jsondir):
+maxtime=60
+def start_soffice(workers,jsondir,maxt=60):
     global gworkers
     global my_lo
     global scannedjson
+    global maxtime
+    maxtime=maxt
     scannedjson=jsondir
     gworkers=workers
     os.makedirs("uploads", exist_ok=True)

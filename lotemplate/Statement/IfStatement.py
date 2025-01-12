@@ -132,10 +132,12 @@ class IfStatement:
 
             match = re.search(IfStatement.start_regex, if_cursor.String, re.IGNORECASE)
             if match is None:
+                c_string=dict_of(if_cursor.String)
+                doc.close(True)
                 raise errors.TemplateError(
                     'syntax_error_in_if_statement',
-                    f"The statement {if_cursor.String} has a Syntax Error",
-                    dict_of(if_cursor.String)
+                    f"The statement {c_string} has a Syntax Error",
+                    dict_of(c_string)
                 )
 
             if_cursor.String = ''
@@ -163,10 +165,12 @@ class IfStatement:
             x_found_endif = doc.findNext(x_found.End, endif_search)
             if x_found_endif is None:
                 cursor = x_found.getText().createTextCursorByRange(x_found)
+                c_string=dict_of(cursor.String)
+                doc.close(True)
                 raise errors.TemplateError(
                     'no_endif_found',
-                    f"The statement {cursor.String} has no endif",
-                    dict_of(cursor.String)
+                    f"The statement {c_string} has no endif",
+                    c_string
                 )
             compute_if(x_found, x_found_endif)
 
@@ -186,6 +190,7 @@ class IfStatement:
         str = globalCursor.String
         match = re.search(IfStatement.end_regex, str, re.IGNORECASE)
         if match is not None:
+            doc.close(True)
             raise errors.TemplateError(
                 'too_many_endif_found',
                 "The document has too many endif",
@@ -251,10 +256,12 @@ class IfStatement:
             x_found_endif = doc.findNext(x_found.End, endif_search)
             if x_found_endif is None:
                 cursor = x_found.getText().createTextCursorByRange(x_found)
+                c_string=dict_of(cursor.String)
+                doc.close(True)
                 raise errors.TemplateError(
                     'no_endif_found',
-                    f"The statement {cursor.String} has no endif",
-                    dict_of(cursor.String)
+                    f"The statement {c_string} has no endif",
+                    dict_of(c_string)
                 )
             compute_if(x_found, x_found_endif)
 
