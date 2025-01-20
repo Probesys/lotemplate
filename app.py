@@ -106,7 +106,7 @@ def directory_route(directory):
 @app.route("/<directory>/<file>", methods=['GET', 'PATCH', 'DELETE', 'POST'])
 def file_route(directory, file):
     @after_this_request
-    def delete_image(response):
+    def delete_tmp_file(response):
         if request.method == 'POST':
             try:
                 os.remove(file)

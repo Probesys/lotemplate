@@ -215,7 +215,10 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
                 export_file=temp.export(json["name"],"exports")
                 export_name=json["name"]
             except Exception as e:
-                return error_format(e), 415
+                if 'export_name' in locals():
+                    return ( export_file,error_format(e))
+                else:
+                    return ( "nofile",error_format(e))
 
             return (export_file,send_file(export_file, export_name))
 
