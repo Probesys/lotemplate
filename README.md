@@ -276,9 +276,9 @@ optional arguments:
                         Configuration file path
   --host HOST           Host address to use for the libreoffice connection
   --port PORT           Port to use for the libreoffice connexion
-  --cpu            		 Specify if the program should just scan the template
-  --scan, -s            Specify the number of libreoffice to start, default 0 is the number of CPU
-                        and return the information, or fill it.
+  --scan, -s            Specify if the program should just scan the template
+  --cpu                 Specify the number of libreoffice to start, default 0 is
+                        the number of CPU and return the information, or fill it.
   --force_replacement, -f
                         Specify if the program should ignore the scan's result
 ```
