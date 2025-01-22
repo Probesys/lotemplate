@@ -1,11 +1,25 @@
-<a name="versions"></a>Versions
--------------------------------
+Versions
+========
+
+Note : the upgrade from version 1.x to 2.x is easy. There is no reason to stay to version 1.x.
+
+The upgrade documentation is in the file [UPGRADE.md](UPGRADE.md).
+
+Versions 2.x
+------------
+
 - v2.0.0 : 01/01/2025 
-  - IMPORTANT JSON now must not be a dict only JSON 
-  - IMPORTANT due to upgrade of FLASH now the variable SECRET_KEY in name SECRETKEY 
-  - now work with Calc only for variables at the moment
-  - Is multiThreaded proof (see Doc to configure number of libreoffice process
-  - Performance improvement)
+  - BC Break (easy to fix) : see [UPGRADE.md](UPGRADE.md)
+  - We can now generate Calc / Excel files (from Calc templates)
+  - Is multiThreaded : we can generate several files at the same time
+  - Performances improvements
+  - No BC Breaks for the templates
+  - upgrade debian, LibreOffice, Python libs versions
+  - for devs : added "use bruno" requests inside the repository
+
+Versions 1.x
+------------
+
 - v1.6.1 : 2024-04-12 : bugfix
   - fix the issue https://github.com/Probesys/lotemplate/issues/34 : too many endif bugg
 - v1.6.0 : 2024-04-11
