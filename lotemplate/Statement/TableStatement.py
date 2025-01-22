@@ -57,7 +57,7 @@ class TableStatement:
             except errors.TemplateError as e:
                 raise e
                 continue
-            except RuntimeException as e:
+            except RuntimeException:
                 continue
 
         return list_tab_vars if get_list else tab_vars

@@ -2,22 +2,25 @@
 Copyright (C) 2023 Probesys
 """
 
-from flask import *
+from flask import Flask,request, jsonify,after_this_request,send_file 
 from werkzeug.utils import secure_filename
 
 import os
-from shutil import copyfile, rmtree
 
+from shutil import copyfile, rmtree
+from os.path import isfile, join
+from os import listdir
 from API import utils
+from lotemplate.utils import get_cached_json
+from lotemplate import statistic_open_document,clean_old_open_document
 
 app = Flask(__name__)
 
-
 @app.route("/", methods=['PUT', 'GET'])
 def main_route():
-    if request.headers.get('secret_key', '') != os.environ.get('SECRET_KEY', ''):
+    if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
-            'ApiError', 'invalid_secret_key', f"The secret key is invalid or not given", {'key': 'secret_key'}), 401
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
     if request.method == 'PUT':
         if 'directory' not in request.headers:
             return utils.error_sim(
@@ -34,11 +37,27 @@ def main_route():
         return jsonify(os.listdir("uploads"))
 
 
+@app.route("/stats")
+def stats_route():
+     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
+        return utils.error_sim(
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
+     else:
+        return statistic_open_document(utils.my_lo,utils.maxtime)
+
+@app.route("/clean_lo")
+def clean_route():
+     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
+        return utils.error_sim(
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
+     else:
+        return clean_old_open_document(utils.my_lo,utils.maxtime)
+
 @app.route("/<directory>", methods=['PUT', 'DELETE', 'PATCH', 'GET'])
 def directory_route(directory):
-    if request.headers.get('secret_key', '') != os.environ.get('SECRET_KEY', ''):
+    if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
-            'ApiError', 'invalid_secret_key', f"The secret key is invalid or not given", {'key': 'secret_key'}), 401
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
     if not os.path.isdir(f"uploads/{directory}") and request.method != 'PUT':
         return utils.error_sim(
             'ApiError', 'dir_not_found', f"the specified directory {repr(directory)} doesn't exist",
@@ -60,6 +79,12 @@ def directory_route(directory):
                 {'key': 'file'}), 400
         return utils.save_file(directory, f, secure_filename(f.filename))
     elif request.method == 'DELETE':
+        onlyfiles = [f for f in listdir("uploads/"+directory) if isfile(join("uploads/"+directory, f))]
+        json_cache_dir=utils.scannedjson
+        for file in onlyfiles:
+            cachedjson=get_cached_json(json_cache_dir,"uploads/"+directory+"/"+file)
+            if os.path.exists(cachedjson):
+                os.remove(cachedjson)
         rmtree(f"uploads/{directory}")
         return {'directory': directory, 'message': 'The directory and all his content has been deleted'}
     elif request.method == 'PATCH':
@@ -80,9 +105,17 @@ def directory_route(directory):
 
 @app.route("/<directory>/<file>", methods=['GET', 'PATCH', 'DELETE', 'POST'])
 def file_route(directory, file):
-    if request.headers.get('secret_key', '') != os.environ.get('SECRET_KEY', ''):
+    @after_this_request
+    def delete_tmp_file(response):
+        if request.method == 'POST':
+            try:
+                os.remove(file)
+            except Exception:
+                print("Error delete file " + str(file))
+        return response
+    if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
-            'ApiError', 'invalid_secret_key', f"The secret key is invalid or not given", {'key': 'secret_key'}), 401
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
     if not os.path.isdir(f"uploads/{directory}"):
         return utils.error_sim(
             'ApiError', 'dir_not_found', f"the specified directory {repr(directory)} doesn't exist",
@@ -109,17 +142,24 @@ def file_route(directory, file):
     elif request.method == 'POST':
         if not request.json:
             return utils.error_sim('ApiError', 'missing_json', "You must provide a json in the body"), 400
-        return utils.fill_file(directory, file, request.json)
+
+        file ,response = utils.fill_file(directory, file, request.json)
+        return response
     elif request.method == 'DELETE':
-        os.remove(f"uploads/{directory}/{file}")
+        json_cache_dir=utils.scannedjson
+        cachedjson=get_cached_json(json_cache_dir,"uploads/"+directory+"/"+file)
+        if os.path.exists(cachedjson):
+            os.remove(cachedjson)
+        if os.path.exists(f"uploads/{directory}/{file}"):
+            os.remove(f"uploads/{directory}/{file}")
         return {'directory': directory, 'file': file, 'message': "File successfully deleted"}
 
 
 @app.route("/<directory>/<file>/download")
 def download_route(directory, file):
-    if request.headers.get('secret_key', '') != os.environ.get('SECRET_KEY', ''):
+    if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
-            'ApiError', 'invalid_secret_key', f"The secret key is invalid or not given", {'key': 'secret_key'}), 401
+            'ApiError', 'invalid_secretkey', "The secret key is invalid or not given", {'key': 'secret_key'}), 401
     if not os.path.isdir(f"uploads/{directory}"):
         return utils.error_sim(
             'ApiError', 'dir_not_found', f"the specified directory {repr(directory)} doesn't exist",

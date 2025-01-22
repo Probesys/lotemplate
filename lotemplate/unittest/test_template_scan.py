@@ -4,13 +4,10 @@ Copyright (C) 2023 Probesys
 
 import unittest
 import lotemplate as ot
-from time import sleep
-import subprocess
 
-subprocess.call(f'soffice "--accept=socket,host=localhost,port=2002;urp;StarOffice.ServiceManager" &', shell=True)
-sleep(2)
-cnx = ot.Connexion("localhost", "2002")
 
+
+cnx=ot.start_multi_office()
 
 class Text(unittest.TestCase):
 
@@ -24,7 +21,7 @@ class Text(unittest.TestCase):
                 "aet": {"type": "text", "value": ""},
                 "h": {"type": "text", "value": ""}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/text_vars_noformat.odt", cnx, False)).scan())
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/text_vars_noformat.odt", ot.randomConnexion(cnx), False)).scan())
         doc.close()
 
     def test_format(self):
@@ -37,34 +34,34 @@ class Text(unittest.TestCase):
                 "aet": {"type": "text", "value": ""},
                 "h": {"type": "text", "value": ""}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/text_vars.odt", cnx, False)).scan())
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/text_vars.odt", ot.randomConnexion(cnx), False)).scan())
         doc.close()
 
     def test_text_var_in_header(self):
         self.assertEqual(
             {"my_var": {"type": "text", "value": ""}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/text_var_in_header.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/text_var_in_header.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_static_table(self):
         self.assertEqual(
             {"var1": {"type": "text", "value": ""}, "var2": {"type": "text", "value": ""}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/static_tab.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/static_tab.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_function_variable(self):
         self.assertEqual(
             {"test(\"jean\")": {"type": "text", "value": ""}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/function_variable.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/function_variable.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_for_variable(self):
         self.assertEqual(
             {"tutu": {"type": "array", "value": []}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/for.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/for.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
@@ -73,7 +70,7 @@ class Images(unittest.TestCase):
     def test_one_image(self):
         self.assertEqual(
             {"image": {"type": "image", "value": ""}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/img_vars.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/img_vars.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
@@ -84,15 +81,14 @@ class Images(unittest.TestCase):
                 "image2": {"type": "image", "value": ""},
                 "image3": {"type": "image", "value": ""}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/multiple_img_vars.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/multiple_img_vars.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
 class Ifs(unittest.TestCase):
     def test_no_endif(self):
         with self.assertRaises(ot.errors.TemplateError):
-            (doc := ot.Template("lotemplate/unittest/files/templates/invalid_if_statement.odt", cnx, False)).scan()
-        doc.close()
+            (ot.TemplateFromExt("lotemplate/unittest/files/templates/invalid_if_statement.odt", ot.randomConnexion(cnx), False)).scan()
 
 
 class Tables(unittest.TestCase):
@@ -100,45 +96,42 @@ class Tables(unittest.TestCase):
     def test_multiple_row(self):
         self.assertEqual(
             {"var1": {"type": "table", "value": [""]}, "var2": {"type": "table", "value": [""]}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/multiple_row_tab.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/multiple_row_tab.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_one_row_varied(self):
         self.assertEqual(
             {"var": {"type": "table", "value": [""]}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/one_row_tab_varied.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/one_row_tab_varied.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_two_row_varied(self):
         self.assertEqual(
             {"var1": {"type": "table", "value": [""]}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/two_row_tab_varied.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/two_row_tab_varied.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_invalid_var(self):
         with self.assertRaises(ot.errors.TemplateError):
-            (doc := ot.Template("lotemplate/unittest/files/templates/invalid_var_tab.odt", cnx, False)).scan()
-        doc.close()
+            (ot.TemplateFromExt("lotemplate/unittest/files/templates/invalid_var_tab.odt", ot.randomConnexion(cnx), False)).scan()
 
     def test_invalid_vars(self):
         with self.assertRaises(ot.errors.TemplateError):
-            (doc := ot.Template("lotemplate/unittest/files/templates/invalid_vars_tab.odt", cnx, False)).scan()
-        doc.close()
+            (ot.TemplateFromExt("lotemplate/unittest/files/templates/invalid_vars_tab.odt", ot.randomConnexion(cnx), False)).scan()
 
     def test_for(self):
         self.assertEqual(
             {'tutu': {'type': 'array', 'value': []}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/for.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/for.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_for_missing_endfor(self):
         with self.assertRaises(ot.errors.TemplateError):
-            (doc := ot.Template("lotemplate/unittest/files/templates/for_missing_endfor.odt", cnx, False)).scan()
-        doc.close()
+            (ot.TemplateFromExt("lotemplate/unittest/files/templates/for_missing_endfor.odt", ot.randomConnexion(cnx), False)).scan()
 
     def test_two_tabs_varied(self):
         self.assertEqual(
@@ -150,7 +143,7 @@ class Tables(unittest.TestCase):
                 "4": {"type": "table", "value": [""]},
                 "5": {"type": "table", "value": [""]}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/two_tabs_varied.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/two_tabs_varied.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
@@ -161,7 +154,7 @@ class Tables(unittest.TestCase):
                 "test": {"type": "table", "value": [""]},
                 "test2": {"type": "text", "value": ""},
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/function_variable_tab.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/function_variable_tab.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
@@ -183,7 +176,7 @@ class Generic(unittest.TestCase):
                 "static2": {"type": "text", "value": ""},
                 "static3": {"type": "text", "value": ""}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/multiple_variables.odt", cnx, False)).scan())
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/multiple_variables.odt", ot.randomConnexion(cnx), False)).scan())
         doc.close()
 
     def test_multiple_pages(self):
@@ -203,26 +196,22 @@ class Generic(unittest.TestCase):
                 "date": {"type": "text", "value": ""},
                 "lieu": {"type": "text", "value": ""}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/multiple_pages.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/multiple_pages.odt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_online_empty_doc(self):
-        self.assertEqual(
-            {},
-            (doc := ot.Template(
-                "https://www.mtsac.edu/webdesign/accessible-docs/word/example03.docx", cnx, False)).scan()
-        )
-        doc.close()
+        with self.assertRaises(ot.errors.FileNotFoundError):
+            ( ot.TemplateFromExt(
+                "https://www.mtsac.edu/webdesign/accessible-docs/word/example03.docx", ot.randomConnexion(cnx), False))
 
     def test_invalid_path(self):
         with self.assertRaises(ot.errors.FileNotFoundError):
-            ot.Template("bfevg", cnx, True)
+            ot.TemplateFromExt("bfevg", ot.randomConnexion(cnx), True)
 
     def test_duplicated_variable(self):
         with self.assertRaises(ot.errors.TemplateError):
-            (doc := ot.Template("lotemplate/unittest/files/templates/duplicated_variables.odt", cnx, False)).scan()
-        doc.close()
+            (ot.TemplateFromExt("lotemplate/unittest/files/templates/duplicated_variables.odt", ot.randomConnexion(cnx), False)).scan()
 
 
 class OtherFormats(unittest.TestCase):
@@ -237,7 +226,7 @@ class OtherFormats(unittest.TestCase):
                 "signature": {"type": "text", "value": ""},
                 "photo": {"type": "image", "value": ""}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/format.ott", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/format.ott", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
@@ -251,14 +240,14 @@ class OtherFormats(unittest.TestCase):
                 "signature": {"type": "text", "value": ""},
                 "photo": {"type": "image", "value": ""}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/format.docx", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/format.docx", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_text(self):
         self.assertEqual(
             {"signature": {"type": "text", "value": ""}},
-            (doc := ot.Template("lotemplate/unittest/files/templates/format.txt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/format.txt", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
@@ -272,13 +261,13 @@ class OtherFormats(unittest.TestCase):
                 "signature": {"type": "text", "value": ""},
                 "photo": {"type": "image", "value": ""}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/format.html", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/format.html", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_html_without_endhtml(self):
         with self.assertRaises(ot.errors.TemplateError):
-            (doc := ot.Template("lotemplate/unittest/files/templates/html_without_endhtml.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/html_without_endhtml.odt", ot.randomConnexion(cnx), False)).scan()
             doc.close()
 
 
@@ -291,12 +280,12 @@ class OtherFormats(unittest.TestCase):
                 "prenon": {"type": "text", "value": ""},
                 "signature": {"type": "text", "value": ""}
             },
-            (doc := ot.Template("lotemplate/unittest/files/templates/format.rtf", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/format.rtf", ot.randomConnexion(cnx), False)).scan()
         )
         doc.close()
 
     def test_for_inside_if(self):
-        doc = ot.Template("lotemplate/unittest/files/content/for_inside_if.odt", cnx, False)
+        doc = ot.TemplateFromExt("lotemplate/unittest/files/content/for_inside_if.odt", ot.randomConnexion(cnx), False)
         self.assertEqual(
             {
                 'tata': {'type': 'text', 'value': ''},
@@ -316,31 +305,30 @@ class OtherFormats(unittest.TestCase):
 
     def test_if_too_many_endif(self):
         with self.assertRaises(ot.errors.TemplateError) as cm:
-            (doc := ot.Template("lotemplate/unittest/files/templates/if_too_many_endif.odt", cnx, False)).scan()
-            doc.close()
+            (ot.TemplateFromExt("lotemplate/unittest/files/templates/if_too_many_endif.odt", ot.randomConnexion(cnx), False)).scan()
         self.assertEqual(cm.exception.code, "too_many_endif_found")
 
     def test_if_syntax_error(self):
         with self.assertRaises(ot.errors.TemplateError) as cm:
-            (doc := ot.Template("lotemplate/unittest/files/templates/if_syntax_error.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/if_syntax_error.odt", ot.randomConnexion(cnx), False)).scan()
             doc.close()
         self.assertEqual(cm.exception.code, "syntax_error_in_if_statement")
 
     def test_for_syntax_error(self):
         with self.assertRaises(ot.errors.TemplateError) as cm:
-            (doc := ot.Template("lotemplate/unittest/files/templates/for_syntax_error.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/for_syntax_error.odt", ot.randomConnexion(cnx), False)).scan()
             doc.close()
         self.assertEqual(cm.exception.code, "syntax_error_in_for_statement")
 
     def test_if_syntax_error_no_endif(self):
         with self.assertRaises(ot.errors.TemplateError) as cm:
-            (doc := ot.Template("lotemplate/unittest/files/templates/if_syntax_error_no_endif.odt", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/if_syntax_error_no_endif.odt", ot.randomConnexion(cnx), False)).scan()
             doc.close()
         self.assertEqual(cm.exception.code, "no_endif_found")
 
     def test_invalid(self):
         with self.assertRaises(ot.errors.TemplateError):
-            (doc := ot.Template("lotemplate/unittest/files/templates/invalid_format.jpg", cnx, False)).scan()
+            (doc := ot.TemplateFromExt("lotemplate/unittest/files/templates/invalid_format.jpg", ot.randomConnexion(cnx), False)).scan()
             doc.close()
 
 

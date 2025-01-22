@@ -1,0 +1,19 @@
+meta {
+  name: upload_simple_vars_xlsx_template
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{baseUrl}}/test_dir1
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  secretkey: DEFAULT_KEY
+}
+
+body:multipart-form {
+  file: @file(template_files/simple_vars.xlsx)
+}

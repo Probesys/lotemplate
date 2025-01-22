@@ -8,7 +8,8 @@ Utils functions, used by the CLI, the API or the core itself
 __all__ = (
     'convert_to_datas_template',
     'is_network_based',
-    'get_file_url'
+    'get_file_url',
+    'get_cached_json'
 )
 
 import functools
@@ -20,8 +21,15 @@ from typing import Union
 from sorcery import dict_of
 from copy import deepcopy
 
+import hashlib
 from . import errors
 
+
+
+def get_cached_json(json_cache_dir:str, filepath:str):
+    filename = filepath.split("/")[-1]  
+    with open(filepath,'rb') as office:
+        return json_cache_dir+"/"+(hashlib.md5(office.read()).hexdigest())+'-'+filename+".json"
 
 def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
     """
@@ -121,10 +129,10 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
                                 f"{repr(get_type(rec_type, is_type=True))}",
                                 dict(varible=var_name, expected_variable_value_type=get_type(rec_type, is_type=True))
                             )
-                        if rec_type.__origin__ == list:
+                        if rec_type.__origin__ is list:
                             for element in rec_value:
                                 recursive_check_type(rec_type.__args__[0], element)
-                        if rec_type.__origin__ == dict:
+                        if rec_type.__origin__ is dict:
                             for key, value in rec_value:
                                 recursive_check_type(rec_type.__args__[0], key)
                                 recursive_check_type(rec_type.__args__[1], value)
@@ -143,6 +151,17 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
         return wrapper_check_type
 
     @check_type
+    def get_cleaned_object(var_name: str, var_value: dict ) -> dict:
+        """
+        clean a table variable
+        :param var_name: the variable name
+        :param var_value: the table
+        :return: the cleaned table
+        """
+        return convert_to_datas_template(var_value) 
+
+
+    @check_type
     def get_cleaned_table(var_name: str, var_value: list[str]) -> list[str]:
         """
         clean a table variable
@@ -150,7 +169,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
         :param var_value: the table
         :return: the cleaned table
         """
-        return [""]
+        return []
 
     @check_type
     def get_cleaned_image(var_name: str, var_value: str) -> str:
@@ -217,7 +236,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
 
     template = {}
     for variable_name, variable_infos in json.items():
-        if type(variable_infos) != dict:
+        if type(variable_infos) is not  dict:
             raise errors.JsonSyntaxError(
                 'invalid_variable_base_value_type',
                 f"The value type {repr(get_type(variable_infos))} isn't accepted in variable, only objects "
@@ -241,7 +260,7 @@ def convert_to_datas_template(json) -> dict[dict[str: Union[str, list]]]:
                 dict_of(variable_name, information=invalid_infos[0])
             )
 
-        if type(variable_infos['type']) != str:
+        if type(variable_infos['type']) is not str:
             raise errors.JsonSyntaxError(
                 'invalid_variable_type_value_type',
                 f"The 'type' information is supposed to be string, not a {repr(get_type(variable_infos['type']))} "

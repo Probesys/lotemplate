@@ -29,8 +29,6 @@ Address :
  123
 
   
-perso 1
-string 1
-perso 2
-lastname with < and >
+perso 1	string 1
+perso 2	lastname with < and >
 

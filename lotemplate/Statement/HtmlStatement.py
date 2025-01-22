@@ -1,4 +1,3 @@
-import re
 from sorcery import dict_of
 import lotemplate.errors as errors
 from com.sun.star.lang import XComponent
@@ -24,7 +23,7 @@ class HtmlStatement:
             """
             scan for a single for statement
             """
-            html_statement = HtmlStatement(local_x_found.getString())
+            #html_statement = HtmlStatement(local_x_found.getString())
             endhtml_search = doc.createSearchDescriptor()
             endhtml_search.SearchString = HtmlStatement.end_regex
             endhtml_search.SearchRegularExpression = True
@@ -34,7 +33,7 @@ class HtmlStatement:
                 cursor = local_x_found.getText().createTextCursorByRange(local_x_found)
                 raise errors.TemplateError(
                     'no_endhtml_found',
-                    f"The statement [html] has no endhtml",
+                    "The statement [html] has no endhtml",
                     dict_of(cursor.String)
                 )
 
@@ -55,7 +54,7 @@ class HtmlStatement:
         """
 
         def compute_html(doc, local_x_found):
-            html_statement = HtmlStatement(local_x_found.getString())
+            #html_statement = HtmlStatement(local_x_found.getString())
             endhtml_search = doc.createSearchDescriptor()
             endhtml_search.SearchString = HtmlStatement.end_regex
             endhtml_search.SearchRegularExpression = True
@@ -65,7 +64,7 @@ class HtmlStatement:
                 cursor = local_x_found.getText().createTextCursorByRange(local_x_found)
                 raise errors.TemplateError(
                     'no_endhtml_found',
-                    f"The statement [html] has no endhtml",
+                    "The statement [html] has no endhtml",
                     dict_of(cursor.String)
                 )
 

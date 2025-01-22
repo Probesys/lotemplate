@@ -1,0 +1,35 @@
+meta {
+  name: generate_simple_vars_xlsx_result
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/test_dir1/simple_vars.xlsx
+  body: json
+  auth: none
+}
+
+headers {
+  secretkey: DEFAULT_KEY
+}
+
+body:json {
+  {
+    "name": "simple_vars_result.html",
+    "variables": {
+      "myhours": {
+        "type": "text",
+        "value": "12"
+      },
+      "myname": {
+        "type": "text",
+        "value": "Gérard"
+      },
+      "otherName": {
+        "type": "text",
+        "value": "Martin"
+      }
+    }
+  }
+}

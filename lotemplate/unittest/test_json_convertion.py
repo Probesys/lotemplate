@@ -2,19 +2,13 @@
 Copyright (C) 2023 Probesys
 """
 
-import json
 import unittest
-import urllib.request
 import lotemplate as ot
+import json
+from .test_function import file_to_dict
 
 
-def file_to_dict(file_path: str) -> dict:
-    if ot.is_network_based(file_path):
-        return json.loads(urllib.request.urlopen(file_path).read())
-    else:
-        with open(file_path) as f:
-            return json.loads(f.read())
-
+cnx = ot.start_multi_office()
 
 class Generic(unittest.TestCase):
 
@@ -128,9 +122,9 @@ class Tables(unittest.TestCase):
     def test_valid(self):
         self.assertEqual(
             {
-                "var": {"type": "table", "value": [""]},
-                "var1": {"type": "table", "value": [""]},
-                "var2": {"type": "table", "value": [""]}
+                "var": {"type": "table", "value": []},
+                "var1": {"type": "table", "value": []},
+                "var2": {"type": "table", "value": []}
             },
             ot.convert_to_datas_template(file_to_dict("lotemplate/unittest/files/jsons/tab_valid.json"))
         )

@@ -1,6 +1,6 @@
 import re
 from com.sun.star.lang import XComponent
-from com.sun.star.beans import PropertyValue, UnknownPropertyException
+from com.sun.star.beans import UnknownPropertyException
 import regex
 from lotemplate.Statement.ForStatement import ForStatement
 from lotemplate.Statement.TableStatement import TableStatement

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "lotemplate",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

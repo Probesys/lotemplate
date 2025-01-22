@@ -2,51 +2,40 @@
 Copyright (C) 2023 Probesys
 """
 
-from flask import *
+from flask import Response, send_file
 
 import lotemplate as ot
 
-import configargparse as cparse
 import glob
 import os
 import sys
-import subprocess
-from time import sleep
 from typing import Union
-from zipfile import ZipFile
 
-p = cparse.ArgumentParser(default_config_files=['config.yml', 'config.ini', 'config'])
-p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
-p.add_argument('--host', default="localhost", help='Host address to use for the libreoffice connection')
-p.add_argument('--port', default="2002", help='Port to use for the libreoffice connexion')
-args = p.parse_known_args()[0]
-
-os.makedirs("uploads", exist_ok=True)
-os.makedirs("exports", exist_ok=True)
-subprocess.call(
-    f'soffice "--accept=socket,host={args.host},port={args.port};urp;StarOffice.ServiceManager" &', shell=True)
-sleep(3)
-cnx = ot.Connexion(args.host, args.port)
-
-
-def restart_soffice() -> None:
-    """
-    simply restart the soffice process
-
-    :return: None
-    """
-
+host='localhost'
+port='200'
+gworkers=0
+scannedjson=''
+maxtime=60
+def start_soffice(workers,jsondir,maxt=60):
+    global gworkers
+    global my_lo
+    global scannedjson
+    global maxtime
+    maxtime=maxt
+    scannedjson=jsondir
+    gworkers=workers
+    os.makedirs("uploads", exist_ok=True)
+    os.makedirs("exports", exist_ok=True)
+    os.makedirs(scannedjson, exist_ok=True)
     clean_temp_files()
-    subprocess.call(
-        f'soffice "--accept=socket,host={cnx.host},port={cnx.port};urp;StarOffice.ServiceManager" &',
-        shell=True
-    )
-    sleep(2)
-    try:
-        cnx.restart()
-    except:
-        pass
+    my_lo=ot.start_multi_office(nb_env=workers)
 
+
+def connexion():
+   global my_lo 
+   cnx= ot.randomConnexion(my_lo)
+
+   return cnx
 
 def clean_temp_files():
     """
@@ -103,7 +92,6 @@ def error_format(exception: Exception, message: str = None) -> dict:
         {
             'error': type(exception).__name__,
             'code': exception.code if isinstance(exception, ot.errors.LotemplateError) else type(exception).__name__,
-            # 'message': message or str(exception),
             'message': message or exception_message,
             'variables': exception.infos if isinstance(exception, ot.errors.LotemplateError) else {}
         }
@@ -148,23 +136,16 @@ def save_file(directory: str, f, name: str, error_caught=False) -> Union[tuple[d
         i += 1
     f.stream.seek(0)
     f.save(f"uploads/{directory}/{name}")
+
+
+    cnx = connexion()
+    global scannedjson
     try:
-        with ot.Template(f"uploads/{directory}/{name}", cnx, True) as temp:
+        with ot.TemplateFromExt(f"uploads/{directory}/{name}", cnx, True,scannedjson) as temp:
             values = temp.variables
     except ot.errors.TemplateError as e:
         delete_file(directory, name)
         return error_format(e), 415
-    except ot.errors.UnoException as e:
-        delete_file(directory, name)
-        restart_soffice()
-        if error_caught:
-            return (
-                error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                                "'Unsolvable problems' for more informations."),
-                500
-            )
-        else:
-            return save_file(directory, f, name, True)
     except Exception as e:
         delete_file(directory, name)
         return error_format(e), 500
@@ -180,24 +161,14 @@ def scan_file(directory: str, file: str, error_caught=False) -> Union[tuple[dict
     :param error_caught: specify if an error was already caught
     :return: a json and optionally an int which represent the status code to return
     """
-
-    try:
-        with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
+    cnx = connexion()
+    global scannedjson
+    with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True,scannedjson) as temp:
             variables = temp.variables
-    except ot.errors.UnoException as e:
-        restart_soffice()
-        if error_caught:
-            return (
-                error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                                "'Unsolvable problems' for more informations."),
-                500
-            )
-        else:
-            return scan_file(directory, file, True)
     return {'file': file, 'message': "Successfully scanned", 'variables': variables}
 
 
-def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tuple[dict, int], dict, Response]:
+def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tuple[dict, int], dict, tuple[str,Response]]:
     """
     fill the specified file
 
@@ -208,61 +179,48 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
     :return: a json and optionally an int which represent the status code to return
     """
 
-    if type(json) != list or not json:
-        return error_sim("JsonSyntaxError", 'api_invalid_base_value_type', "The json should be a non-empty array"), 415
-
+    if  isinstance(json, list):
+        json=json[0]
+        print("####\nUsing a list of dict is DEPRECATED, you must directly send the dict.")
+        print("See documentation.\n#######")
+    cnx = connexion()
+    global scannedjson
     try:
-        with ot.Template(f"uploads/{directory}/{file}", cnx, True) as temp:
+        with ot.TemplateFromExt(f"uploads/{directory}/{file}", cnx, True,scannedjson) as temp:
 
-            exports = []
+            length = len(json)
+            is_name_present = type(json.get("name")) is str
+            is_variables_present = type(json.get("variables")) is dict
+            is_page_break_present = type(json.get("page_break")) is bool
 
-            for elem in json:
+            if (
+                    not is_name_present
+                    or not is_variables_present
+                    or ((length > 2 and not is_page_break_present) or (length > 3 and is_page_break_present))
+            ):
+                return 415, error_sim(
+                    "JsonSyntaxError",
+                    'api_invalid_instance_syntax',
+                    "Each instance of the array in the json should be an object containing only 'name' - "
+                    "a non-empty string, 'variables' - a non-empty object, and, optionally, 'page_break' - "
+                    "a boolean.")
 
-                length = len(elem)
-                is_name_present = type(elem.get("name")) is str
-                is_variables_present = type(elem.get("variables")) is dict
-                is_page_break_present = type(elem.get("page_break")) is bool
+            try:
+                json_variables = ot.convert_to_datas_template(json["variables"])
+                temp.search_error(json_variables)
+                temp.fill(json["variables"])
+                if json.get('page_break', False):
+                    temp.page_break()
+                export_file=temp.export(json["name"],"exports")
+                export_name=json["name"]
+            except Exception as e:
+                if 'export_name' in locals():
+                    return ( export_file,error_format(e))
+                else:
+                    return ( "nofile",error_format(e))
 
-                if (
-                        not is_name_present
-                        or not is_variables_present
-                        or ((length > 2 and not is_page_break_present) or (length > 3 and is_page_break_present))
-                ):
-                    return error_sim(
-                        "JsonSyntaxError",
-                        'api_invalid_instance_syntax',
-                        "Each instance of the array in the json should be an object containing only 'name' - "
-                        "a non-empty string, 'variables' - a non-empty object, and, optionally, 'page_break' - "
-                        "a boolean."), 415
+            return (export_file,send_file(export_file, export_name))
 
-                try:
-                    json_variables = ot.convert_to_datas_template(elem["variables"])
-                    temp.search_error(json_variables)
-                    temp.fill(elem["variables"])
-                    if elem.get('page_break', False):
-                        temp.page_break()
-                    exports.append(temp.export("exports/" + elem["name"], should_replace=(
-                        True if len(json) == 1 else False)))
-                except Exception as e:
-                    return error_format(e), 415
+    except Exception as e:
+            return error_format(e), 500
 
-            if len(exports) == 1:
-                return send_file(exports[0], download_name=exports[0].split("/")[-1])
-            else:
-                with ZipFile('exports/export.zip', 'w') as zipped:
-                    for elem2 in exports:
-                        zipped.write(elem2, elem2.split("/")[-1])
-                return send_file('exports/export.zip', 'export.zip')
-    except ot.errors.UnoException as e:
-        restart_soffice()
-        if error_caught:
-            return (
-                error_format(e, "Internal server error on file opening. Please checks the README file, section "
-                                "'Unsolvable problems' for more informations."),
-                500
-            )
-        else:
-            return fill_file(directory, file, json, True)
-
-
-clean_temp_files()

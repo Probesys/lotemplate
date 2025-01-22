@@ -12,9 +12,7 @@ import urllib.request
 import urllib.error
 import sys
 import traceback
-import subprocess
-from time import sleep
-
+import os
 
 def set_arguments() -> cparse.Namespace:
     """
@@ -24,11 +22,11 @@ def set_arguments() -> cparse.Namespace:
     """
 
     p = cparse.ArgumentParser(default_config_files=['config.yml', 'config.ini', 'config'])
-    p.add_argument('template_file',
+    p.add_argument('--template_file', '-t',
                    help="Template file to scan or fill")
-    p.add_argument('--json_file', '-jf', nargs='+', default=[],
+    p.add_argument('--json_file', '-jf', 
                    help="Json files that must fill the template, if any")
-    p.add_argument('--json', '-j', nargs='+', default=[],
+    p.add_argument('--json', '-j', 
                    help="Json strings that must fill the template, if any")
     p.add_argument('--output', '-o', default="output.pdf",
                    help="Names of the filled files, if the template should be filled. supported formats: "
@@ -36,28 +34,48 @@ def set_arguments() -> cparse.Namespace:
     p.add_argument('--config', '-c', is_config_file=True, help='Configuration file path')
     p.add_argument('--host', default="localhost", help='Host address to use for the libreoffice connection')
     p.add_argument('--port', default="2002", help='Port to use for the libreoffice connexion')
+    p.add_argument('--cpu', default="0", help='number of libreoffice start, default 0 is the number of CPU')
+    p.add_argument('--clean', action='store_true',
+                   help="Specify if the program should all to old open connection")
+    p.add_argument('--maxtime', default="60" , help='number of second before considering a document open for too long')
+    p.add_argument('--stats', action='store_true',
+                   help="return statistic about open files that should not be")
     p.add_argument('--scan', '-s', action='store_true',
                    help="Specify if the program should just scan the template and return the information, or fill it.")
     p.add_argument('--force_replacement', '-f', action='store_true',
                    help="Specify if the program should ignore the scan's result")
-    return p.parse_args()
-
+    p.add_argument('--json_cache_dir',nargs='?',  help="Specify a cache for the scanned json")
+    args=p.parse_args()
+    if not args.scan and not args.clean and not args.template_file and not args.stats:
+         p.error(" #######You need at minimun --scan or --clean or --template_file")
+    elif (args.scan and not  args.template_file):
+         p.error(" ####### with --scan you need --template_file")
+    return args
 
 if __name__ == '__main__':
-
     # get the necessaries arguments
     args = set_arguments()
-
     # run soffice
-    subprocess.call(
-        f'soffice "--accept=socket,host={args.host},port={args.port};urp;StarOffice.ServiceManager" &', shell=True)
-    sleep(2)
+    if args.cpu == "0":
+        nb_process=len(os.sched_getaffinity(0))
+    else:
+        nb_process=int(args.cpu)
+
+    my_lo=ot.start_multi_office(nb_env=nb_process)
+    if args.clean:
+        print(json.dumps(ot.clean_old_open_document(my_lo, args.maxtime)))
+        exit()
+
+    if args.stats:
+        print(json.dumps(ot.statistic_open_document(my_lo, args.maxtime)))
+   
+        exit()
+
 
     # establish the connection to the server
-    connexion = ot.Connexion(args.host, args.port)
-
+    connexion = ot.randomConnexion(my_lo)
     # generate the document to operate and its parameters
-    document = ot.Template(args.template_file, connexion, not args.force_replacement)
+    document = ot.TemplateFromExt(args.template_file, connexion, not args.force_replacement,args.json_cache_dir)
 
     # prints scan result in json format if it should
     if args.scan:
@@ -68,35 +86,31 @@ if __name__ == '__main__':
 
         # get the specified jsons
         json_dict = {}
-        for elem in args.json_file:
-            if ot.is_network_based(elem):
-                json_dict[elem] = json.loads(urllib.request.urlopen(elem).read())
+        if args.json_file:
+            if ot.is_network_based(args.json_file):
+                json_variables = json.loads(urllib.request.urlopen(args.json_file).read())
             else:
-                with open(elem) as f:
-                    json_dict[elem] = json.loads(f.read())
-        for index, elem in enumerate(args.json):
-            json_dict[f"json_{index}"] = json.loads(elem)
+                with open(args.json_file) as f:
+                    json_variables = json.loads(f.read())
+        if args.json:
+            json_variables = json.loads(args.json)
 
-        for json_name, json_variables in json_dict.items():
+        try:
+            # scan for errors
+            document.search_error(ot.convert_to_datas_template(json_variables))
+            #pdb.set_trace()
+            # fill and export the document
+            document.fill(json_variables)
+            filename=os.path.basename(args.output)
+            path=os.path.dirname(args.output)
+            if not path:
+               path='exports'
 
-            try:
-                # scan for errors
-                document.search_error(ot.convert_to_datas_template(json_variables))
-
-                # fill and export the document
-                document.fill(json_variables)
-                print(
-                    f"File {repr(json_name)}: Document saved as " +
-                    repr(document.export(
-                        args.output if len(json_dict) == 1 else
-                        ".".join(args.output.split(".")[:-1]) + '_' + (
-                            json_name.split("/")[-1][:-5] if json_name.split("/")[-1][-5:] == ".json"
-                            else json_name.split("/")[-1]
-                        ) + "." + args.output.split(".")[-1]
-                    ))
-                )
-            except Exception as exception:
-                print(f'Ignoring exception on json {repr(json_name)}:', file=sys.stderr)
-                traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
-                continue
+            print(
+                "Document saved as " +
+                repr(document.export( filename, path, True))
+            )
+        except Exception as exception:
+            print('Ignoring exception on json :', file=sys.stderr)
+            traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
     document.close()

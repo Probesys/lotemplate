@@ -1,0 +1,19 @@
+meta {
+  name: upload_table_formula_calc_template
+  type: http
+  seq: 11
+}
+
+put {
+  url: {{baseUrl}}/test_dir1
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  secretkey: DEFAULT_KEY
+}
+
+body:multipart-form {
+  file: @file(template_files/calc_table_formula.ods)
+}
