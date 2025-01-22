@@ -27,7 +27,7 @@
         "type": "text",
         "value": "mon appart"
     },
-    "table_d_tab1": {
+    "loop_down_tab1": {
         "type": "object",
         "value": {
            "nom": {
@@ -44,7 +44,7 @@
             }
         }
     },
-    "table_d_tab2": {
+    "loop_down_tab2": {
         "type": "object",
          "value": {
            "produit": {
@@ -61,7 +61,7 @@
             }
         }
     },
-    "table_r_tab3": {
+    "loop_right_tab3": {
         "type": "object",
         "value": {
             "nom": {
@@ -86,7 +86,7 @@
             }
         }
     },
-    "table_d_large1": {
+    "loop_down_large1": {
         "type": "object",
          "value": {
            "produit": {
@@ -103,7 +103,7 @@
             }
         }
     },
-    "table_r_large2": {
+    "loop_right_large2": {
         "type": "object",
         "value": {
             "nom": {
