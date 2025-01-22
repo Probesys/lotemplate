@@ -20,7 +20,7 @@ def incr_str(s,numb):
 
 
 class CalcTableStatement:
-    table_pattern = re.compile("^table_[udlr]_(.+)",re.IGNORECASE)
+    table_pattern = re.compile("^loop_(down|right)_(.+)",re.IGNORECASE)
 
     def isTableVar(var):
         if re.match(CalcTableStatement.table_pattern,var):
@@ -78,12 +78,14 @@ class CalcTableStatement:
         maxlen=max([len(value[x]['value']) for x in value])
         sheet=doc.getSheets()[mycellrangeaddr.Sheet]
 
-        if variable[6]=="r":
+        match = re.match(CalcTableStatement.table_pattern, variable)
+        direction = match.group(1)
+        if direction=="right":
             size=1+EndColumn-StartColumn
             left=True
             decale=RIGHT
             delete=LEFT
-        else:
+        elif direction=="down":
             size=1+EndRow-StartRow
             left=False
             decale=DOWN
