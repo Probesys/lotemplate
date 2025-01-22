@@ -92,7 +92,7 @@ class CalcTemplate(Template):
            self.close()
            raise errors.JsonComparaisonError(
                 'missing_required_variable',
-                f"There is one or more missing variables in the json",
+                f"There is one or more missing variables in the json {repr(notdiff)}",
                 {"error" : repr(notdiff)}
             )
 
