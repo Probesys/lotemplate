@@ -92,7 +92,6 @@ def error_format(exception: Exception, message: str = None) -> dict:
         {
             'error': type(exception).__name__,
             'code': exception.code if isinstance(exception, ot.errors.LotemplateError) else type(exception).__name__,
-            # 'message': message or str(exception),
             'message': message or exception_message,
             'variables': exception.infos if isinstance(exception, ot.errors.LotemplateError) else {}
         }
@@ -199,12 +198,12 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
                     or not is_variables_present
                     or ((length > 2 and not is_page_break_present) or (length > 3 and is_page_break_present))
             ):
-                return error_sim(
+                return 415, error_sim(
                     "JsonSyntaxError",
                     'api_invalid_instance_syntax',
                     "Each instance of the array in the json should be an object containing only 'name' - "
                     "a non-empty string, 'variables' - a non-empty object, and, optionally, 'page_break' - "
-                    "a boolean."), 415
+                    "a boolean.")
 
             try:
                 json_variables = ot.convert_to_datas_template(json["variables"])

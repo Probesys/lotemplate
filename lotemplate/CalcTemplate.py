@@ -92,9 +92,8 @@ class CalcTemplate(Template):
            self.close()
            raise errors.JsonComparaisonError(
                 'missing_required_variable',
-                f"The json are not the same here is the diff "
-                f"{notdiff}",
-                dict(variable=notdiff)
+                f"There is one or more missing variables in the json",
+                {"error" : repr(notdiff)}
             )
 
         # when parsing the template, we assume that all vars are of type text. But it can also be of type html.
