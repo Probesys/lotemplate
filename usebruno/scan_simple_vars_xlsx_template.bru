@@ -1,0 +1,15 @@
+meta {
+  name: scan_simple_vars_xlsx_template
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/test_dir1/simple_vars.xlsx
+  body: none
+  auth: none
+}
+
+headers {
+  secretkey: DEFAULT_KEY
+}

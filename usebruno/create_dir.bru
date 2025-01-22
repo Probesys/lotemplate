@@ -1,0 +1,16 @@
+meta {
+  name: create_dir
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/
+  body: none
+  auth: none
+}
+
+headers {
+  secretkey: DEFAULT_KEY
+  directory: test_dir1
+}

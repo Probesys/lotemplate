@@ -1,0 +1,19 @@
+meta {
+  name: upload_writer_template
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/test_dir1
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  secretkey: DEFAULT_KEY
+}
+
+body:multipart-form {
+  file: @file(template_files/if_inside_for.odt)
+}

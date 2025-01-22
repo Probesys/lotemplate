@@ -1,0 +1,15 @@
+meta {
+  name: scan_writer_template
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/test_dir1/if_inside_for.odt
+  body: none
+  auth: none
+}
+
+headers {
+  secretkey: DEFAULT_KEY
+}

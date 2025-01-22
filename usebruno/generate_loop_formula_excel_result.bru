@@ -1,0 +1,55 @@
+meta {
+  name: generate_loop_formula_excel_result
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/test_dir1/calc_table_formula.xlsx
+  body: json
+  auth: none
+}
+
+headers {
+  secretkey: DEFAULT_KEY
+}
+
+body:json {
+  {
+    "name": "calc_table_formula.html",
+    "variables": {
+      "loop_down_article": {
+        "type": "object",
+        "value": {
+          "name": {
+            "type": "table",
+            "value": [
+              "appel",
+              "banana",
+              "melon",
+              "lemon"
+            ]
+          },
+          "unitPrice": {
+            "type": "table",
+            "value": [
+              "1",
+              "1.5",
+              "3.2",
+              "0.8"
+            ]
+          },
+          "quantity": {
+            "type": "table",
+            "value": [
+              "4",
+              "6",
+              "2",
+              "1"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
