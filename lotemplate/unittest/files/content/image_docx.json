@@ -1,0 +1,14 @@
+{
+    "Test": {
+        "type": "text",
+        "value": "OK OK"
+    },
+    "var2": {
+        "type": "image",
+        "value": "lotemplate/unittest/files/jsons/Yami_Yugi.png"
+    },
+    "var1": {
+        "type": "image",
+        "value": "lotemplate/unittest/files/jsons/Yami_Yugi.png"
+    }
+}

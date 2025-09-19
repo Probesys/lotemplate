@@ -5,7 +5,7 @@ Copyright (C) 2023 Probesys
 import unittest
 import lotemplate as ot
 from lotemplate.unittest.test_function import to_data  
-
+from lotemplate.unittest.test_function import compare_image
 cnx=ot.start_multi_office()
 
 
@@ -75,7 +75,12 @@ class Images(unittest.TestCase):
         Check that there is no exception anymore where there is an unknown variable in the json
         """
         self.temp.search_error(to_data("lotemplate/unittest/files/comparaison/img_vars_invalid_other_image.json"))
+    def test_image_odt(self):
+        self.assertTrue(compare_image('image_odt',cnx))
+    temp.close()
 
+    def test_image_doc(self):
+        self.assertTrue(compare_image('image_docx',cnx))
     temp.close()
 
 

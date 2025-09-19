@@ -6,7 +6,6 @@ from PIL import Image
 from lotemplate.utils import get_file_url, is_network_based
 from com.sun.star.awt import Size
 
-
 class ImageStatement:
     image_regex = regex.compile(r'\$\w+')
 
@@ -17,12 +16,13 @@ class ImageStatement:
         :param doc: the document to scan
         :return: the scanned variables
         """
-
-        return {
-            elem.LinkDisplayName[1:]: {'type': 'image', 'value': ''}
-            for elem in doc.getGraphicObjects()
-            if ImageStatement.image_regex.fullmatch(elem.LinkDisplayName)
-        }
+        imgs = {}
+        for img in doc.getGraphicObjects():
+            if ImageStatement.image_regex.fullmatch(img.LinkDisplayName): 
+                imgs[ImageStatement.image_regex.match(img.LinkDisplayName).group(0)[1:]] = {'type': 'image', 'value': ''}
+            elif ImageStatement.image_regex.fullmatch(img.Description):
+                imgs[ImageStatement.image_regex.match(img.Description).group(0)[1:]] = {'type': 'image', 'value': ''}
+        return imgs
 
     def image_fill(doc: XComponent, graphic_provider, variable: str, path: str, should_resize=True) -> None:
         """
@@ -40,7 +40,7 @@ class ImageStatement:
             return
 
         for graphic_object in doc.getGraphicObjects():
-            if graphic_object.LinkDisplayName != variable:
+            if graphic_object.LinkDisplayName != variable and graphic_object.Description != variable :
                 continue
 
             new_image = graphic_provider.queryGraphic((PropertyValue('URL', 0, get_file_url(path), 0),))
@@ -54,4 +54,3 @@ class ImageStatement:
                 graphic_object.setSize(new_size)
 
             graphic_object.Graphic = new_image
-

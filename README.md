@@ -346,7 +346,7 @@ Limitation : Html is not interpreted into "shape content". For example for a tex
 
 ### image variables
 
-Add any image in the document, and put in the title of the alt text of the image
+Add any image in the document, and put in the title of the alt text of the image (If your are using MsOffice you can use the Description field)
 (properties) '$' followed by the desired name ('$image' for example to add the image 'image')
 
 ### dynamic arrays

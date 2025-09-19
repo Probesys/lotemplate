@@ -8,7 +8,7 @@ import filecmp
 import os
 import json
 from pypdf import PdfReader
-
+import glob
 
 
 def file_to_dict(file_path: str) -> dict:
@@ -19,6 +19,39 @@ def file_to_dict(file_path: str) -> dict:
 
 def to_data(file: str):
     return ot.convert_to_datas_template(file_to_dict(file))
+
+def compare_image(name: str, cnx) :
+    base_path = 'lotemplate/unittest/files/content'
+    def get_filename(ext: str):
+        return base_path + '/' + name + '.' + ext
+
+    temp = None
+    if os.path.isfile(get_filename('ods')):
+        temp = ot.TemplateFromExt(get_filename('ods'), ot.randomConnexion(cnx), True)
+    if os.path.isfile(get_filename('odt')):
+        temp = ot.TemplateFromExt(get_filename('odt'), ot.randomConnexion(cnx), True)
+    if os.path.isfile(get_filename('docx')):
+        temp = ot.TemplateFromExt(get_filename('docx'), ot.randomConnexion(cnx), True)
+
+    if temp is None:
+        if name == 'debug':
+            return True
+        else:
+            raise FileNotFoundError('No file found for ' + name)
+
+    temp.scan()
+    temp.search_error(to_data(get_filename('json')))
+    temp.fill(file_to_dict(get_filename('json')))
+    if os.path.isfile(get_filename('unittest.html')):
+        os.remove(get_filename('unittest.html'))
+    temp.export(name+'.unittest.html',base_path, True)
+    temp.close()
+    response = filecmp.cmp(
+    "lotemplate/unittest/files/jsons/Yami_Yugi.png",
+    list(glob.iglob(base_path + '/' + name +'.unittest_html*.png'))[0],
+    shallow=False
+    )
+    return response
 
 
 def compare_files_html(name: str, cnx ):
@@ -31,6 +64,10 @@ def compare_files_html(name: str, cnx ):
     temp = None
     if os.path.isfile(get_filename('ods')):
         temp = ot.TemplateFromExt(get_filename('ods'), ot.randomConnexion(cnx), True)
+    if os.path.isfile(get_filename('odt')):
+        temp = ot.TemplateFromExt(get_filename('odt'), ot.randomConnexion(cnx), True)
+    if os.path.isfile(get_filename('docx')):
+        temp = ot.TemplateFromExt(get_filename('docx'), ot.randomConnexion(cnx), True)
 
     if temp is None:
         if name == 'debug':
