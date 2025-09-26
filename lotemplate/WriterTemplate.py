@@ -11,7 +11,7 @@ __all__ = (
 
 from typing import Union
 from sorcery import dict_of
-
+import os
 import uno
 
 from com.sun.star.beans import PropertyValue
@@ -88,7 +88,9 @@ class WriterTemplate(Template):
         # horrible hack : there is a bug with the "paste HTML" function of libreoffice, so we have to add
         # a &nbsp; at the beginning of the string to make it work. Without that, the first element of a list
         # <ul><li>...</li></ul> is displayed without the bullet point. This is the less visible workaround I found.
-        html_string = '&nbsp;' + html_string
+        if os.getenv('DISABLE_HTML_HACK', 'False') != 'True' :
+            html_string = '&nbsp;' + html_string
+
         input_stream = self.cnx.ctx.ServiceManager.createInstanceWithContext("com.sun.star.io.SequenceInputStream",
                                                                              self.cnx.ctx)
         input_stream.initialize((uno.ByteSequence(html_string.encode()),))

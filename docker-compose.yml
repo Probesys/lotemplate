@@ -12,4 +12,5 @@ services:
       - SECRET_KEY=$SECRET_KEY
       - NB_WORKERS=$NB_WORKERS
       - MAXTIME=$MAXTIME
+      - DISABLE_HTML_HACK=${DISABLE_HTML_HACK:-}
     command: "gunicorn -b 0.0.0.0:8000 app:app"

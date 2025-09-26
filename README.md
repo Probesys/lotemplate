@@ -344,6 +344,10 @@ To declare a variable as an html variable, we only have to change the type in th
 
 Limitation : Html is not interpreted into "shape content". For example for a text associated to a rectangle inserted into the document.
 
+Due to  a bug with the "paste HTML" function of libreoffice,  we have to add # a &nbsp; at the beginning of the string to make it work. Without that, the first element of a list # <ul><li>...</li></ul> is displayed without the bullet point. This is the less visible workaround I found. html_string = '&nbsp;' + html_string
+If you want to disable this. you can set DISABLE_HTML_HACK to true  (look a the .env file)
+
+
 ### image variables
 
 Add any image in the document, and put in the title of the alt text of the image (If your are using MsOffice you can use the Description field)
