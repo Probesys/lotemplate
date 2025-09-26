@@ -5,6 +5,7 @@ import unittest
 
 import lotemplate as ot
 from lotemplate.unittest.test_function import compare_files_html 
+from lotemplate.unittest.test_function import compare_image
 
 cnx = ot.start_multi_office()
 
@@ -26,6 +27,14 @@ class Test_calc(unittest.TestCase):
 
     def test_table(self):
         self.assertTrue(compare_files_html('calc_table',cnx))
+
+class Test_Calc_Images(unittest.TestCase):
+
+    def test_image_xlsx(self):
+        self.assertTrue(compare_image('image_xlsx',cnx))
+
+    def test_image_ods(self):
+        self.assertTrue(compare_image('image_ods',cnx))
 
 
 

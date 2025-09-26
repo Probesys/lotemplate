@@ -10,7 +10,6 @@ import json
 from pypdf import PdfReader
 import glob
 
-
 def file_to_dict(file_path: str) -> dict:
         with open(file_path) as f:
             return json.loads(f.read())
@@ -24,10 +23,11 @@ def compare_image(name: str, cnx) :
     base_path = 'lotemplate/unittest/files/content'
     def get_filename(ext: str):
         return base_path + '/' + name + '.' + ext
-
     temp = None
     if os.path.isfile(get_filename('ods')):
         temp = ot.TemplateFromExt(get_filename('ods'), ot.randomConnexion(cnx), True)
+    if os.path.isfile(get_filename('xlsx')):
+        temp = ot.TemplateFromExt(get_filename('xlsx'), ot.randomConnexion(cnx), True)
     if os.path.isfile(get_filename('odt')):
         temp = ot.TemplateFromExt(get_filename('odt'), ot.randomConnexion(cnx), True)
     if os.path.isfile(get_filename('docx')):

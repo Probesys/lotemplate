@@ -13,12 +13,12 @@ from typing import Union
 
 
 from . import errors
-
+from sorcery import dict_of
 from lotemplate.Statement.CalcTableStatement import CalcTableStatement
 from .Template import Template
 from lotemplate.Statement.CalcSearchStatement import CalcTextStatement
+from lotemplate.Statement.CalcImageStatement import CalcImageStatement
 from jsondiff import diff
-
 class CalcTemplate(Template):
     formats = {
             "ods": "calc8",
@@ -68,14 +68,29 @@ class CalcTemplate(Template):
         """
 
         #should_close = kwargs.get("should_close", False)
-        texts = {} 
+        texts = {}
+        images = {}
         #(Pdb) self.doc.getSheets().getElementNames()
         for sheet in self.doc.getSheets():
             texts = texts | CalcTextStatement.scan(sheet)
+            images = images | CalcImageStatement.scan_image(sheet)
         tables=CalcTableStatement.scan(self.doc)
-        #texts = CalcTextStatement.scan_Document_text(self.doc)
-        #pdb.set_trace()
-        return texts | tables 
+        variables_list = list(texts.keys()) + list(tables.keys()) + list(images.keys())
+        duplicates = [variable for variable in variables_list if variables_list.count(variable) > 1]
+
+        if duplicates:
+            first_type = "text" if duplicates[0] in texts.keys() else "image"
+            second_type = "table" if duplicates[0] in tables.keys() else "image"
+            self.close()
+            raise errors.TemplateError(
+                'duplicated_variable',
+                f"The variable {duplicates[0]!r} is mentioned two times, but "
+                f"for two different types: {first_type!r}, and {second_type!r}",
+                dict_of(first_type, second_type, variable=duplicates[0])
+            )
+
+
+        return texts | tables | images
 
 
     def search_error(self, json_vars: dict[str, dict[str, Union[str, list[str]]]]) -> None:
@@ -132,6 +147,9 @@ class CalcTemplate(Template):
             if details['type'] == 'text':
                 for sheet in self.doc.getSheets():
                     CalcTextStatement.fill(sheet, "$" + var, details['value'])
+            elif details['type'] == 'image':
+                   for sheet in self.doc.getSheets():
+                     CalcImageStatement.image_fill(sheet,self.cnx.graphic_provider,"$" + var, details['value'])
             elif details['type'] == "object" and  CalcTableStatement.isTableVar(var) :
                     objects[var]=details
         for  var, details in objects.items():

@@ -947,7 +947,7 @@ The principle is exactly the same as for LibreOffice Calc exept for the creation
 |-------------------------|----------|----------|----------|------|-----------|-----|-----|-------|
 | text variables support  | ✅        | ✅        | ✅        | ✅    | ✅         | ✅   | ✅   | ❌     |
 | dynamic tables support  | ✅        | ✅       | ✅       | ✅    | ✅         | ✅   | ❌   | ❌     |
-| image variables support | ✅        | ❌        | ❌        | ✅    | ✅         | ❌   | ❌   | ❌     |
+| image variables support | ✅        | ✅        | ✅        | ✅    | ✅         | ❌   | ❌   | ❌     |
 
 ### Export
 For Writer
