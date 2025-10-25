@@ -23,6 +23,7 @@ exports/
 /lotemplate/unittest/files/content/debug.json
 /lotemplate/unittest/files/content/*.unittest.odt
 /lotemplate/unittest/files/content/*.unittest.pdf
+/lotemplate/unittest/files/content/*.unittest_html_*.png
 /venv
 /lotemplate/unittest/files/content/e89fbedb61af3994184da3e5340bd9e9-calc_variables.ods.json
 /output*.*

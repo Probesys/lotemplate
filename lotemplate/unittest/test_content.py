@@ -61,6 +61,9 @@ class Text(unittest.TestCase):
     def test_text_var_in_header(self):
         self.assertTrue(compare_files('text_var_in_header', 'pdf',cnx=cnx))
 
+    def test_text_watermark(self):
+        self.assertTrue(compare_files('text_watermark','pdf',cnx=cnx,watermark=True))
+
     def test_too_many_endif_strange(self):
         self.assertTrue(compare_files('too_many_endif_strange',cnx=cnx))
 

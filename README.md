@@ -56,11 +56,12 @@ The tool is written in Python and use a real LibreOffice headless to fill the te
 Table of content
 ----------------
 
-* [Principles](#installation)
+* [Principles](#principles)
 * [Quick Start](#quick_start)
 * [API and CLI Usage](#api-and-cli-usage)
 * [DOCX and ODT Template syntax and examples](#docx-and-odt-template-syntax)
 * [XLSX and ODS Template syntax and examples](#xlsx-and-ods-template-syntax)
+* [Add watermark when output in pdf](#watermark)
 * [Supported formats](#supported-formats)
 * [Doc for developpers of lotemplate](#doc-for-devs)
 * [Unsolvable problems](#unsolvable-problems)
@@ -242,8 +243,12 @@ optional arguments:
   -h, --help            show this help message and exit
   --json_file JSON_FILE , -jf JSON_FILE
                         Json files that must fill the template, if any
-  --json JSON , -j JSON 
+  --json JSON , -j JSON
                         Json strings that must fill the template, if any
+  --json_watermark_file JSON_FILE, -jwf JSON_FILE
+                        Json files to configure pdf watermark, if any
+  --json_watermark JSON , -jw JSON
+                        Json strings to configure pdf watermark, if any
   --output OUTPUT, -o OUTPUT
                         Names of the filled files, if the template should
                         be filled. supported formats: pdf, html, docx, png, odt
@@ -943,6 +948,51 @@ The principle is exactly the same as for LibreOffice Calc exept for the creation
 
 (sorry, my excel is in french...)
 
+<a name="watermark">Add watermark when output in pdf
+
+You can insert a watermark text in the page background when you are exporting in pdf.
+
+### Possible parameters
+
+| Name               | Description                                                                            | DefaultValue |
+|--------------------|----------------------------------------------------------------------------------------|--------------|
+| Watermark          | Specifies the text for a watermark to be drawn on every page of the exported PDF file. | empty        |
+| WatermarkColorRGB  | Specifies the color of the watermark text in RGB                                       |  236,236,236 |
+| WatermarkFontHeight| Specifies the font height of the watermark text.                                       |              |
+| WatermarkRotateAngle | Specifies angle of the watermark text in 1/10 degree.                                | 450          |
+| WatermarkFontName  | Specifies font name of the watermark text.                                             | Helvetica    |
+| TiledWatermark     | Specifies the tiled watermark text.                                                    |              |
+
+
+### Cli example
+
+create a file named watermark.json
+
+```json
+{
+"Watermark": "ttottoto",
+"WatermarkColorRGB" : "236,0,0"
+}
+
+```
+then you can used the cli like this
+
+```bash
+./lotemplate_cli.py --template_file lotemplate/unittest/files/templates/text_vars.odt --json_file lotemplate/unittest/files/jsons/text_vars_valid.json --output toto.pdf -jwf 'watermark.json'
+
+```
+
+
+### API example
+
+
+```bash
+
+# generate a file titi.pdf from a template and a json content
+ curl -X POST -H 'secretkey: DEFAULT_KEY' -H 'Content-Type: application/json' -d '{"name":"my_file.pdf","variables":{"my_tag":{"type":"text","value":"foo"},"other_tag":{"type":"text","value":"bar"}},"watermark": {"Watermark": "It s a draft","WatermarkColorRGB" : "236,200,0"}}' --output titi.pdf http://localhost:8000/test_dir1/test.odt
+
+```
+
 <a name="supported-formats"></a>Supported formats
 -------------------------------------------------
 
@@ -1043,5 +1093,5 @@ For Pyuno
 - [JODConverter wiki for list formats compatibles with LibreOffice](https://github.com/sbraconnier/jodconverter/wiki/Getting-Started)
 - [The unoconv source code, written in python with PyUNO](https://github.com/unoconv/unoconv/blob/master/unoconv)
 - [Unoconv source code for list formats - and properties - compatible with LibreOffice for export](https://github.com/unoconv/unoconv/blob/94161ec11ef583418a829fca188c3a878567ed84/unoconv#L391)
-
+- [convert color RGB to long color use for LibreOffice](https://help.libreoffice.org/latest/fr/text/sbasic/shared/03010305.html)
 

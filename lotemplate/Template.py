@@ -13,19 +13,28 @@ import os
 from typing import Union
 from sorcery import dict_of
 import unohelper
+import uno
 from com.sun.star.beans import PropertyValue
 from com.sun.star.io import IOException
 from com.sun.star.lang import IllegalArgumentException, DisposedException
 from com.sun.star.uno import RuntimeException
-
 from . import errors
 #from . import Connexion
-from .utils import get_file_url,get_cached_json 
+from .utils import get_file_url,get_cached_json
 
 
 import uuid
 import shutil
 import json
+
+def dict_to_property(values, uno_any=False):
+    ps = tuple([PropertyValue(Name=n, Value=v) for n, v in values.items()])
+    if uno_any:
+        ps = uno.Any('[]com.sun.star.beans.PropertyValue', ps)
+    return ps
+
+def rgb_to_long(rgb:tuple):
+    return int(rgb[0])*65536+int(rgb[1])*256+int(rgb[2])
 
 class Template:
 
@@ -205,7 +214,9 @@ class Template:
         except FileNotFoundError:
             pass
 
-    def export(self, filename: str, dirname=None, no_uid=None )  -> Union[str, None]:
+
+
+    def export(self, filename: str, dirname=None, no_uid=None, my_filter_data=None )  -> Union[str, None]:
         """
         Exports the newly generated document, if any.
 
@@ -220,10 +231,27 @@ class Template:
             path = os.getcwd() + "/" + dirname +  '/' + str(uuid.uuid4()) +filename
         url = unohelper.systemPathToFileUrl(path)
 
+
+        filter_data = {
+                #'EncryptFile': True,
+                #'DocumentOpenPassword': 'letmein',
+                'Watermark' : '',
+                'WatermarkColorRGB' : '236,236,236',
+                #'WatermarkColor' : 11316396,
+                'WatermarkRotateAngle' : 450,
+                'WatermarkFontName' : 'Helvetica',
+        }
+        if  isinstance(my_filter_data,dict) and bool(my_filter_data) and self.formats[file_type].endswith("pdf_Export"):
+            filter_data.update(my_filter_data)
+            filter_data['WatermarkColor']=rgb_to_long(tuple(filter_data['WatermarkColorRGB'].split(",")))
+
+        prop_filter_data = dict_to_property(filter_data, True)
         # list of available convert filters
         # cf https://help.libreoffice.org/latest/he/text/shared/guide/convertfilters.html
         try:
-            self.doc.storeToURL(url, (PropertyValue("FilterName", 0, self.formats[file_type], 0),))
+            self.doc.storeToURL(url, (PropertyValue("FilterName", 0,self.formats[file_type], 0),
+                                      PropertyValue("FilterData", 0,prop_filter_data, 0)),
+                                      )
         except KeyError:
             self.close()
             raise errors.ExportError('invalid_format',

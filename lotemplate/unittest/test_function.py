@@ -106,7 +106,7 @@ def compare_files_html(name: str, cnx ):
 
 
 
-def compare_files(name: str, format: str = 'txt',cnx = None):
+def compare_files(name: str, format: str = 'txt',cnx = None, watermark = False):
     if format not in ['txt', 'pdf']:
         return False
 
@@ -126,18 +126,21 @@ def compare_files(name: str, format: str = 'txt',cnx = None):
             return True
         else:
             raise FileNotFoundError('No file found for ' + name)
-
     temp.scan()
     temp.search_error(to_data(get_filename('json')))
     temp.fill(file_to_dict(get_filename('json')))
+    if watermark:
+        watermark_data=file_to_dict(get_filename('wk.json'))
+    else:
+        watermark_data={}
 
     if os.path.isfile(get_filename('unittest.'+format)):
         os.remove(get_filename('unittest.'+format))
-    temp.export(name+'.unittest.'+format,base_path, True)
+    temp.export(name+'.unittest.'+format,base_path, True,watermark_data)
     # temp.close()
     if os.path.isfile(get_filename('unittest.odt')):
         os.remove(get_filename('unittest.odt'))
-    temp.export(name+'.unittest.odt',base_path, True)
+    temp.export(name+'.unittest.odt',base_path, True, watermark_data)
     temp.close()
 
     # The PDF format is used to test some documents with headers or footers that are not supported by the text saveAs from

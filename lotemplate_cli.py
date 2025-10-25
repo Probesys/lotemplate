@@ -28,6 +28,10 @@ def set_arguments() -> cparse.Namespace:
                    help="Json files that must fill the template, if any")
     p.add_argument('--json', '-j', 
                    help="Json strings that must fill the template, if any")
+    p.add_argument('--json_watermark_file', '-jwf', 
+                   help="Json files to configure pdf watermark, if any")
+    p.add_argument('--json_watermark', '-jw', 
+                   help="Json strings to configure pdf watermark, if any")
     p.add_argument('--output', '-o', default="output.pdf",
                    help="Names of the filled files, if the template should be filled. supported formats: "
                         "pdf, html, docx, png, odt")
@@ -47,10 +51,18 @@ def set_arguments() -> cparse.Namespace:
     p.add_argument('--json_cache_dir',nargs='?',  help="Specify a cache for the scanned json")
     args=p.parse_args()
     if not args.scan and not args.clean and not args.template_file and not args.stats:
-         p.error(" #######You need at minimun --scan or --clean or --template_file")
+         p.error(" ####### You need at minimun --scan or --clean or --template_file")
     elif (args.scan and not  args.template_file):
          p.error(" ####### with --scan you need --template_file")
     return args
+
+def load_json_file(file):
+    if ot.is_network_based(file):
+        json_variables = json.loads(urllib.request.urlopen(file).read())
+    else:
+        with open(file) as f:
+            json_variables = json.loads(f.read())
+    return json_variables
 
 if __name__ == '__main__':
     # get the necessaries arguments
@@ -68,7 +80,6 @@ if __name__ == '__main__':
 
     if args.stats:
         print(json.dumps(ot.statistic_open_document(my_lo, args.maxtime)))
-   
         exit()
 
 
@@ -83,17 +94,17 @@ if __name__ == '__main__':
 
     # fill and export the template if it should
     else:
-
+        json_watermark_variables={}
         # get the specified jsons
         json_dict = {}
         if args.json_file:
-            if ot.is_network_based(args.json_file):
-                json_variables = json.loads(urllib.request.urlopen(args.json_file).read())
-            else:
-                with open(args.json_file) as f:
-                    json_variables = json.loads(f.read())
+            json_variables = load_json_file(args.json_file) 
         if args.json:
             json_variables = json.loads(args.json)
+        if args.json_watermark_file:
+            json_watermark_variables = load_json_file(args.json_watermark_file) 
+        if args.json:
+            json_watermark_variables = json.loads(args.json_watermark)
 
         try:
             # scan for errors
@@ -105,10 +116,10 @@ if __name__ == '__main__':
             path=os.path.dirname(args.output)
             if not path:
                path='exports'
-
             print(
                 "Document saved as " +
-                repr(document.export( filename, path, True))
+                repr(document.export( filename, path,
+                                     True,json_watermark_variables))
             )
         except Exception as exception:
             print('Ignoring exception on json :', file=sys.stderr)

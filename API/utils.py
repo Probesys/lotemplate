@@ -32,7 +32,7 @@ def start_soffice(workers,jsondir,maxt=60):
 
 
 def connexion():
-   global my_lo 
+   global my_lo
    cnx= ot.randomConnexion(my_lo)
 
    return cnx
@@ -178,7 +178,6 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
     :param error_caught: specify if an error was already caught
     :return: a json and optionally an int which represent the status code to return
     """
-
     if  isinstance(json, list):
         json=json[0]
         print("####\nUsing a list of dict is DEPRECATED, you must directly send the dict.")
@@ -192,18 +191,17 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
             is_name_present = type(json.get("name")) is str
             is_variables_present = type(json.get("variables")) is dict
             is_page_break_present = type(json.get("page_break")) is bool
-
+            is_watermark_present = type(json.get("watermark")) is dict
             if (
                     not is_name_present
                     or not is_variables_present
-                    or ((length > 2 and not is_page_break_present) or (length > 3 and is_page_break_present))
             ):
                 return 415, error_sim(
                     "JsonSyntaxError",
                     'api_invalid_instance_syntax',
                     "Each instance of the array in the json should be an object containing only 'name' - "
-                    "a non-empty string, 'variables' - a non-empty object, and, optionally, 'page_break' - "
-                    "a boolean.")
+                    "a non-empty string, 'variables' - a non-empty object, optionally, 'page_break' - "
+                    "a boolean and 'watermark' a json array.")
 
             try:
                 json_variables = ot.convert_to_datas_template(json["variables"])
@@ -211,14 +209,14 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
                 temp.fill(json["variables"])
                 if json.get('page_break', False):
                     temp.page_break()
-                export_file=temp.export(json["name"],"exports")
+                watermark=json.get("watermark",{})
+                export_file=temp.export(json["name"],"exports",False,watermark)
                 export_name=json["name"]
             except Exception as e:
                 if 'export_name' in locals():
                     return ( export_file,error_format(e))
                 else:
                     return ( "nofile",error_format(e))
-
             return (export_file,send_file(export_file, export_name))
 
     except Exception as e:
