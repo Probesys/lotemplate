@@ -8,7 +8,14 @@ The upgrade documentation is in the file [UPGRADE.md](UPGRADE.md).
 Versions 2.x
 ------------
 
-- v2.0.0 : 01/01/2025 
+- v2.2.0 : 2025-11-03
+  - new : Add the ability to add a watermark on PDF generation
+
+- v2.1.0 : 2025-09-26
+  - Fix on dynamic insertions of images. Before the fix, it worked only with a libreoffice writer template , now, it works also with a xlsx template
+  - new : a paramater that disables a hack on html contents
+
+- v2.0.0 : 2025-01-22
   - BC Break (easy to fix) : see [UPGRADE.md](UPGRADE.md)
   - We can now generate Calc / Excel files (from Calc templates)
   - Is multiThreaded : we can generate several files at the same time
