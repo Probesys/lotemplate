@@ -8,6 +8,9 @@ The upgrade documentation is in the file [UPGRADE.md](UPGRADE.md).
 Versions 2.x
 ------------
 
+- v2.2.1 : 2025-11-03
+  - FIX : Sort variable to avoid sub string replacement
+
 - v2.2.0 : 2025-11-03
   - new : Add the ability to add a watermark on PDF generation
 
