@@ -96,7 +96,7 @@ class CalcTableStatement:
             copycell=sheet.getCellByPosition(StartColumn,StartRow)
             rangetocopy=sheet.getCellRangeByPosition(StartColumn,StartRow,EndColumn,EndRow )
             sheet.copyRange(copycell.CellAddress,doc.NamedRanges.getByName(variable).getReferredCells().getRangeAddress())
-            for key, mylist  in value.items():
+            for key, mylist  in sorted(value.items(), key=lambda x: len(x[0]), reverse=True):
                 try:
                     CalcTextStatement.fill(rangetocopy,'&'+key,mylist['value'][i])
                 except IndexError:
