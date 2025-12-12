@@ -2,7 +2,7 @@
 Copyright (C) 2023 Probesys
 """
 
-from flask import Flask,request, jsonify,after_this_request,send_file 
+from flask import Flask,request, jsonify,after_this_request,send_file
 from werkzeug.utils import secure_filename
 
 import os
@@ -15,6 +15,10 @@ from lotemplate.utils import get_cached_json
 from lotemplate import statistic_open_document,clean_old_open_document
 
 app = Flask(__name__)
+if os.getenv('LOG_LEVEL') :
+    app.logger.setLevel(os.getenv('LOG_LEVEL'))
+else:
+    app.logger.setLevel('ERROR')
 
 @app.route("/", methods=['PUT', 'GET'])
 def main_route():
@@ -111,7 +115,7 @@ def file_route(directory, file):
             try:
                 os.remove(file)
             except Exception:
-                print("Error delete file " + str(file))
+                app.logger.error("Error delete file " + str(file))
         return response
     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
@@ -142,7 +146,6 @@ def file_route(directory, file):
     elif request.method == 'POST':
         if not request.json:
             return utils.error_sim('ApiError', 'missing_json', "You must provide a json in the body"), 400
-
         file ,response = utils.fill_file(directory, file, request.json)
         return response
     elif request.method == 'DELETE':

@@ -13,4 +13,5 @@ services:
       - NB_WORKERS=$NB_WORKERS
       - MAXTIME=$MAXTIME
       - DISABLE_HTML_HACK=${DISABLE_HTML_HACK:-}
-    command: "gunicorn -b 0.0.0.0:8000 app:app"
+      - LOG_LEVEL=${LOG_LEVEL:-}
+    command: "gunicorn -b 0.0.0.0:8000  --access-logfile '-'  --access-logformat '%(h)s %(l)s %(u)s %(t)s  \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\" %(M)s' app:app"

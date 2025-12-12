@@ -8,6 +8,9 @@ The upgrade documentation is in the file [UPGRADE.md](UPGRADE.md).
 Versions 2.x
 ------------
 
+- V2.2.2 : 2025-12-12
+    - add better logs for the api using logging
+
 - v2.2.1 : 2025-11-03
   - FIX : Sort variable to avoid sub string replacement
 

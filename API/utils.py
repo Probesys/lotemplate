@@ -2,7 +2,7 @@
 Copyright (C) 2023 Probesys
 """
 
-from flask import Response, send_file
+from flask import Response, send_file, current_app
 
 import lotemplate as ot
 
@@ -180,8 +180,7 @@ def fill_file(directory: str, file: str, json, error_caught=False) -> Union[tupl
     """
     if  isinstance(json, list):
         json=json[0]
-        print("####\nUsing a list of dict is DEPRECATED, you must directly send the dict.")
-        print("See documentation.\n#######")
+        current_app.logger.warning("DEPRECATED Using a list of dict is DEPRECATED, you must directly send the dict. See documentation.")
     cnx = connexion()
     global scannedjson
     try:
