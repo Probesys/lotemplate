@@ -63,7 +63,4 @@ class CalcTextStatement:
         search = doc.createReplaceDescriptor()
         search.SearchString = variable
         search.ReplaceString = value
-        doc.replaceAll(search)
-
-
-
+        doc.queryContentCells(4).replaceAll(search)
