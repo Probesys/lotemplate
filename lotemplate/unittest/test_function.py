@@ -68,6 +68,8 @@ def compare_files_html(name: str, cnx ):
         temp = ot.TemplateFromExt(get_filename('odt'), ot.randomConnexion(cnx), True)
     if os.path.isfile(get_filename('docx')):
         temp = ot.TemplateFromExt(get_filename('docx'), ot.randomConnexion(cnx), True)
+    if os.path.isfile(get_filename('xls')):
+        temp = ot.TemplateFromExt(get_filename('xls'), ot.randomConnexion(cnx), True)
 
     if temp is None:
         if name == 'debug':

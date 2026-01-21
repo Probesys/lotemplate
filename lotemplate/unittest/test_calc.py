@@ -31,6 +31,10 @@ class Test_calc(unittest.TestCase):
     def test_formula(self):
         self.assertTrue(compare_files_html('calc_formula',cnx))
 
+    def test_formula1(self):
+        self.assertTrue(compare_files_html('calc_formula1',cnx))
+
+
 class Test_Calc_Images(unittest.TestCase):
 
     def test_image_xlsx(self):

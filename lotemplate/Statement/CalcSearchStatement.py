@@ -33,7 +33,7 @@ class CalcTextStatement:
         search.SearchString = regex_to_use
         search.SearchRegularExpression = True
         search.SearchCaseSensitive = False
-        founded = doc.findAll(search)
+        founded = doc.queryContentCells(4).findAll(search)
         var_table = {}
         if founded: 
             for x_found in founded:
