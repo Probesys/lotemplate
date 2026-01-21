@@ -28,7 +28,7 @@ class Test_calc(unittest.TestCase):
     def test_table(self):
         self.assertTrue(compare_files_html('calc_table',cnx))
 
-    def test_table(self):
+    def test_formula(self):
         self.assertTrue(compare_files_html('calc_formula',cnx))
 
 class Test_Calc_Images(unittest.TestCase):
