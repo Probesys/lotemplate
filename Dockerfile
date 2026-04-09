@@ -27,12 +27,15 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
 	fonts-noto-mono \
 	fonts-sil-gentium-basic \
 	fonts-recommended \
+	curl \
     && useradd -d /app python
 COPY . /app
+COPY ./healthcheck.sh /healthcheck.sh
 WORKDIR /app
 RUN chown python /app -R \
        && pip install -r requirements.txt --break-system-packages
 USER python
+HEALTHCHECK --retries=5 CMD ["/healthcheck.sh"]
 
 
 From prod as dev
