@@ -109,13 +109,15 @@ def directory_route(directory):
 
 @app.route("/<directory>/<file>", methods=['GET', 'PATCH', 'DELETE', 'POST'])
 def file_route(directory, file):
+    app.logger.debug("New request on file route (" + directory + "/" + file + ")")
+
     @after_this_request
     def delete_tmp_file(response):
         if request.method == 'POST':
             try:
                 os.remove(file)
-            except Exception:
-                app.logger.error("Error delete file " + str(file))
+            except Exception as e:
+                app.logger.error("Error deleting file " + str(file) + ": " + str(e))
         return response
     if request.headers.get('secretkey', '') != os.environ.get('SECRET_KEY', ''):
         return utils.error_sim(
@@ -146,7 +148,9 @@ def file_route(directory, file):
     elif request.method == 'POST':
         if not request.json:
             return utils.error_sim('ApiError', 'missing_json', "You must provide a json in the body"), 400
+        app.logger.debug("POST request on " + directory + "/" + file + " with following json: " + str(request.json))
         file ,response = utils.fill_file(directory, file, request.json)
+        app.logger.debug("Filled template " + directory + "/" + file)
         return response
     elif request.method == 'DELETE':
         json_cache_dir=utils.scannedjson
